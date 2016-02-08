@@ -1,0 +1,150 @@
+* Paper Outline
+
+** Two-By-Two
+
+Ecological theories so far assume/find evidence of darwinian mechanisms of selection and evolution. We think Lamarckian mechanisms of within-organizational adaptation/learning.
+
+Darwin ->           No Replacement      Replacement 
+           --------------------------------------
+No Change  | Unpopulated       | Hannan's World |
+Change     | Infinite Profusion| Probably True  |
+Lamarck ^  --------------------------------------
+
+** Hypothesis
+
+1. There's a positive association between niche specialization, the niche becomes more concentrated. [standard resource partitioning]
+
+The real novelty comes in terms of these next two:
+
+2. If concentration increases within a niche, then specialization will *subsequently* increase.  [concentration comes before specialization; temporal sequence is a novel aspect here]
+3. When specialization increases, does this happen by means of:
+   a. intra-organizational change? 
+   b. replacement (new, more specialized communities replacing others)?
+
+** Measures
+
+- concentration: HHI of activity levels in the topic
+- specialization: HHI of topic distribution across communities
+- intra-organizational: change in the distribution of topics across communitites (l2 norm)
+- replacement: size of set difference in particular communities in the niche before after change
+
+** Models
+
+H1: specialization ~ beta * concentration : beta > 0
+
+H2: specialization(t1)  ~ beta * concentration (t0)  : beta > 0
+
+H3a: specialization ~ beta * L2(topic(t0), topic(t1)) : beta > 0
+
+H3b: specialization ~ beta * replacement : beta > 0
+
+
+
+* Bike Rack
+
+  as competition increases within a niche, communities in the niche will shift to different niches [communities change]
+  as concentration increases within a niche, commu`1nities in the niche will change topics in ways that lead to more specialized
+ [novel (?) resource partitioning]
+
+Step 1: Build a dependent variable that captures intra-community change in niche:
+
+
+** Rationale
+
+Population ecology models assume that individuals occupy certain niches, do not change, and succeed or fail due to environmental pressure in their niches.
+
+A set of more recent approaches to population ecology have tried to relax these assumptions by modeling the way that actors change to fit into different niches in response to changing resources landscapes — i.e., they work together over time to actively partion ecosystems. (CITATIONS)
+
+Most people who have studied resource partitioning have looked at the emergence of this organizations over time. They've studied this by looking at looking at organization foundings and failures.
+
+Online communities are different than firms in ways that can be unconvered though ecological modeling that relaxes conventional assumptions used in traditional population ecologiy studies of populations of organizations. For example:
+
+- Firms that "die" go bankrupt or get absorbed into other firms. In contrast, online communities may wither or disolve, but the good + mailing list and identiy they produce and have persist and can be reappropriated by members and/or future communities of participants.
+- The forces that threaten firm survival may pose less of a threat to online communities, because online communities may be able to change their form to specialize or even to move to new niches. 
+- A population of firms changes by a process in which those that die free up resources that enable new firms to enter and replace the old ones.  A population of online communities changes through a different process that involves both death and replacement and intra-community changes.
+- Firms that share a pool of resources enter into competition over control and access to these resources.  Online communities that share resources (users, moderators, attention) can complement one another and produce spillovers that increase the supply of the resource.
+
+These differences have implications for ecological findings:
+
+- Increases in the number of communities need not lead to increased competition. 
+- Increases in competition or shortages of resources normally cause a change in the identities of individuals that make up the population, but such shocks lead to changes in the population through a process of intra-organizational change.
+
+** Simple Version
+
+- Use RPT to detect events where replacement or change occur
+- Use population diff to measure replacement
+- Use topic change to measure change
+
+- There is positive relationship between amount of resources in a niche (i.e., the amount of activity in a topic), and the concentration and partitioning within the topic. If there is a change in the amount of resources, is the amount of resource partioning before or after changed?
+- Compare overlap between communities within a topic/niche before/after to measure the number of replacements.
+
+If there are the same individuals and different concentration, that means that the sha
+
+
+Ecologists predict: increased resources -> increased entrants/population -> increased competition -> increased founding specialists.
+
+Our suggestion is that the same relationship will hold except it won't just ben driven by new foundings but by organiationsl changing. 
+
+As predicted by ecologists, we anticipate that as niches become more concentrated (through the growth and/or dominance of one community) communities within that niche will wither and/or disappear, new entrants into overlapping topic spaces will occupy narrower niches.
+
+Additionally, as niches become more concentrated, existing communities will occupy more specialized roles within the niche.
+Change happens when activity level drops. 
+
+
+
+1- Test for substantial within-community change in the specific niches (distribution of topics) within which individual communities participate over time.
+
+Step 2: Use new DV to understand when communities are more likely to change
+
+2- Test whether, specialization occurs during periods where resource partitioning and death would have occurred (increase in concentration and resources).
+
+Step 3: Test whether new, more specialized community creation happens under periods of increased concentration
+
+3 - See when increases in new community creation happens within topics when concentration increases
+
+
+To test the assumption in organizational ecology that online communities are created in a set of niches and that they do not change niches.
+
+Traditional ecology theory: New opportunities create new firms and that creates opportunities for resource partionining. You have generalists and specialization. 
+
+In traditional ecology 
+
+Increase in resources leads to population increase (within niche) -- aka concentration -- and this leads to increased specialization *within* existing communities.
+
+To test whether increased competition and/or increased concentration within a niche (e.g., the creation and/or growth of other communities) is associated with within-community changes in niche and increased specialization among existing members.
+
+
+# unlikely to vary much across reddit
+# To test whether niches with more resources and higher dimensionality of resources will create more specialists.
+
+*** Specific Objectives
+
+
+However, consistent with the resource partitioning accounts that emphasize the possibility of within-organizational change, we also anticipate that specialization and adaptation may happen \emph{within} communities over time. In other words, we anticipate that increased concentration of activity within a topical niche may drive other similar communities within that space to wither, but in withering they may specialize and/or seek to define a novel, unique and/or more narrow niche for themselves.
+
+
+To measure whether /ceteris paribus/ a community's niches become a comm
+
+controlling for interest, as a activity within a niche becomes more concentrated (i.e., as one actor becomes larger), communities within the niche will tend to become more specialized
+
+as other communities within a niche grow, 
+
+** Null Hypotheses
+
+Online communities's are created into a niche or set of niches and do not change.
+
+The creation or growth of additional communities 
+
+** Conceptual Model/Diagram
+
+** Measures
+** Dummy Tables
+** Threats to Validity and Limitations
+** Anticipated findings & significance
+
+We expect to find that increased concentration within a niche (controlling for activity) will lead to specialization by two processes:
+- Communities that are not growing will either go on to die or change (by specializing or by moving into another niche)
+- New entrants within overlapping niche(s) will be more specialized.
+
+These results would confirm prior accounts of negative density dependence and resource partitioning as competition dynamics drive organizations to emerge within increasingly narrow niches.
+These results would also suggest that negative density dependence and resource partitioning occurs within organizations (has there been prior evidence of this?). 
