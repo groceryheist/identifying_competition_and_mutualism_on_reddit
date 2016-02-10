@@ -1,0 +1,84 @@
+* TODO AKISMET ALL THE PETITIONS
+* TODO SKETCH OUT THE IDEAS
+
+* Organization Learning and  Change
+** Organizational Founding
+- new subreddits seek to differentiate from established ones 
+- established subreddits create conditions for complementary ones (metacirclejerk)
+
+** Inertia + Change 
+- new organizations can change easier than established ones
+- established organizations sometimes do change, after they change, they are more likly to die, but the risk declines over time.
+
+*** For subreddits
+- subreddits are influenced by the exogenous environmental factors, by endogenous community factors, and by moderators/leaders
+- some sources of change might lead to failure/success (being made default, loss of moderators/leaders, endogenous factors), but most will not
+- exogenous sources of change may be interesting
+- User overlap lets us see when subreddits split / merge
+- user overlap lets us see complementarity/competition
+
+
+* Niche / population Formation
+- new opporunities create spikes in organization creation
+- resource partitioning may emerge as *young organizations differentiate*
+- organizations that survive may be more resilient
+- 'liability of newness' may be dependent with niche formation
+
+** For subreddits
+- exogenous events(bernie sanders campaign, plane crashes, popular tv shows, bitcoiner ferment) trigger the creation of subreddits.
+- some of these subreddits become generalists and specialists
+- Is there a maximum width for a generalist to be a good subreddit?
+- If /r/Music were not a default subreddit would anyone read it?
+- User overlap!
+
+
+* Population Level Learning
+Failure rate declines as a function of founding date in a 'populations' history. 
+Failure rate declines as a function of failures due to competition in a populations history.  
+
+If a subreddit (in a population) is created earlier, does it have a greater failure rate?
+If a subreddit (in a population) is created before competitive events, does it have a greater failure rate?
+
+** for subreddits
+- How to define population?  (TOPIC? TOPIC + USER NETWORKS?)
+- How to define failure for a population?
+- Do these hypotheses make sense in contrapositive?
+- Can we see population level learning as memes, moderation policies diffuse? 
+
+* What is the best question for subreddits: 
+
+Does resource partitioning increase following a spike in creation in a niche. 
+
+moderating variables:
++ user overlap
++ age
+
+dependent variables:
++ activity
++ population activity
++ death
++ population size
++ population death rate
++ population creation rate
+
+independent variables:
++ shock leading to subreddit formation within a population. 
+
+
+
+* Technical difficulties: 
+Controlling for attention to the topic (google trends, wiki views).
+Defining success/failure. 
+How to get moderation policy?
+
+* Study design:
+
+An exogenous event (news, moderator angers community) leads to the creation of a number of subreddits within a population of subreddits (either a new population, or existing). 
+
+What happens to the population? Which subreddits survive? Does resource partitioning take hold? 
+What about when there is user overlap? 
+What about already existing subreddits that are older or have weathered more events?
+
+- Defining population is  little hard ( do we think all TV shows is a population, and then specific shows are a niche or what?)  Is it Genre or topic?
+
+
