@@ -1,0 +1,436 @@
+# Fitting VAR models in stan using pystan
+
+In this notebook, we'll walk through fitting VAR models in pystan. 
+We'll write down stan code for fitting our model and test that we can recover parameters from VAR models with full bayesian inference.
+We'll test out *multithreading* using the Pystan interface.
+We'll also test out regularizing priors that will help us fit models in complex systems with many time series. 
+Eventually, we'll build up to hierarchical VAR models.
+
+## A basic autoregressive model in stan
+Since vector autoregressions generalize univariate autoregressive time series models to the multivariate case, we'll start with a time series model to test out a framework for simulating and testing stan code in python. 
+
+The the [stan user's guide](https://mc-stan.org/docs/2_22/stan-users-guide-2_22.pdf "link to pdf") provides code for an AR(1) model. 
+```{r, echo=FALSE}
+knitr::opts_chunk$set(cache=TRUE)
+```
+
+```stan
+// stan_code/ar_1_nopriors.stan
+// the model fits a vector y, of N datapoints
+
+data {
+  int<lower=0> N;
+  vector[N] y;
+}
+
+parameters{
+  real alpha; // the intercept / growth rate
+  real beta; // autoregressive coefficient
+  real<lower=0> sigma; // outcome variance
+}
+
+model {
+  y[2:N] ~ normal(alpha + beta * y[1:(N-1)], sigma); // fit the model in vectorized form
+}
+
+// use this block to generate time series with the same parameters
+generated quantities{
+  real y0 = y[1];
+  vector[N] y_new;
+  {
+    y_new[1] = y0;
+    for (n in 2:N)
+      y_new[n] = normal_rng(alpha + beta * y_new[n-1], sigma);
+  }
+}
+```
+
+Let's try to fit this model using pystan
+
+```{python, cache=FALSE}
+
+import pandas as pd
+from  plotnine import *
+theme_set(theme_minimal())
+import pystan
+import numpy as np
+import os
+import pickle
+import sys
+
+# save obj if filename not exists, or overwrite, else load
+def unpickle_or_create(filename, overwrite, function, *args, **kwargs):
+    if os.path.isfile(filename) and not overwrite:
+        return pickle.load(open(filename, 'rb'))
+    else:
+        obj = function(*args, **kwargs)
+        pickle.dump(obj, open(filename,'wb'))
+        return obj
+
+```
+
+
+```{python}
+
+recompile = False # flag to use to recompile all the models
+refit = False
+
+alpha = 10
+beta = 0.87
+sigma = 6
+y0 = 0
+N = 50 
+
+def next_y(y0):
+    return np.random.normal(alpha + beta*y0, sigma, 1)[0]
+
+y_vec = [y0]
+for i in range(N-1):
+    y_vec.append(next_y(y_vec[-1]))
+
+y_vec = np.array(y_vec)
+forecast_len = 100
+
+true_forecast = [y_vec[-1]]
+for i in range(forecast_len):
+    true_forecast.append(next_y(true_forecast[-1]))
+
+true_forecast = true_forecast[1:]
+
+data = {'N':N,
+        'y':y_vec,
+        'forecast_len':forecast_len}
+og_stderr = sys.stderr
+sys.stderr = open("stan_compile.log",'a')
+sm = unpickle_or_create("stan_code/ar_1_unifpriors.pkl",
+                   overwrite=recompile,
+                   function=pystan.StanModel,
+                   file="stan_code/ar_1_unifpriors.stan",
+                   model_name='ar_1_unif_priors')
+og_stderr = sys.stderr
+
+fit = unpickle_or_create("stan_models/ar1_unif_priors.pkl",
+                         overwrite=refit,
+                         function = sm.sampling,
+                         iter=1000,
+                         chains=4,
+                         data=data)
+
+print(fit.stansummary(pars=['alpha','beta','sigma']))
+
+```
+
+Looks like we were able to recover the parameters pretty well, but our estimate of beta is a bit too low. Let's compare the data and the model. 
+
+```{python}
+
+
+def plot_ar(fit):
+
+    y_gen = fit.extract(["y_new"])["y_new"]
+
+    forecast_mean = y_gen.mean(0)
+    forecast_upper = np.quantile(y_gen, 0.975, axis=0)
+    forecast_lower = np.quantile(y_gen, 0.025, axis=0)
+
+    labels = np.concatenate([np.repeat(str(i), N) for i in range(10)])
+    df = pd.DataFrame({'y':forecast_mean,'Time step':N + np.arange(forecast_len),'ymax':forecast_upper,'ymin':forecast_lower})
+
+    true_data=pd.DataFrame({'Time step':range(N+forecast_len), 'Hold-out':np.concatenate([y_vec, true_forecast])})
+
+    p = ggplot(mapping=aes(x="Time step", y="y",ymax='ymax',ymin='ymin'), data=df)
+    p = p + geom_line(color='red')
+    p = p + geom_ribbon(alpha=0.5)
+    p = p + geom_line(aes(x="Time step",y="Hold-out"), true_data, inherit_aes=False)
+    #p = p + scale_color_manual(values=['red','black'],labels=['forecast','hold-out data'])
+    p = p + scale_x_continuous() + theme(legend_position='bottom')
+    p.save('plots/ar_1_nopriors_pred.pdf')
+    p.draw()
+    return p
+
+
+plot_ar(fit).draw()
+
+```
+
+## Using proper priors
+By default, stan uses uniform priors for each parameter.  This works ok for our toy ar(1) model, but is going to be a bad idea when we get into more complex models that wpill be difficult to fit.  We'll need to use priors to help the sampler concentrate on realistic values for each parameter. Uniform priors are improper and not truely uninformative anyway. 
+
+```{python,echo=FALSE}
+
+sm = unpickle_or_create("stan_code/ar_1.pkl",
+                        overwrite=recompile,
+                        function=pystan.StanModel,
+                        file="stan_code/ar_1.stan",
+                        model_name='ar_1_unif_priors')
+
+fit = unpickle_or_create("stan_models/test_ar1.pkl",
+                         overwrite = refit,
+                         function = sm.sampling,
+                         iter=1000,
+                         chains=4,
+                         data=data)
+
+print(fit.stansummary(pars=['alpha','beta','sigma']))
+plot_ar(fit)
+
+```
+It appears to make little difference whether we use proper or uniform priors.
+
+## Vector autoregreesion (VAR) models.
+
+One of the promises of VAR modeling approaches is that they can model complex dynamics at equillibria.  For example, below we have a predetor-prey that's stable, but ossillating.  For now we'll stick with VAR(1) models. Though down the line we may wish to adopt models that have more memory. 
+
+A predetor-prey system
+```{python, cache=F}
+K = 2
+N = 400
+forecast_len = N
+
+## a predetor-prey system
+alpha = np.array([10,100])
+beta = np.array([[0.3,-0.8],[0.5, 0.9]])
+sigma = np.array([[10.0,5],[5,10]])
+
+y0 = np.array([150,100])
+
+def evolve_var_system(alpha,beta,sigma,y0,N,forecast_len):
+    y = [y0]
+    k = beta.shape[0]
+
+    def y_next(y0):
+        return np.random.multivariate_normal(alpha + np.matmul(y0,beta), sigma)
+
+    for n in range(1, N):
+        y.append(y_next(y[-1]))
+
+    true_forecast = [y[-1]]
+    for n in range(forecast_len):
+        true_forecast.append(y_next(true_forecast[-1]))
+
+    true_forecast = true_forecast[1:]
+
+    all_x = range(N + forecast_len)
+    all_y = y + true_forecast
+
+    vardict = {'x':np.concatenate([all_x for i in range(K)]),
+               'y':np.concatenate(np.array(all_y).transpose(),axis=0),
+               'variable':np.concatenate([np.repeat(f"y{i}",N+forecast_len) for i in range(1,K+1)])
+               }
+
+
+    return (y,pd.DataFrame(vardict))
+
+
+y, df = evolve_var_system(alpha, beta, sigma, y0, N, forecast_len)
+
+p = ggplot(df) + geom_line(aes(x='x', y='y',group='variable',color='variable'))
+p.draw()
+```
+
+
+Now let's try fitting a var model in STAN!
+ 
+```stan
+// stan_code/var_1.stan
+data{
+  int<lower=0> forecast_len;  // length of the forecast to generate
+  int<lower=0> N; // length of the time series
+  int<lower=0> k; // number of series
+  matrix[N,K] y; // output matrix
+}
+
+	parameters{
+	  vector[K] alpha_hat_location; // intrinsic growth rates
+	  vector<lower=0>[K] alpha_hat_scale; // intrinsic growth rates
+	  matrix[K,K] beta_hat_location; // community matrix of competition / correlation coefficients
+	  matrix<lower=0>[K,K] beta_hat_scale;
+	  vector<lower=0>[K] tau_scale;
+	  vector[K] tau_location;
+	  // LJK parameterize the covariance matrix 
+	  cholesky_factor_corr[K] L_Omega; // covariance matrix in cholesky form
+	}
+transformed parameters{
+  matrix[K,K] beta;
+  vector[K] alpha;
+  beta = beta_hat_location + beta_hat_scale;
+  alpha = alpha_hat_location + alpha_hat_scale;
+}
+
+model{
+  L_Omega ~ lkj_corr_cholesky(1); // prior on Omega
+  tau_location ~ cauchy(0,1);
+  tau_scale ~ cauchy(0,1);
+  tau ~ normal(tau_location,tau_scale);
+  to_vector(beta_hat_location) ~ normal(0,0.5);
+  to_vector(beta_hat_scale) ~ cauchy(0,0.5);
+  L_Sigma = diag_pre_multiply(tau, Omega);
+  y[2:N] ~ multi_normal(alpha + beta*y[1:(N-1)], L_Sigma);
+	}
+
+generated quantities{
+  vector[K] y_new[forecast_len];
+  vector[K] y0 = y[1];
+  corr_matrix[K] Sigma;
+  {
+	Sigma = L_Sigma * L_Sigma;
+	y_new[1] = y0;
+	for(n in 2:forecast_len)
+	  y_new[n] = multi_normal_cholesky_rng(alpha + beta*y_new[n-1], L_sigma);
+  }
+}
+```
+
+```{python, cache=F}
+og_stderr = sys.stderr
+sys.stderr = open("stan_compile.log",'a')
+sm = unpickle_or_create("stan_code/var_1.pkl",
+                        overwrite=False,
+                        function=pystan.StanModel,
+                        file="stan_code/var_1.stan",
+                        model_name="var_1")
+sys.stderr = og_stderr
+
+data = {"forecast_len":forecast_len,
+        "N":N,
+        "K":K,
+        "Y":np.array(y)}
+
+
+fit = unpickle_or_create("stan_models/var_1_sim.pkl",
+                   overwrite=False,
+                   function=sm.sampling,
+                   iter=1000,
+                   chains=3,
+                   data=data)
+
+print(fit.stansummary(pars=['alpha','beta','Sigma']))
+
+def stan_var_predict(fit,N):
+    y_new = fit.extract('y_new')['y_new']
+    forecast_len = y_new.shape[1]
+    y_new_mean = y_new.mean(axis=0)
+    y_new_upper = np.quantile(y_new, 0.975,axis=0)
+    y_new_lower = np.quantile(y_new, 0.025,axis=0)
+
+    df_pred = pd.DataFrame({
+        'y' : np.concatenate([y_new_mean[:,i] for i in range(y_new_mean.shape[1])]),
+        'y_upper' : np.concatenate([y_new_upper[:,i] for i in range(y_new_upper.shape[1])]),
+        'y_lower' : np.concatenate([y_new_lower[:,i] for i in range(y_new_lower.shape[1])]),
+        'x': np.concatenate([N + np.arange(forecast_len) for i in range(y_new.shape[2])]),
+        'variable' : np.concatenate([np.repeat(f'y{i}',forecast_len) for i in range(1,1+y_new.shape[2])])
+    })
+
+    return df_pred
+
+df_pred = stan_var_predict(fit,N)
+
+
+# df_pred = df_pred.melt(id_vars=['x','y1_lower','y1_upper','y2_lower','y2_upper'], value_vars=['y1','y2'], value_name='y')
+# df_pred = df_pred.melt(id_vars=['x','y','y1_upper','y2_upper','variable'], value_vars=['y1_lower','y2_lower'], value_name='y_lower',var_name='var_1')
+# df_pred = df_pred.melt(id_vars=['x','y','y_lower'], value_vars=['y1_upper','y2_upper'], value_name='y_upper', var_name=['variable'])
+# df_pred.loc[df_pred.variable == 'y1_upper','variable'] = 'y1'
+# df_pred.loc[df_pred.variable == 'y2_upper','variable'] = 'y2'
+
+p = ggplot(df_pred,aes(y='y',ymax='y_upper',ymin='y_lower', x='x',group='variable')) + geom_ribbon(alpha=0.5) + geom_line(aes(color='variable'), linetype='-')
+p = p + geom_line(aes(y='y',x='x',color='variable',group='variable'), data=df, inherit_aes=False)
+p = p + theme(legend_position = 'top')
+p.draw()
+
+```
+
+# A system with 3 variables
+```{python, cache=F}
+K = 3
+N = 200
+forecast_len = 50
+
+alpha = np.array([-100,70,100])
+beta = np.array([[0.9,-0.1,-0.3],[0.3,0.8,-0.14],[0.4,-0.1,0.85]])
+sigma = np.array([[5,-0.4,0.4],[2,8,-2],[3,2,7]])
+
+y0 = np.array([150, 70, 100])
+y, df = evolve_var_system(alpha, beta, sigma, y0, N, forecast_len)
+
+og_stderr = sys.stderr
+sys.stderr = open("stan_compile.log",'a')
+sm = unpickle_or_create("stan_code/var_1.pkl",
+                        overwrite=False,
+                        function=pystan.StanModel,
+                        file="stan_code/var_1.stan",
+                        model_name="var_1")
+sys.stderr = og_stderr
+
+data = {"forecast_len":forecast_len,
+        "N":N,
+        "K":K,
+        "Y":np.array(y)}
+
+fit = unpickle_or_create("stan_models/var_1_sim_3.pkl",
+                         overwrite=False,
+                         function=sm.sampling,
+                         iter=1000,
+                         chains=3,
+                         data=data)
+
+print(fit.stansummary(pars=['alpha','beta','Sigma']))
+
+df_pred = stan_var_predict(fit,N)
+p = ggplot(df_pred,aes(y='y',ymax='y_upper',ymin='y_lower', x='x',group='variable')) + geom_ribbon(alpha=0.5) + geom_line(aes(color='variable'), linetype='-')
+p = p + geom_line(aes(y='y',x='x',color='variable',group='variable'), data=df, inherit_aes=False)
+p = p + theme(legend_position = 'top')
+p.draw()
+```
+
+# Can we do it with 8 variables?
+```{python, cache = F}
+
+K = 8
+N = 400 # we'll probably need more data for this
+forecast_len = 50
+alpha = np.random.normal(3,K/3,K)
+# we want beta to be sparse
+
+# sparsify the betas
+np.random.seed(1234)
+beta_zeros = np.array([np.random.binomial(1,0.1,K) for i in range(K)])
+beta = np.array([np.random.normal(0,0.2,K) for i in range(K)])
+beta = np.multiply(beta, beta_zeros)
+sigma = np.array([np.random.chisquare(1,K) for i in range(K)])
+
+y0 = alpha
+y, df = evolve_var_system(alpha, beta, sigma, y0, N, forecast_len)
+
+data = {"forecast_len":forecast_len,
+        "N":N,
+        "K":K,
+        "Y":np.array(y)}
+
+fit = unpickle_or_create("stan_models/var_1_sim_10.pkl",
+                         overwrite=True,
+                         function=sm.sampling,
+                         iter=2000,
+                         chains=3,
+                         data=data,
+                         seed=20
+                         )
+
+print(fit.stansummary(pars=['alpha','beta','Sigma']))
+
+df_pred = stan_var_predict(fit,N)
+p = ggplot(df_pred,aes(y='y',ymax='y_upper',ymin='y_lower', x='x',group='variable')) + geom_ribbon(alpha=0.5) + geom_line(aes(color='variable'), linetype='-')
+p = p + geom_line(aes(y='y',x='x',color='variable',group='variable'), data=df, inherit_aes=False)
+p = p + theme(legend_position = 'top')
+p.draw()
+
+
+
+```
+
+
+## Hierarchical VAR models 
+
+
+
+Jim Savage wrote a nice tutorial on hierarchical var modeling in Stan that we're building upon. 
+
