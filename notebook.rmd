@@ -388,15 +388,26 @@ p.draw()
 K = 8
 N = 400 # we'll probably need more data for this
 forecast_len = 50
-alpha = np.random.normal(3,K/3,K)
-# we want beta to be sparse
 
-# sparsify the betas
-np.random.seed(1234)
-beta_zeros = np.array([np.random.binomial(1,0.1,K) for i in range(K)])
-beta = np.array([np.random.normal(0,0.2,K) for i in range(K)])
-beta = np.multiply(beta, beta_zeros)
-sigma = np.array([np.random.chisquare(1,K) for i in range(K)])
+def gen_system(K,N,seed=1234):
+    np.random.seed(seed)
+    alpha = np.random.normal(3,10,K)
+    # we want beta to be sparse
+    # sparsify the betas
+    beta_zeros = np.array([np.random.binomial(1,0.1,K) for i in range(K)])
+    beta = np.array([np.random.normal(0,0.2,K) for i in range(K)])
+    beta = np.multiply(beta, beta_zeros)
+    sigma = np.array([np.random.chisquare(1,K) for i in range(K)])
+    return (alpha,
+            beta,
+            sigma}
+
+alpha,beta,sigma = unpickle_or_create("simulation_data/var1_k8.pkl",
+                                      overwrite=False,
+                                      function=gen_system,
+                                      K=K,
+                                      N=N)
+
 
 y0 = alpha
 y, df = evolve_var_system(alpha, beta, sigma, y0, N, forecast_len)
