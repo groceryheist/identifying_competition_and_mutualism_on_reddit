@@ -1,4 +1,4 @@
-# Fitting VAR models in stan using pystan
+.# Fitting VAR models in stan using pystan
 
 In this notebook, we'll walk through fitting VAR models in pystan. 
 We'll write down stan code for fitting our model and test that we can recover parameters from VAR models with full bayesian inference.
@@ -19,6 +19,7 @@ knitr::opts_chunk$set(cache=FALSE)
 // the model fits a vector y, of N datapoints
 
 data {
+
   int<lower=0> N;
   vector[N] y;
 }
@@ -365,8 +366,8 @@ alpha, beta, sigma = unpickle_or_create("simulation_data/var_1_sim_3_pois.pkl",
                                         function=gen_system,
                                         K=K,
                                         N=N,
-                                        growth=3,
-                                        growth_var=0.4,
+                                        growth=5,
+                                        growth_var=1.5,
                                         community=0.2,
                                         noise=1)
 y0 = alpha
@@ -374,7 +375,7 @@ y0 = alpha
 y, df = evolve_var_system(alpha, beta, sigma, y0, N, forecast_len, link = lambda x: np.random.poisson(np.exp(x)))
 
 sm = unpickle_or_create("stan_code/var_1_pois.pkl",
-                        overwrite=False,
+                        overwrite=True,
                         function=pystan.StanModel,
                         file="stan_code/var_1_pois.stan",
                         model_name="var_1_poisson_2"
@@ -387,12 +388,14 @@ data = {"forecast_len":forecast_len,
         "Y":y.T}
 
 fit = unpickle_or_create("stan_models/var_1_pois.pkl",
-                         overwrite=False,
+                         overwrite=True,
                          function=sm.sampling,
                          data=data,
                          chains=4)
 
-df_pred = stan_var_predict(fit, forecast_len)
+## since stan has overflow issues generating numbers from a poisson distribution we'll use
+
+df_pred = stan_pois_var_predict(fit, N)
 
 print(fit.stansummary(pars=['alpha','beta','Sigma']))
 
@@ -411,3 +414,4 @@ p.draw()
 Jim Savage wrote a nice tutorial on hierarchical var modeling in Stan that we're building upon. 
 
  
+.

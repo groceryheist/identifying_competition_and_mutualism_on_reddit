@@ -67,8 +67,7 @@ def evolve_var_system(alpha,beta,sigma,y0,N,forecast_len, link = lambda x:x):
 
     return (y,pd.DataFrame(vardict))
 
-def stan_var_predict(fit,N):
-    y_new = fit.extract('y_new')['y_new']
+def build_forecast_df(y_new, N):
     forecast_len = y_new.shape[1]
     y_new_mean = y_new.mean(axis=0)
     y_new_upper = np.quantile(y_new, 0.975,axis=0)
@@ -83,6 +82,15 @@ def stan_var_predict(fit,N):
     })
 
     return df_pred
+
+def stan_pois_var_predict(fit,N):
+    lambda_new = fit.extract(pars=['lambda_new'])['lambda_new']
+    y_new = np.random.poisson(np.exp(lambda_new))
+    return build_forecast_df(y_new, N)
+
+def stan_var_predict(fit,N):
+    y_new = fit.extract('y_new')['y_new']
+    return build_forecast_df(y_new, N)
 
 def gen_system(K,N,sparsity=0.5,growth=3,growth_var=10,community=0.3,noise=3,seed=1234):
     np.random.seed(seed)

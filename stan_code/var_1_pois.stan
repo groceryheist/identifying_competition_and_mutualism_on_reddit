@@ -61,9 +61,9 @@ generated quantities{
     // just so we output the covariance matrix
     Sigma = multiply_lower_tri_self_transpose(L_Sigma);
 
-    lambda_new[1]  = multi_normal_cholesky_rng(alpha + beta*lambda[N], L_Sigma)/10;
+    lambda_new[1]  = multi_normal_cholesky_rng(alpha + beta*lambda[N], L_Sigma);
     for (n in 2:forecast_len){
-      lambda_new[n] = multi_normal_cholesky_rng(alpha + beta*lambda_new[n-1], L_Sigma)/10;
+      lambda_new[n] = multi_normal_cholesky_rng(alpha + beta*lambda_new[n-1], L_Sigma);
     }
   }
 }
