@@ -11,7 +11,14 @@ import numpy as np
 import pickle
 import sys
 
-
+def pd_round_week(s):
+    s = np.where(s.dt.weekday==0,
+                 s,
+                 s - pd.DateOffset(weekday=0, weeks=1))
+    s = pd.to_datetime(s)
+    s = s.floor('D')
+    return(s)
+    
 def plot_ar(fit, y_vec, true_forecast):
 
     y_gen = fit.extract(["y_new"])["y_new"]
