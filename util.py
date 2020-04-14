@@ -35,7 +35,14 @@ def gen_fun_matrix(K,growth=0.5,growth_var=0.5, dist=None):
     # random orthogonal matrix
     Q = special_ortho_group.rvs(K)
     return np.dot(Q.T, np.diag(lamda) * Q)
-    
+
+def pd_round_week(s):
+    s = np.where(s.dt.weekday==0,
+                 s,
+                 s - pd.DateOffset(weekday=0, weeks=1))
+    s = pd.to_datetime(s)
+    s = s.floor('D')
+    return(s)
 
 def plot_ar(fit, y_vec, true_forecast):
 
@@ -182,7 +189,6 @@ def init_logging(args):
     logging.info(f"Last commit: {export_git_hash}")
     return(logging)
 
-        
 def get_loglevel(arg_loglevel):
     loglevel_mapping = { 'debug' : logging.DEBUG,
                          'info' : logging.INFO,
@@ -196,5 +202,4 @@ def get_loglevel(arg_loglevel):
     else:
         print("Choose a valid log level: debug, info, warning, error, or critical", file=sys.stderr)
         return logging.INFO
-
 
