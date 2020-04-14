@@ -8,9 +8,34 @@ from  plotnine import *
 theme_set(theme_minimal())
 import pystan
 import numpy as np
+from scipy.stats import special_ortho_group
 import pickle
 import sys
 
+# a community matrix is stable if no eigenvalues are greater than 1 
+# this doesn' generate uniformly random stable matrixes, for
+# more fun it generates matrixes with biased eigenvalues. 
+# for uniform random stable matrixes set dist = np.random.uniform
+def gen_fun_matrix(K,growth=0.5,growth_var=0.5, dist=None):
+    # random eigenvalues on (-1,1)
+    signs = np.random.binomial(1, 0.5, K)
+    signs = np.power(-1,signs + 1)
+
+    if dist is None:
+        dist = lambda size: np.random.normal(loc=growth, scale=growth_var, size=size)
+
+    lamda = dist(size=K)
+    # the eigenvalues have to be less than 1 in magnitude
+    rescale = np.abs(lamda).max()
+    if rescale > 1:
+        lamda = lamda / rescale
+
+    lamda = signs * lamda
+
+    # random orthogonal matrix
+    Q = special_ortho_group.rvs(K)
+    return np.dot(Q.T, np.diag(lamda) * Q)
+    
 
 def plot_ar(fit, y_vec, true_forecast):
 
@@ -37,7 +62,7 @@ def plot_ar(fit, y_vec, true_forecast):
     p.draw()
     return p
 
-def evolve_var_system(alpha,beta,sigma,y0,N,forecast_len, link = lambda x:x):
+def evolve_var_system(alpha, beta, sigma, y0, N, forecast_len, link_args=[], link = lambda x:x):
     y_star = [y0]
     K = beta.shape[0]
 
@@ -52,15 +77,20 @@ def evolve_var_system(alpha,beta,sigma,y0,N,forecast_len, link = lambda x:x):
         true_forecast.append(y_next(true_forecast[-1]))
 
     true_forecast = true_forecast[1:]
-
+    y_star = np.column_stack(y_star)
+    true_forecast = np.column_stack(true_forecast)
+        
     all_x = range(N + forecast_len)
-    all_y_star = y_star + true_forecast
-    y = np.apply_along_axis(link,0,y_star)
-    true_forecast = np.apply_along_axis(link, 0, true_forecast)
-    all_y = np.concatenate([y, true_forecast])
+    all_y_star = np.column_stack([y_star, true_forecast])
+    y = link(y_star.T, *link_args)
+
+    true_forecast = link(true_forecast.T, *link_args)
+    y.shape
+    true_forecast.shape
+    all_y = np.row_stack([y, true_forecast])
 
     vardict = {'x':np.concatenate([all_x for i in range(K)]),
-               'y_star':np.concatenate(np.column_stack(all_y_star)),
+               'y_star':np.concatenate(all_y_star),
                'y':np.concatenate(all_y.T),
                'variable':np.concatenate([np.repeat(f"y{i}",N+forecast_len) for i in range(1,K+1)])
                }
@@ -83,6 +113,19 @@ def build_forecast_df(y_new, N):
 
     return df_pred
 
+## numpy has a n, p parameterization
+## for models we need a mu, theta parameterization
+def convert_negbin_params(mu, theta):
+    """
+    Convert mean/dispersion parameterization of a negative binomial to the ones scipy supports
+
+    See https://en.wikipedia.org/wiki/Negative_binomial_distribution#Alternative_formulations
+    """
+    r = theta
+    var = mu + 1 / r * mu ** 2
+    p = (var - mu) / var
+    return r, 1 - p
+
 def stan_pois_var_predict(fit,N):
     lambda_new = fit.extract(pars=['lambda_new'])['lambda_new']
     y_new = np.random.poisson(np.exp(lambda_new))
@@ -92,14 +135,16 @@ def stan_var_predict(fit,N):
     y_new = fit.extract('y_new')['y_new']
     return build_forecast_df(y_new, N)
 
-def gen_system(K,N,sparsity=0.5,growth=3,growth_var=10,community=0.3,noise=3,seed=1234):
+### for testing stability is more important than sparsity
+### figure out how to generate sparse stable matrixes later
+### we might be able to do that by taking QR decompositions of sparse matrixes
+def gen_system(K,N,sparsity=0.5,growth=3,growth_var=9,community=0.95, community_var=0.1,noise=3,seed=1234):
     np.random.seed(seed)
     alpha = np.random.normal(growth,growth_var,K)
     # we want beta to be sparse
     # sparsify the betas
-    beta_zeros = np.array([np.random.binomial(1,sparsity,K) for i in range(K)])
-    beta = np.array([np.random.normal(0,community,K) for i in range(K)])
-    beta = np.multiply(beta, beta_zeros)
+    beta = gen_fun_matrix(K, growth=community, growth_var=community_var)
+
     sigma = np.array([np.random.normal(0,noise,K) for i in range(K)])
     sigma = np.dot(sigma,sigma.T)
     return (alpha,
