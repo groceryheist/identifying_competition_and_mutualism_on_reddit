@@ -1,0 +1,250 @@
+\documentclass[12pt]{memoir}
+
+\usepackage{cdsc-memoir}
+% there are two chapter styles: cdsc-article and cdsc-memo
+% memo assumes that you remove the "\\" and the email address from the
+% \author field below as well as that you will comment out the
+% \published tag
+\chapterstyle{cdsc-article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{wrapfig}
+\usepackage[T1]{fontenc}
+\usepackage{textcomp}
+\usepackage[garamond]{mathdesign}
+
+\usepackage[letterpaper,left=1.65in,right=1.65in,top=1.3in,bottom=1.2in]{geometry}
+
+% packages i use in essentially every document
+\usepackage{graphicx}
+\usepackage{enumerate}
+
+% packages i use in many documents but leave off by default
+% \usepackage{amsmath, amsthm, amssymb}
+% \usepackage{dcolumn}
+% \usepackage{endfloat}
+
+% import and customize urls
+\usepackage[usenames,dvipsnames]{color}
+\usepackage[breaklinks]{hyperref}
+
+\hypersetup{colorlinks=true, linkcolor=Black, citecolor=Black, filecolor=Blue,
+    urlcolor=Blue, unicode=true}
+
+% list of footnote symbols for \thanks{}
+\makeatletter
+\renewcommand*{\@fnsymbol}[1]{\ensuremath{\ifcase#1\or *\or \dagger\or \ddagger\or
+ \mathsection\or \mathparagraph\or \|\or **\or \dagger\dagger
+  \or \ddagger\ddagger \else\@ctrerr\fi}}
+\makeatother
+\newcommand*\samethanks[1][\value{footnote}]{\footnotemark[#1]}
+
+% add bibliographic stuff 
+\usepackage[american]{babel}
+\usepackage{csquotes}
+\usepackage[natbib=true, style=apa, backend=biber]{biblatex}
+\addbibresource{Ecology.bib}
+\DeclareLanguageMapping{american}{american-apa}
+
+\defbibheading{secbib}[\bibname]{%
+  \section*{#1}%
+  \markboth{#1}{#1}%
+  \baselineskip 14.2pt%
+  \prebibhook}
+
+\def\citepos#1{\citeauthor{#1}'s (\citeyear{#1})}
+\def\citespos#1{\citeauthor{#1}' (\citeyear{#1})}
+
+% memoir function to take out of the space out of the whitespace lists
+\firmlists
+
+% LATEX NOTE: these lines will import vc stuff after running `make vc` which
+% will add version control information to the bottom of each page. This can be
+% useful for keeping track of which version of a document somebody has:
+% \input{vc}
+% \pagestyle{cdsc-page-git}
+
+% LATEX NOTE: this alternative line will just input a timestamp at the
+% build process, useful for Overleaf
+% \pagestyle{cdsc-page-overleaf}
+\usepackage{tikz}
+\usetikzlibrary{positioning,shapes,arrows,fit,chains,shapes.geometric,trees}
+
+\begin{document}
+
+\setlength{\parskip}{4.5pt}
+% LATEX NOTE: Ideal linespacing is usually said to be between 120-140% the
+% typeface size. So, for 12pt (default in this document, we're looking for
+% somewhere between a 14.4-17.4pt \baselineskip.  Single; 1.5 lines; and Double
+% in MSWord are equivalent to ~117%, 175%, and 233%.
+
+\baselineskip 16pt
+
+\title{Outline for: Unpacking Ecological Approaches to Online Communities }
+\author{Your Name\\
+        \href{mailto:youremail@uw.edu}{youremail@uw.edu}}
+\date{}
+
+\published{\textsc{\textcolor{BrickRed}{This document is an
+  unpublished draft.\\ Please do not distribute or cite without
+  permission.}}}
+
+\maketitle
+
+\begin{abstract}
+Internet researchers are increasingly aware of important interdependence between online communities.  HCI researchers have drawn density dependence theory from population ecology to theorize competitive and complementary dynamics between communities with overlapping content and participants and predict growth and survival of communities.   Density dependence theory highlights similarities between online communities as exchangeable members of a homogeneous population while minimizing the role of diversity and the importance of specialization.   Community ecology, a complementary approach proposes that each community plays a distinctive role in the broader sociotechnical ecosystem and applies vector autoregression (VAR) models to estimate matrix representing competitive, complementary, and asymmetrical commensalist form of interdependence.  We introduce community ecology to sociotechnical systems research by comparing population and community ecologies, explicating applicable concepts from community ecology, and testing hypothesis using vector autoregression models fit to time-series data from Reddit.
+\end{abstract}
+
+\section{Dissemination Objectives}
+
+This is a dissertation chapter and a CHI 2021 paper. The CHI 2020 deadline is Sep. 10 2020 for abstracts and metadata and Sep. 17th for the submission. I aim to submit or have a solid draft before then. Let's say July 1. 
+
+I'll release code and datasets.
+
+There isn't a practitioner or outreach component specific to this paper. 
+
+\section{Rationale}
+
+\begin{itemize}
+\item Accumulating empirical results show the importance of interdependence between online groups to their growth and survival (we use the term ``online group'' to avoid confusion with ecological communities).  Yet relatively few studies provide general methodological tools and even fewer provide general theoretical concepts for systematically studying interdependence between online communities. 
+
+\item Ecology provide such general tools for conceptualizing and modeling these relationships.  These approaches have been fruitfully extended from biology to organizational sociology and to HCI.  We continue the project of building ecological theorizing in the context of HCI by introducing concepts and models from community ecology.  Community ecology aims to characterize the network of relations that shift or stabilize an ecosystem.  
+
+\item Prior ecological work in HCI draws test theories of density dependence from population ecology based on overlapping users and content \citep{zhu_impact_2014,zhu_selecting_2014,wang_impact_2013}.  Population ecology places online groups in the position of the biological organism and the set of groups on an online platform occupy the position of a population of species.  This highlights the similarity of groups as members of the same populations while minimizing the diverse roles that groups can play in the online ecosystem.   In contrast, community ecology is a more holistic ecological approach that analyzes diverse populations as interdependent constituents of an ``ecological community'' \citep{astley_two_1985-1}.  Community ecology places each community in the conceptual position of a distinct biological population and seeks to understand how communities relate to one another.  
+
+Yet in their empirical analyses, these studies model density dependence as structured by overlapping memberships and topics.  Rather than strictly following population ecology, they move toward community ecology by including heterogeneous forms of interdependence in their model. Each group in their analysis faces a distinct environment of overlapping groups, but they stop short of explicating community ecology concepts or estimating the ``community matrix'' which quantifies relations of interdependence between online communities. 
+
+% Why are community ecology concepts useful to understanding online communities?
+\item Concepts from community ecology give community managers ways to think about the role of individual communities in the broader context, to help answer questions like ``How might groups about similar topics shape activity and participation in one another?'' or ``What topics might we be able to create a new group around?'', ``When will we have more small groups or few large groups?'' Community ecology can also inform design choices like whether to allow users to create new groups and the potential effects of interventions like banning, quarantining, and norms against coordinated cross-participation.
+
+% Why do we care about estimating the community matrix?
+% Why is estimating the CM a goal of community ecology?
+\item Community ecology provides statistical models tools for understanding sociotechnical ecosystems.  In particular, Vector autoregression (VAR) models can infer ecological networks of complementary, competitive, predatory, and communal relationships.  VAR analysis can quantify the stability of the system and affords exploration of counterfactual forecasts to simulate hypothetical interventions. 
+
+\item Geographically local online communities are important sites in the networked public sphere where people go to make sense of current events and local concerns.  They also generate data that is relatively easy to cast into a community ecology model.  This study contributes to understanding these communities through the lens of community ecology.   
+
+\item Community ecology promises a vast depth of analysis at levels of granularity ranging from narrow groups of a handful of communities to estimating ecological networks for entire large platforms like Reddit.  Therefore this project will be a first step focused on translating community ecology for HCI and a demonstrative analysis.  
+
+\end{itemize}
+
+\section{General Objectives}
+
+\begin{itemize}
+\item Provide answers to ``How does the growth/success of an online group depend on the environmental context?''  and ``How can we understand interdependence between online groups?''
+
+\item Provide an overarching conceptual framework for studies of interdependence in social computing.
+
+\end{itemize}
+
+\section{Specific Objectives}
+\begin{itemize}
+
+\item Argue that community ecology is a more appropriate framework than population ecology for thinking about interdependence between online groups.
+
+\item Define and motivate concepts of \emph{competition}, \emph{complementary} and \emph{comensalism} and \emph{stability} and \emph{specialization} for online communities.
+
+\item Explicate the above concepts through testing hypotheses about when communities will compete or be complementary using the theory of competitive exclusion one or more case studies from Reddit.
+
+\end{itemize}
+
+\section{Propositions}
+
+\begin{itemize}
+\item \textbf{P1:} For geographic subreddits, ecological relationships between generalists will probably be competitive. That is, generalist $\rightarrow$ generalist dyads will have positive coefficients in estimated community matrices. 
+
+\item \textbf{P2:} For geographic subreddits, ecological relationships from generalist to specialists will probably be beneficial to specialists. That is, generalist $\rightarrow$ specialist dyads will have positive coefficients in estimated community matrices.
+
+
+\item \textbf{P3:} For geographic subreddits, ecological relationships between generalists and specialists are likely to be commensal. That is, generalist $\rightarrow$ specialist dyads will have greater coefficients in estimated community matrices compared to specialist $\rightarrow$ generalist dyads. 
+
+\item \textbf{P4:} Communities of geographic subreddits with more specialist communities will be more stable.
+\end{itemize}
+
+\section{Hypotheses}
+\begin{itemize}
+
+% Competitive exclusion / specialization means that online  
+
+
+\item \textbf{H2:} Changes in the number of user accounts posting in a generalist community will be negatively cor
+related with changes in the number of user accounts posting in a generalist community.
+
+\item \textbf{H3:} Changes in the number of user accounts posting in a generalist community will be more strongly correlated with changes in the number of user accounts posting in a specialist community than visa-versa.
+
+\item \textbf{H4:} The ratio of active specialist to generalist subreddits for a geography will be positively associated with the stability of the ecological community.
+
+\end{itemize}
+
+\section{Conceptual Model}
+
+\label{sec:conc-modeld}
+
+The argument for \textbf{P1} and \textbf{H1} is based on the theories of resource partitioning and the principle of competitive exclusion.  Specialization is a good strategy because specialists can avoid competition with generalists.  In the specific case of local geographic subreddits, we expect that generalist communities (e.g. /r/seattle) will attract and sustain participants who are also cyclists.  If the cyclists form an additional community specialized in discussions related to cycling (e.g. /r/seattlebikes), will this community compete with the generalist community? If it does that means that people in /r/seattle can have similar kinds of interaction as they can have in  /r/seattlebikes.  This is not a good sign for /r/seattlebikes.  Indeed resource partitioning theory posits that specialists will survive when they have competitive advantages over generalists.  For example, we expect that if /r/seattlebikes can sustain an active community that means that /r/seattlebikes participants are able to have interactions, have conversations, or find content related to their interests in ways they prefer to /r/seattle.  So while it is possible for a specialist to compete with a generalist it is unlikely that this competition hurts the specialist very much.
+
+On the other hand it seems more likely that increases in activity in the generalist will help the specialist.  Increasing activity in /r/seattle might be associated with growing participation on Reddit in the Seattle area in general.  Users of both communities might link to /r/seattlebikes in bike-related threads in /r/seattle and growth in /r/seattle increases the size of the audience that would be exposed to these messages.
+
+What about the effect of specialist subreddits on generalist ones?  It seems hard to imagine that an increase in activity on /r/seattlebikes will cause a large decrease in participation in /r/seattle because discussions about bikes in /r/seattle constitute a relatively small proportion of activity.  But a weak relationship might be expected.  On the other hand it also plausible that in other cases a specialist subreddit might attract participants to reddit who subsequently participate in generalist communities. So we are agnostic about this relationship and have no strong prior.  Instead we'll state a research question: \textbf{RQ 1:} What kind of ecological dynamics are common from specialists to generalists?
+
+\begin{figure}[h]
+\centering
+\tikzstyle{frame_cyan} = [line width=4pt, draw=cyan,inner sep=0.2em,minimum width=15cm,minimum height=6cm]
+\begin{tikzpicture}  [->,>=stealth',shorten >=1pt,auto,
+      thick,
+      obs/.style={rectangle,draw,font=\sffamily\bfseries},
+      latent/.style={rectangle,draw,font=\sffamily\bfseries,fill=blue!20},
+      obsmic node/.style={ellipse,draw,font=\sffamily\bfseries},
+      unobsmic node/.style={ellipse,draw,font=\sffamily\bfseries,fill=blue!20}]
+
+      \node[obs] (generalists1) [yshift=-1cm] {Generalists};
+
+
+      \node[obs] (specialists1) [right of=generalists1, yshift=-1cm] {Specialists};
+
+
+      \node[obs] (inactive) [right of=specialists1, yshift=-1cm] {Specialists become inactive};
+
+      \node[frame_cyan, fit=(generalists1)(specialists1)(inactive)]{Competitive Exclusion};
+
+      \node[obs] (generalists2) [below of=generalists1, yshift=-4cm] {Generalists};
+
+      \node[obs] (specialists2) [below of=specialists1, yshift=-1cm] {Specialists};
+
+%      \node[obs] (exclusion) [below of=histaction, yshift=-1cm] {Resource partitioning};
+
+      \node[frame_cyan, fit=(generalists2)(specialists2)]{Resource partitioning};
+
+      % \node[obs] (competition) [] {Competition};
+      % \node[latent] (complementarity) [below of=concessions, yshift=-1.5cm, text width=4cm] {Complementarity};
+      % \node[latent] (comensalism) [below of=concessions, yshift=-1.5cm, text width=4cm] {Commensalism};
+
+      % \node[latent] (stability) [below of=opportunity, yshift = -1cm] {Stability};
+ 
+      \path[every node/.style={font=\sffamily}]
+      (generalists1) edge [] node {-} (specialists1)
+      (generalists2) edge [] node {+} (specialists2)
+      ;
+
+\end{tikzpicture}
+\caption{Conceptual model of competitive exclusion illustrating H1, H2, H3.}
+\end{figure}
+
+
+%Organizational ecologists \citet{hannan_logics_2007} argue that ecological dynamics between organizations depend on the ``audiences'' of organizations by which they mean groups like investors, employees, and consumers.  In applying this thinking to generalization and specialization of online communities, we proposes that for a specialist community to survive it must have an audience of participants who prefer to participate in the specialist community over the other.  
+
+
+
+For \textbf{}
+
+
+\clearpage
+
+
+
+% bibliography here
+\setcounter{biburlnumpenalty}{9001}
+\printbibliography[title = {References}, heading=secbib]
+
+
+\end{document}
+
+%  LocalWords:  
