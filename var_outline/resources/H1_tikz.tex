@@ -20,9 +20,9 @@
         \fill[gray!20] \genbcircle;
       \end{scope}
 
-      \node (nichea) [xshift=-5cm] {Generalist A's niche}; 
-      \node (nicheb) [xshift=5.5cm] {Generalist B's niche}; 
-      \node (overlap) [xshift=0.5cm] {High niche overlap};
+      \node[obs] (nichea) [xshift=-5cm] {Generalist A's niche}; 
+      \node[obs] (nicheb) [xshift=5.5cm] {Generalist B's niche}; 
+      \node[obs] (overlap) [xshift=0.5cm] {High niche overlap};
       \node (hidden) [xshift=0.5cm,yshift=-2.5cm] {};
       \node[obs] (competition) [below of=hidden, yshift=-0.5cm]{Competition};
       \path[every node/.style={font=\sffamily}]
