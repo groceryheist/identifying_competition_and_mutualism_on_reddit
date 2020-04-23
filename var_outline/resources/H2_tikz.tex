@@ -1,0 +1,80 @@
+\begin{figure}[h]
+\centering
+\tikzstyle{frame_black} = [line width=1pt, draw=black,inner sep=0.8em,minimum width=\textwidth,minimum height=3cm]
+\begin{tikzpicture}  [->,>=stealth',shorten >=1pt,auto,
+      thick,
+      obs/.style={rectangle,draw,font=\sffamily\small,inner sep=0.5em},
+      latent/.style={rectangle,draw,font=\sffamily\small,fill=gray!20, inner sep=0.5em},
+      label/.style={font=\scshape\small},
+      obsmic node/.style={ellipse,draw,font=\sffamily\small},
+      unobsmic node/.style={ellipse,draw,font=\sffamily\small,fill=gray!20}]
+
+      \node[obs] (generalist1) [yshift=-1cm] {Generalist};
+
+      \node[latent] (competeswith1) [right of=generalist1, xshift=3cm]{Strong competition};
+
+      \node[obs] (specialist1) [right of=competeswith1, xshift=3cm] {Specialist};
+
+      \node[latent] (cause1) [below of=competeswith1,yshift=-0.4cm] {Causes};
+
+      \node[obs] (inactive) [below of=specialist1,yshift=-0.4cm] {Inactive specialist};
+      \node[label] (lab1) [below of=cause1] {Competitive exclusion between generalist and specialist};
+
+      \node[frame_black, fit=(generalist1)(specialist1)(inactive)(cause1)(competeswith1)(lab1)]{};
+
+%      \node[obs] (generalist2) [below of=generalist1, shaft=-4cm] {Generalist};
+
+      \node[obs] (specialist2) [below of=generalist1, yshift=-4cm] {Isolated specialist};
+
+%      \node[latent] (no_association2) [right of=generalist2, xshift=2cm]{};
+
+      \node[latent] (cause2) [right of=specialist2, xshift=3cm] {No critical mass};
+
+      \node[obs] (inactive2) [right of=cause2, xshift=3cm] {Inactive specialist};
+
+      \node[label] (lab2) [below of=cause2] {Narrow isolated specialist fails to maintain critical mass};
+
+%      \node[obs] (exclusion) [below of=histaction, yshift=-1cm] {Resource partitioning};
+
+      \node[frame_black, fit=(specialist2)(cause2)(inactive2)(lab2)]{};
+
+      \node[obs] (generalist3) [below of=specialist2, yshift=-2.7cm] {Generalist};
+
+      \node[obs] (specialist3) [below of=inactive2, yshift=-2.7cm] {Specialists};
+
+      \node[latent] (interaction3) [right of=generalist3, xshift=3cm]{Complements};
+
+      \node[latent] (cause3) [below of=interaction3,yshift=-0.4cm] {Causes};
+
+      \node[obs] (active) [below of=specialist3,yshift=-0.4cm] {Active specialist};
+      \node[label] (lab3) [below of=cause3] {A generalist supports an environment for specialists};
+%      \node[obs] (exclusion) [below of=histaction, yshift=-1cm] {Resource partitioning};
+
+      \node[frame_black, fit=(generalist3)(specialist3)(cause3)(interaction3)(active)(lab3)]{};
+      % \node[obs] (competition) [] {Competition};
+      % \node[latent] (complementarity) [below of=concessions, yshift=-1.5cm, text width=4cm] {Complementarity};
+      % \node[latent] (comensalism) [below of=concessions, yshift=-1.5cm, text width=4cm] {Commensalism};
+
+      % \node[latent] (stability) [below of=opportunity, yshift = -1cm] {Stability};
+      
+      \path[every node/.style={font=\sffamily}]
+      (generalist1) edge [] node {} (competeswith1)
+      (competeswith1) edge [] node {} (specialist1)
+      (competeswith1) edge [] node {} (cause1)
+      (cause1) edge [] node {} (inactive)
+      (specialist2) edge [] node {} (cause2)
+      (cause2) edge [] node {} (inactive2)
+      (generalist3) edge [] node {} (interaction3)
+      (interaction3) edge [] node {} (cause3)
+      (interaction3) edge [] node {} (specialist3)
+      (cause3) edge [] node {} (active)
+      ;
+
+\end{tikzpicture}
+\caption{Conceptual model showing why we expect to find positive associations between participation in a generalist and subsequent participation in related specialists.  The first box states that strong competition decreases the survival chances of specialists. The second shows that narrow specialists may struggle to maintain critical mass on their own. But if a generalist can help participants discover the specialist, more specialists will survive.}
+\end{figure}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

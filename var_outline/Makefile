@@ -1,13 +1,12 @@
 #!/usr/bin/make
-
-all: $(patsubst %.tex,%.pdf,$(wildcard *.tex)) 
+all: $(patsubst %.tex,%.pdf,$(wildcard *.tex))
 
 # use the following section for Rnw/knitr documents
 # all: $(patsubst %.Rnw,%.pdf,$(wildcard *.Rnw))
 # %.tex: %.Rnw
 #	Rscript -e "library(knitr); knit('$<')"
 
-%.pdf: %.tex 
+%.pdf: %.tex resources/*.tex
 	latexmk -f -pdf $<
 
 clean: 
@@ -28,3 +27,6 @@ pdf: all
 
 .PHONY: clean all
 # .PRECIOUS: %.tex
+
+vpath %.tex resources
+
