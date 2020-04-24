@@ -22,7 +22,7 @@
 \usepackage{enumerate}
 
 % packages i use in many documents but leave off by default
-% \usepackage{amsmath, amsthm, amssymb}
+\usepackage{amsmath}
 % \usepackage{dcolumn}
 % \usepackage{endfloat}
 
@@ -252,26 +252,119 @@ What about the effect of specialist subreddits on generalist ones?  It seems har
 
 \textbf{H2} predicts how a specialist depends on a generalist, but says nothing about how the generalist's course is shaped by the specialist.    \textbf{H3} says that the effect of specialists on generalists is weak relative to the effect of generalists on specialists.  This is based on the intuition that while generalists' niches generally cover specialists' niches specialists' niches cover only a small part of generalists' niches.  \textbf{H3} is agnostic as to the sign of the relationship, but taken with \textbf{H2} it's clear that we hypothesize mutualistic commensalism between generalists and specialists.
 
+\section{Data \& measures}
+
+\subsubsection{Data: Seattle area subreddits}
+
+I will analyze the ecological community of subreddits related to the Seattle area.  There are 3 generalist subreddits: /r/seattle, /r/seattlewa and /r/seawa. /r/seawa is not super active.  There are also several dozen specialist subreddits.
+
+ \subsubsection{Measures}
+ The only measure in this study is the \emph{number of contributors} to a community where a contributor is defined as a user account that makes at least one post in a given week. Number of contributors is a more precise measure of the size of a community and avoids noise from popular threads that attract a large number of comments. 
+
+ \subsubsection{Unit of analysis}
+ 
+The unit of analysis is the \emph{community state} defined as a vector of contributor counts in a given unit of time. 
+
+\subsubsection{Inclusion criteria}
+The choice of subreddits to include in the analysis is coupled with our use of VAR models.  VAR models will be well-behaved when the system is stationary.  A system is stationary if it is approximately at equilibrium (though the model can account for random exogenous shocks as long as they don't change the equilibrium), which implies that the system is stable.  The model can be extended to include events that change the equilibrium or that lead to the creation or destruction of communities, but these extensions are out of scope of the current project.  If there's a secular trend in the entire system (i.e. overall growth or decline) that is not hard to add to the model and can be in scope if it strengthens the analysis considerable. 
+
+Therefore we'll select data that fit the assumptions of the model well.  This isn't the ideal way to do science, this project emphasizes concept explication not generality.  Right now we're still in a stage of theoretical and methodological development where we're just trying to show that these concepts can be useful in some cases. Later we'll try to go beyond to find boundary conditions or do more large-scale analysis. 
+
+This means we'll cherry pick a set of communities to find a dataset including:
+
+\begin{itemize}
+\item At least 2 generalists and at least 2 specialists
+\item There exists a period of time of at least 3 years where all communities are active
+\item All time-series appear stationary on a log-scale upon visual inspection (i.e. no apparent discontinuities ordifficult-to-model trends).
+\end{itemize}
 
 
-% \begin{table}[t]
-% \small
-%   \begin{tabular}{*{4}{|m{0.25\textwidth}}|}
-%     \hline
-%     & generalist hurts \newline specialist & generalist helps \newline specialist & generalist has no \newline effect on specialist \\ \hline
-%     specialist hurts \newline generalist & \cellcolor{nullhypothesizedcell} competition \newline increased chance of inactive specialist & \cellcolor{hypothesizedcell} Specialist ``preys'' on generalist, siphoning off participants & \cellcolor{agnosticcell} Competitive \newline commensalism, \newline surprise!  \\
-%     specialist helps \newline  generalist & \cellcolor{nullhypothesizedcell} Generalist ``preys'' on specialist, \newline siphoning off participants  & \cellcolor{hypothesizedcell} Mutualism & \cellcolor{agnosticcell} Mutualistic \newline commensalism \\
-%     specialist has no \newline effect on generalist & \cellcolor{nullhypothesizedcell} Competitive \newline commensalism &  \cellcolor{hypothesizedcell} Mutualistic \newline commensalism & \cellcolor{agnosticcell} No relationship \\ \hline
-% \end{tabular}
-% \end{table}
+\section{Analytical approach and methods}
+
+The analytical approach is based on vector aggression models.  See \href{https://teblunthuis.cc/outgoing/private/notebook_share/notebook-exported.html}{this notebook} for an extended discussion and demonstrating of VAR modeling for online community ecology.
+
+A $VAR(1)$ model predicts an outcome vector time-series $y_t$ as a stochastic linear function of the previous state, $y_{t-1}$:
+
+$$ y_{i,t} = B_i \cdot y_{i,t-1} + \epsilon_{i,i} $$
+
+Where $\epsilon$ is the error term and $B_i$ is the row of the community matrix $B$ for online group $i$.
+
+Since some of the communities we'll study will have small numbers of contributors, a normal distribution will not be a good approximation.  Available VAR modeling packages generally only provide OLS-based approaches. But I implemented count models in Stan that work by modeling the system in a latent Gaussian space and then use a negative binomial or Poisson link function. A second reason to use Stan is that the asymptotic for matrix-parameterized models such as VAR are not as good as you'd expect from the central limit theorem in the univariate case.  Fitting models using MCMC solves that problem and Stan can fit the models in a reasonable amount of time.  Furthermore, a probablistic programming language like Stan makes it easier to extend models to include exogenous shocks, impose sparsity assumptions or other things we might like to do in future work. Finally, and most importantly, being Bayesian provides an easy solution to testing hypotheses that average across many ecological relationships as discussed below.
+
+We'll choose whether to use a Poisson or a negative binomial model depending on whether our counts are over-dispersed.  Say we use a negative binomial model then:
+
+\begin{align*}
+  y^*_{i,t} = & B_i \cdot y^*_{i,t-1} \\
+  y_{i,t} \sim & \mathrm{negbin}(y^*_{i,t-1}, \theta_{i}) \\
+\end{align*}
+
+Where $\theta$ is the over-dispersion parameter in the negative binomial distribution.  The error terms are implied in the $\sim$ notation for sampling. I used scalar notation in this section more accessible.  I also left out priors on the parameters.
+
+A first pass analysis stops here, but the model can be easily improved if it turns out that the error terms are serially correlated.  The first way to deal with serial correlation is simply to use longer, more coarse-grained time windows. But it might be that the dynamics we care about only play out on shorter time scales or that we don't have enough data to power inference on more coarse-grained time series.
+
+\begin{figure}[t]
+  \input{resources/analytic_plan.tex}
+  \caption{Flow chart showing planned decision tree for iterating on selecting a time window. \label{fig:analytic_plan}}
+\end{figure}
+
+If we can't find a length of window without serial correlation then we can continue by extending our models using $VAR(p)$ models that have multiple time lags. The disadvantages of this are that we now have to infer many more parameters, we have to choose $p$ (this isn't so bad using information-theoretic model selection), and hypothesis tests become more complicated because we can model more complex relationships that are different on different time scales. While ecological relationships can be interpreted directly from the coefficient matrix $B$ of a $VAR(1)$ model, for a $VAR(p)$ model we'll have to inspect impulse response functions and decide how we'll draw conclusions about our hypotheses if we find relationships like short-run competition but long-run mutualism.  Figure \ref{fig:analytic_plan} summarizes this decision process.
+
+\subsection{Hypothesis tests}
+\label{sec:hypothesis_tests}
+
+One complication in our analytic plan is that we test hypotheses about the relationship between generalists and specialists and our data only includes a handful of each.  Limited sample size means we can't infer the general relationship between types of groups and coefficients in the community matrix.  But we still have to average across all the dyads to test our hypotheses. Since we are Bayesians we can sum over posterior draws for each of the parameters in the community matrix that are relevant for a hypothesis test to generate a posterior distribution of the average.  
+
+\subsubsection{\textbf{H1:} Competition between generalists}
+
+We test \textbf{H1} by averaging over the marginal posteriors of elements $b_{i,j}$ of $B$ such that subreddits $i$ and $j$ are both generalists to calculate $\overline{b_{gen,gen}}$, the average relationship between generalists. 
+We say that our analysis supports \textbf{H1} if the 95\% credible interval of $\overline{b_{gen,gen}}$ is strictly negative.
 
 
+\subsubsection{\textbf{H2:} Generalists benefit specialists}
+
+We test \textbf{H2} by averaging over the marginal posteriors of elements $b_{i,j}$ of $B$ such that subreddit $i$ is a generalist and subreddit $j$  is a specialist, to calculate $\overline{b_{gen,spec}}$, the average influence of a generalist on a specialist. We say that our analysis supports \textbf{H2} if the 95\% credible interval of $\overline{b_{gen,spec}}$ is strictly positive.
+
+
+\subsubsection{\textbf{H3:} Commensalism between generalists and specialists}
+
+We test \textbf{H2} by averaging over the marginal posteriors of elements $b_{i,j}$ of $B$ such that subreddit $i$ is a specialist and subreddit $j$  is a generalist, to calculate $\overline{b_{spec,gen}}$, the average influence of a specialist on a generalist. We say that our analysis supports \textbf{H2} if the 95\% credible interval of $\overline{b_{gen,spec}}$ contains 0 and is less than the absolute value of  $\overline{b_{gen,spec}}$.  This means that a strictly commensal relationship is plausible and that the average influence of specialists on generalists is very likely weaker than that of generalists on specialists.
+
+\section{Ethical Concerns}
+
+This study bears the usual ethical concerns of observational research in public online spaces.  Participants in Reddit communities are unlikely to expect that traces of their behavior will be analyzed in studies like this one.  
+
+The data we're using is very minimal as it only includes aggregate counts of activities.  Those individuals who are most active in the smaller communities we study might feel exposed to scrutiny as they may identify with those communities.  Participants in these communities might be sensitive to connotations that their communities compete with or benefit from latent ecological relationships to other communities.  
 
 %Organizational ecologists \citet{hannan_logics_2007} argue that ecological dynamics between organizations depend on the ``audiences'' of organizations by which they mean groups like investors, employees, and consumers.  In applying this thinking to generalization and specialization of online communities, we proposes that for a specialist community to survive it must have an audience of participants who prefer to participate in the specialist community over the other.  
 
+\section{Dummy findings, tables, visualizations}
+
+\begin{table}[h]
+\begin{tabular}{l|c c c}
+  subreddit & mean & sd & boxplot \\ \hline
+
+  /r/Seattle & 40 & 20 & \raisebox{-0.5\totalheight}{\includegraphics[width=4cm, height=2cm]{resources/random_dist.png}}
+\end{tabular}
+\caption{Table of time-averaged summary statistics and distributions for each community.}
+\end{table}
+
+\begin{figure}[h]
+  \includegraphics[width=\textwidth]{resources/example_forecast.png}
+  \caption{One or more plots presenting raw time series data with our model fit and forecast}
+\end{figure}
 \clearpage
 
-
+\begin{table}[h]
+\footnotesize
+\begin{tabular}{l | c c c c}
+  & seattle & seattlewa & seattlebike & seattleents \\ \hline
+  seattle & 0.50 (0.45, 0.55) & -0.30 (-0.35, -0.23) & 0.20 (0.1, 0.3) & 0.30 (0.04, 0.4) \\
+  seattlewa & -0.50 (-0.8,-0.1) & 0.50 (0.43, 0.58) & 0.10 (0.02, 0.20) & 0.20 (0.10, 0.30) \\
+  seattlebike & 0.010 (-0.2, 0.2) & -0.040 (-0.10, 0.20) & -0.01 (-0.70, 0.80) & 0.10 (0.05, 0.15) \\
+  seattleents & 0.020 (-0.23, 0.4) & 0.040 (0.01, 0.23) & -0.01 (-0.30, 0.20) & 0.20 (0.08, 0.25) \\ \hline
+\end{tabular}
+\caption{Table showing estimated community matrix with 95\% credible intervals}
+\end{table}
 
 % bibliography here
 \setcounter{biburlnumpenalty}{9001}
