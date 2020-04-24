@@ -120,7 +120,7 @@ There isn't a practitioner or outreach component specific to this paper.
 
 \item Ecology provides general tools for conceptualizing and modeling these relationships.  Organizational social scientists have long worked on extensions from biological ecology and influenced prior research in HCI.  We continue building ecological theorizing in the context of HCI by introducing concepts and models from community ecology.  Community ecology aims to characterize the network of relations that shift or stabilize an ecosystem and thereby gain insights into the nature of the system and how it can be regulated.  
 
-\item Prior work in HCI tests theories of density dependence from population ecology based on overlapping users and content \citep{zhu_impact_2014,zhu_selecting_2014,wang_impact_2013}.  Population ecology places online groups in the position of the biological organism and the set of groups on an online platform occupy the position of a population of species.  This highlights the similarity of groups as members of the same populations while minimizing the diverse roles that groups can play in the online ecosystem.   Community ecology by contrast is a more holistic ecological approach that analyzes diverse populations as interdependent constituents of an ``ecological community'' \citep{astley_two_1985-1}.  Community ecology places each community in the conceptual position of a distinct biological population and seeks to understand how communities relate to one another.  
+\item Prior work in HCI tests theories of density dependence from population ecology based on overlapping users and content \citep{zhu_impact_2014,zhu_selecting_2014,wang_impact_2013}.  Population ecology places online groups in the position of the biological organism and the set of groups on an online platform occupy the position of a population of species.  This highlights the similarity of groups as members of the same populations while minimizing the diverse roles that groups can play in the online ecosystem.   Community ecology by contrast analyzes populations as distinct interdependent constituents of an ``ecological community'' \citep{astley_two_1985-1}.  Community ecology places each community in the conceptual position of a distinct biological population and seeks to understand how communities relate to one another.  
 
 In their empirical analyses, the above studies already take steps toward a community ecology approach by modeling density dependence as structured by overlapping memberships and topics between online groups.  Rather than assuming all communities face the same environment in strict population ecology approach, each group in their analysis faces a distinct environment of overlapping groups. They use the ``niche'' concept to refer to fit between a group and it's participants and content. Yet they stop short of explicating community ecology concepts or estimating the ``community matrix'' which quantifies relations of interdependence between online communities. 
 
@@ -129,11 +129,11 @@ In their empirical analyses, the above studies already take steps toward a commu
 
 % Why do we care about estimating the community matrix?
 % Why is estimating the CM a goal of community ecology?
-\item Community ecology provides statistical models tools for understanding sociotechnical ecosystems.  In particular, Vector autoregression (VAR) models can infer ecological networks of complementary, competitive, predatory, and communal relationships.  VAR analysis can quantify the stability of the system and affords exploration of counterfactual forecasts to simulate hypothetical interventions. 
+\item Community ecology provides statistical models tools for understanding sociotechnical ecosystems.  In particular, vector autoregression (VAR) models can infer ecological networks of complementary, competitive, predatory, and communal relationships.  VAR analysis can quantify the stability of the system and affords exploration of counterfactual forecasts to simulate hypothetical interventions. 
 
-\item Geographically local online communities are important sites in the networked public sphere where people go to make sense of current events and local concerns.  They also generate data that is relatively easy to cast into a community ecology model.  This study contributes to understanding these communities through the lens of community ecology. 
+\item Geographically local online communities are important sites in the networked public sphere where people go to make sense of current events and local concerns.  They also generate data that is relatively easy to cast into a community ecology model.  This study contributes to understanding these communities through the lens of community ecology.
 
-\item Community ecology promises a vast depth of analysis at levels of granularity ranging from narrow groups of a handful of communities to estimating ecological networks for entire large platforms like Reddit.  Therefore this project will be a first step focused on translating community ecology for HCI and a demonstrative analysis.  
+\item Community ecology promises a vast depth of analysis at levels of granularity ranging from narrow ``ecological communities'' consisting of a handful of tightly related groups to estimating ecological networks for entire large platforms like Reddit.  Therefore this project will be a first step focused on translating community ecology for HCI and a demonstrative analysis.
 
 \end{itemize}
 
@@ -153,7 +153,7 @@ In their empirical analyses, the above studies already take steps toward a commu
 
 \item Build on prior use of the concept of \emph{niches} in HCI to emphasize that niche overlaps can be associated qualitatively different kinds of relationships.   
 
-\item Define and motivate concepts of \emph{competition}, \emph{complementary} and \emph{comensalism} and \emph{specialization} for online communities.
+\item Define and motivate concepts of \emph{ecological community}, \emph{competition}, \emph{complementary} and \emph{commensalism} and \emph{specialization} for online communities.
 
 \item Explicate the above concepts through testing hypotheses about when communities will compete or be complementary using \emph{resource partitioning theory} and \emph{the principle of competitive exclusion} using one or more case studies from Reddit.
 
@@ -162,12 +162,11 @@ In their empirical analyses, the above studies already take steps toward a commu
 \section{Propositions}
 
 \begin{itemize}
-\item \textbf{P1:} For geographic subreddits, ecological relationships between generalists will probably be competitive. That is, generalist $\rightarrow$ generalist dyads will have positive coefficients in estimated community matrices. 
+\item \textbf{P1:} For geographic subreddits, ecological relationships between generalists will probably be competitive. That is, generalist $\rightarrow$ generalist edges will have positive coefficients in estimated community matrices. 
 
-\item \textbf{P2:} For geographic subreddits, ecological relationships from generalist to specialists will probably be beneficial to specialists. That is, generalist $\rightarrow$ specialist dyads will have positive coefficients in estimated community matrices.
+\item \textbf{P2:} For geographic subreddits, ecological relationships from generalist to specialists will probably be beneficial to specialists. That is, generalist $\rightarrow$ specialist edges will have positive coefficients in estimated community matrices.
 
-
-\item \textbf{P3:} For geographic subreddits, ecological relationships between generalists and specialists are likely to be commensal. Sepcifically, generalist $\rightarrow$ specialist dyads will have greater coefficients in estimated community matrices compared to specialist $\rightarrow$ generalist dyads. 
+\item \textbf{P3:} For geographic subreddits, ecological relationships between generalists and specialists are likely to be commensal. Sepcifically, generalist $\rightarrow$ specialist edges will have greater coefficients in estimated community matrices compared to specialist $\rightarrow$ generalist edges. 
 
 \end{itemize}
 
@@ -175,11 +174,11 @@ In their empirical analyses, the above studies already take steps toward a commu
 \begin{itemize}
 
 % Competitive exclusion / specialization means that online  
-\item \textbf{H1:} Changes in the number of user accounts posting in a generalist group will be negatively associated related with changes in the number of user accounts posting in a generalist group  \footnote{``Association'' in these hypotheses refers to marginal correlation, i.e. signs in the community matrix}.
+\item \textbf{H1:} Within an ecological community, changes in the number of user accounts posting in a generalist group will be negatively associated with changes in the number of user accounts posting in a generalist group.  \footnote{``Association'' in these hypotheses refers to marginal correlation, i.e. signs in the community matrix}
 
-\item \textbf{H2:} Changes in the number of user accounts posting in a generalist group will be more positively associated with changes in the number of user accounts posting in a specialist group than visa-versa.
+\item \textbf{H2:} Within in an ecological community, changes in the number of user accounts posting in a generalist group will be positively associated with changes in the number of user accounts posting in a specialist group.
 
-\item \textbf{H3:} Changes in the number of user accounts posting in a generalist group will be more strongly associated with changes in the number of user accounts posting in a specialist group than visa-versa.
+\item \textbf{H3:} Changes in the number of user accounts posting in a generalist group will be much more strongly associated with changes in the number of user accounts posting in a specialist group than visa-versa.
 
 \end{itemize}
 
@@ -187,44 +186,73 @@ In their empirical analyses, the above studies already take steps toward a commu
 
 \label{sec:conc-modeld}
 
-The argument for \textbf{P1} and \textbf{H1} introduces competitive dynamics.  Two different generalist subreddits can exist about the same topical area, but they are likely to compete with one another.  By the principle of competitive exclusion the competition must be weak enough that one group doesn't collapse and therefore we should expect for some elements of differentiation.
+\subsection{\textbf{H1:} Competition between generalists}
 
+\begin{figure}[b]
+\centering
+\input{resources/H1_tikz.tex}
+\caption{Conceptual model illustrating high symmetrical niche overlap between generalists leading to competition as proposed by \textbf{H1}. \label{fig:H1_chart}}
+\end{figure}
 
-\begin{table}[h]
-\input{resources/H1_table.tex}
-\end{table}
+The argument for \textbf{P1} and \textbf{H1} introduces competitive dynamics.  Two different generalist subreddits can exist about the same topical area, but they are likely to compete with one another.  By the principle of competitive exclusion the competition must be weak enough that one group doesn't collapse and therefore we should expect for some elements of differentiation.  Within an ecological community, generalists' niches are likely to overlap to a high degree.  As illustrated in figure \ref{fig:H1_chart}, such symmetrically overlapping niches are likely to lead to competition between generalist groups.
 
 In the case of /r/seattle and /r/seattlewa evidence of differentiation includes the custom look-and-feel, and different and statistically significant differences in the distribution of votes and comments across posts. /r/seattle has more votes and less comments per post compared to /r/seattlewa suggesting that it is more focused on social content ranking and less on discussion. Yet topically the two groups are both broadly scoped generalists and therefore we anticipate that a bi-directional competitive relationship is most likely.  We also expect competition between these two groups based on the historical origin of /r/seattlewa, for it was created immediately in response to conflict between the moderator of /r/seattle and community members.
 
-\input{resources/H1_tikz.tex}
+\begin{table}[t]
+\input{resources/H1_table.tex}
+\caption{Table of possible relationships between generalists for hypothesis 1. \myhl{nullhypothesizedcell}{Improbable as overlapping generalists should be competitors.}  \myhl{agnosticcell}{Plausible, but hard to rationalize in the case of /r/seattle and /r/seattelwa.} \myhl{hypothesizedcell}{Relationships consistent with \textbf{H1}}. \label{tab:H1}}
+\end{table}
 
-A mutualistic relationship between the two subreddits is counter-intuitive because participants in both communities must split their efforts and attention across both. Mutualism might be possible because the communities also share content, but \textbf{H1} proposes that competition over attention is more relevant. 
+Table \ref{tab:H1} shows the logically possible qualitative relationships between generalist groups in a subreddit community ecology.  Ecological theory proposes that not relationships are equally likely and table \ref{tab:H1} colors cells according to whether they are predicted by general theory or by our specific hypothesis. 
+A mutualistic relationship between the two subreddits is counter-intuitive because participants in both communities must split their efforts and attention across both. Mutualism might be possible because the communities also share content, but \textbf{H1} proposes that competition over attention is more relevant.  
 
 Relationships analogous to predation are also plausible. This might happen if participants often move between communities through a pipeline such that they commonly discover /r/seattle when they first go looking for a Seattle-based online group, but soon learn that /r/seattlewa is really the more active discussion group.   Then increases in participation in /r/seattle will be associated with subsequent increases in participation in /r/seattlewa and increased participation in /r/seattlewa  is associated with decreases in participation in /r/seattle.
 
 A competitive commensalist relationship is also plausible if increases in one community are associated with decreases in the other, but increases in the second community have no association with changes in the first.  This might happen  /r/seattlewa attracts participants who would have participated in /r/seattle if not for /r/seattlewa, but the converse isn't true and participants in /r/seattlewa will only contribute to /r/seattlewa whether /r/seattle exists or not.  In this scenario an increase in /r/seattlewa will be associated with a future decrease in /r/seattle, but an increase in /r/seattle will be statistically independent of future changes in /r/seattlewa.
 
-A second way that a commensal competitive relationship can happen is if bidirectional competition is mixed with commensal mutualism. This could happen if /r/seattle and /r/seattlewa compete over participants, but activity in /r/seattle somehow generates activity in /r/seattlewa. It's hard to see how this might happen in this particular example, but Reddit's so big it probably happens somewhere. 
+A second way that a commensal competitive relationship can happen is if bidirectional competition is mixed with commensal mutualism. This could happen if /r/seattle and /r/seattlewa compete over participants, but activity in /r/seattle somehow generates activity in /r/seattlewa. It's hard to see how either mechanism for commensalism can happen in this particular example, but Reddit is so big it probably happens somewhere with a higher degree of resource partitioning between generalists.  In the case of Seattle area communities we find two similarly broad generalists in /r/seattle and /r/seattlewa.
 
-\input{resources/H2_table.tex}
+\begin{figure}[t]
+\input{resources/H2_tikz.tex}
+\caption{Conceptual model showing why we expect to find positive associations between participation in a generalist and subsequent participation in related specialists.  The first box states that strong competition decreases the survival chances of specialists. The second shows that narrow specialists may struggle to maintain critical mass on their own. But if a generalist can help participants discover the specialist, more specialists will survive. \label{fig:H2}}
+\end{figure}
+
+\subsection{\textbf{H2:} Generalists benefit specialists}
 
 % Diagram for \textbf{H1} goes here
-The argument for \textbf{P2} and \textbf{H2} is based on the theories of resource partitioning and the principle of competitive exclusion.  Specialization is a good strategy because specialists can avoid competition with generalists.  In the specific case of local geographic subreddits, we expect that generalist groups (e.g. /r/seattle) will attract and sustain participants who are also cyclists.  If the cyclists form their own specialized group (e.g. /r/seattlebikes), will this community compete with the generalist community?  According to resource partitioning theory which posits that specialists will survive when they have competitive advantages over generalists.  This leads to \emph{resource partitioning} as content or discussion of /r/seattlebikes should have less overlap with that of /r/seattle.  
-
-%If this competition is strong that will not be a good sign for the survival of /r/seattlebikes   For example, we expect that if /r/seattlebikes can sustain an active community that means that /r/seattlebikes participants are able to have interactions, have conversations, or find content related to their interests in ways they prefer to /r/seattle.  So while it is possible for a specialist to compete with a generalist it is unlikely that this competition hurts the specialist very much.
-
-\input{resources/H2_tikz.tex}
-Specialists are unlikely to survive for a second reason. If a specialist occupies a niche so narrow that it is difficult to maintain a critical mass of participants then it will fail to sustain activity.  Helpful generalists can create a hospitable environment for specialists by routing them participants.  This can be seen in practice by cross linking. On the other hand it seems more likely that increases in activity in the generalist will help the specialist.  Increasing activity in /r/seattle might be associated with growing participation on Reddit in the Seattle area in general.  Users of both communities might link to /r/seattlebikes in bike-related threads in /r/seattle and growth in /r/seattle increases the size of the audience that would be exposed to these messages.
+The argument for \textbf{P2} and \textbf{H2} is based on the theories of resource partitioning and the principle of competitive exclusion.  As figure \ref{fig:H2} illustrates, resource partitioning theory makes a selection argument that specialists are much more likely to survive when they can avoid competition with generalists (by the principle of competitive exclusion).  In addition, narrow specialists may struggle to maintain a critical mass of contributions, and so specialists will be much more likely to survive if they are supported by beneficial relationships in their ecological community. 
 
 
-% Diagram for \textbf{H2} goes here
+\begin{table}[t]
+\input{resources/H2_table.tex}
+\caption{Table of possible relationships between a generalist and a specialist for hypothesis 2. \myhl{nullhypothesizedcell}{Improbable by competitive exclusion and resource partitioning.}  \myhl{agnosticcell}{Plausible, but specialists as independent of generalists runs against ecological intuition.} \myhl{hypothesizedcell}{Relationships consistent with \textbf{H2}}. \label{tab:H2}}
+\end{table}
 
-What about the effect of specialist subreddits on generalist ones?  It seems hard to imagine that an increase in activity on /r/seattlebikes will cause a large decrease in participation in /r/seattle because discussions about bikes in /r/seattle constitute a relatively small proportion of activity.  Commensal relations are common in biology and we expect them to be common in the realm of online groups as well.
 
+In the specific case of local geographic subreddits, we expect that generalist groups (e.g. /r/seattle) will attract and sustain participants who are also cyclists.  If the cyclists form their own specialized group (e.g. /r/seattlebike), will this community compete with the generalist community?  Competition with the large generalist that has more visibility and isn't at risk of losing critical mass is not a good sign for the survival of /r/seattlebike. A specialist will be more likely to remain active under conditions of \emph{resource partitioning} where more bike focused discussion occurs in /r/seattlebike rather than in generalist groups. 
+
+%If /r/seattlebike can sustain an active community that means that /r/seattlebike participants are able to have interactions, have conversations, or find content related to their interests in ways they prefer to /r/seattle.  So while it is possible for a specialist to compete with a generalist it is unlikely that this competition hurts the specialist very much.
+
+Specialists are unlikely to survive for a second reason. If a specialist occupies a niche so narrow that it is difficult to maintain a critical mass of participants then it will fail to sustain activity.  Helpful generalists can create a hospitable environment for specialists by routing them participants.  This can be seen in practice by cross linking. On the other hand it seems more likely that increases in activity in the generalist will help the specialist.  Increasing activity in /r/seattle might be associated with growing participation on Reddit in the Seattle area in general.  Participants in generalists groups will link to /r/seattlebike in their side bars, wikis, and in bike-related threads. Growth in the generalist communities will increase the size of the audience that would be exposed to these messages.  Such linking from generalist to specialist groups is one of the strongest clues supporting relationships where generalists benefit specialists in ecological communities on Reddit.
+
+\subsection{\textbf{H3:} Commensalism between specialists and generalists}
+
+\begin{figure}[t]
+\input{resources/H3_tikz.tex}
+\caption{Conceptual model roughly illustrating high asymmetrical niche overlap leading to commensalism as proposed by \textbf{H3}. \label{fig:H3}}
+\end{figure}
+
+\begin{table}[b]
+  \input{resources/H3_table.tex}
+\caption{Table of possible relationships between a generalist and a specialist for hypothesis 3. \myhl{nullhypothesizedcell}{Improbable because it is unlikely that generalists are more sensitive to specialists than visa-versa or that specialists are not influenced by generalists.}  \myhl{hypothesizedcell}{Relationships consistent with \textbf{H3}}. \label{tab:H3}}
+\end{table}
+
+
+What about the effect of specialist subreddits on generalist ones?  It seems hard to imagine that an increase in activity on /r/seattlebike will cause a large decrease in participation in /r/seattle because discussions about bike in /r/seattle constitute a relatively small proportion of activity.  Commensal relations are common in biology and we expect them to be common in the realm of online groups as well.
 
 \textbf{H2} predicts how a specialist depends on a generalist, but says nothing about how the generalist's course is shaped by the specialist.    \textbf{H3} says that the effect of specialists on generalists is weak relative to the effect of generalists on specialists.  This is based on the intuition that while generalists' niches generally cover specialists' niches specialists' niches cover only a small part of generalists' niches.  \textbf{H3} is agnostic as to the sign of the relationship, but taken with \textbf{H2} it's clear that we hypothesize mutualistic commensalism between generalists and specialists.
 
-\input{resources/H3_table.tex}
+
 
 % \begin{table}[t]
 % \small
@@ -241,11 +269,6 @@ What about the effect of specialist subreddits on generalist ones?  It seems har
 
 %Organizational ecologists \citet{hannan_logics_2007} argue that ecological dynamics between organizations depend on the ``audiences'' of organizations by which they mean groups like investors, employees, and consumers.  In applying this thinking to generalization and specialization of online communities, we proposes that for a specialist community to survive it must have an audience of participants who prefer to participate in the specialist community over the other.  
 
-
-
-For \textbf{}
-
-
 \clearpage
 
 
@@ -257,4 +280,4 @@ For \textbf{}
 
 \end{document}
 
-%  LocalWords:  
+%  LocalWords: commensalism commensal mutualism predation subreddit Reddit subreddits

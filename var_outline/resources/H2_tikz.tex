@@ -1,4 +1,4 @@
-\begin{figure}[h]
+\small
 \centering
 \tikzstyle{frame_black} = [line width=1pt, draw=black,inner sep=0.8em,minimum width=\textwidth,minimum height=3cm]
 \begin{tikzpicture}  [->,>=stealth',shorten >=1pt,auto,
@@ -24,7 +24,7 @@
 
 %      \node[obs] (generalist2) [below of=generalist1, shaft=-4cm] {Generalist};
 
-      \node[obs] (specialist2) [below of=generalist1, yshift=-4cm] {Isolated specialist};
+      \node[obs] (specialist2) [below of=generalist1, yshift=-3.4cm] {Isolated specialist};
 
 %      \node[latent] (no_association2) [right of=generalist2, xshift=2cm]{};
 
@@ -38,9 +38,9 @@
 
       \node[frame_black, fit=(specialist2)(cause2)(inactive2)(lab2)]{};
 
-      \node[obs] (generalist3) [below of=specialist2, yshift=-2.7cm] {Generalist};
+      \node[obs] (generalist3) [below of=specialist2, yshift=-2.0cm] {Generalist};
 
-      \node[obs] (specialist3) [below of=inactive2, yshift=-2.7cm] {Specialists};
+      \node[obs] (specialist3) [below of=inactive2, yshift=-2.0cm] {Specialists};
 
       \node[latent] (interaction3) [right of=generalist3, xshift=3cm]{Complements};
 
@@ -71,8 +71,6 @@
       ;
 
 \end{tikzpicture}
-\caption{Conceptual model showing why we expect to find positive associations between participation in a generalist and subsequent participation in related specialists.  The first box states that strong competition decreases the survival chances of specialists. The second shows that narrow specialists may struggle to maintain critical mass on their own. But if a generalist can help participants discover the specialist, more specialists will survive.}
-\end{figure}
 
 %%% Local Variables:
 %%% mode: latex
