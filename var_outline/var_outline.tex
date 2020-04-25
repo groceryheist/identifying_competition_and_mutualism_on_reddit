@@ -67,8 +67,8 @@
 % LATEX NOTE: these lines will import vc stuff after running `make vc` which
 % will add version control information to the bottom of each page. This can be
 % useful for keeping track of which version of a document somebody has:
-% \input{vc}
-% \pagestyle{cdsc-page-git}
+%\input{vc}
+%\pagestyle{cdsc-page-git}
 
 % LATEX NOTE: this alternative line will just input a timestamp at the
 % build process, useful for Overleaf
@@ -102,34 +102,34 @@
 \maketitle
 
 \begin{abstract}
-Internet researchers are increasingly aware of important interdependence between online groups.  HCI researchers have drawn density dependence theory from population ecology to theorize competitive and complementary dynamics between communities with overlapping content and participants and predict growth and survival of online groups.   Density dependence theory highlights similarities between online groups as exchangeable members of a homogeneous population while minimizing the role of diversity and the importance of specialization.   Community ecology, a complementary approach proposes that each group plays a distinctive role in the broader sociotechnical ecosystem.   Vector autoregression (VAR) models are a method from community ecology  for estimating a network of competitive, complementary, and asymmetrical commensalist relations.  We introduce community ecology to HCI research by comparing population and community ecologies, explicating applicable concepts from community ecology, and testing hypothesis using a vector autoregression model fit to time-series data from Reddit.
+  HCI researchers are increasingly aware of important interdependence between online groups. A promising approach for theories and empirical analysis draws from ecological approaches in biology and organization science. Prior work draws the theory of density dependence from population ecology to study competitive and complementary dynamics between communities.  Yet population ecology theories treat online groups as exchangeable members of a homogeneous population and thereby minimize the distinctive roles that each online group plays in the digital ecosystem.  Community ecology instead introduces an intermediate level of analysis between a group and a platform ecosystem to and aims to understand how specific online groups depend on one another to constitute an ecological community.   Vector autoregression (VAR) models provide a methodological tool well-suited to a community ecology analysis of online groups. VAR models infer networks of competitive, complementary, and asymmetrical commensal relations to characterize an ecological community.  We introduce community ecology to HCI research by comparing population and community ecologies, explicating applicable concepts from community ecology, and testing hypothesis using a vector autoregression model fit to time-series data from Reddit.
 \end{abstract}
 
 \section{Dissemination Objectives}
 
-This is a dissertation chapter and a CHI 2021 paper. The CHI 2020 deadline is Sep. 10 2020 for abstracts and metadata and Sep. 17th for the submission. I aim to submit or have a solid draft before then. Let's say July 1. 
+This is a dissertation chapter and a CHI 2021 paper. The CHI 2020 deadline is Sep. 10 2020 for abstracts and metadata and Sep. 17th for the submission. I aim to submit or have a solid draft by July 1.
 
 I'll release code and datasets.
 
-There isn't a practitioner or outreach component specific to this paper. 
+There isn't a practitioner or outreach component specific to this paper.
 
 \section{Rationale}
 
 \begin{itemize}
-\item Accumulating empirical results demonstrate how interdependence between online groups shapes participation, growth, and survival (we use the term ``online group'' to avoid confusion with ecological communities).  Yet relatively few studies provide general methodological tools and even fewer provide general theoretical concepts for systematically studying interdependence between online groups. 
+\item Accumulating empirical results demonstrate how interdependence between online groups shapes participation, growth, and survival (we use the term ``online group'' to avoid confusion with ecological communities) \citep[e.g.][]{vincent_examining_2018,chandrasekharan_you_2017,tan_all_2015,tan_tracing_2018}.   Yet relatively few studies provide general methodological tools and even fewer provide general theoretical concepts for systematically studying interdependence between online groups.
 
 \item Ecology provides general tools for conceptualizing and modeling these relationships.  Organizational social scientists have long worked on extensions from biological ecology and influenced prior research in HCI.  We continue building ecological theorizing in the context of HCI by introducing concepts and models from community ecology.  Community ecology aims to characterize the network of relations that shift or stabilize an ecosystem and thereby gain insights into the nature of the system and how it can be regulated.  
 
-\item Prior work in HCI tests theories of density dependence from population ecology based on overlapping users and content \citep{zhu_impact_2014,zhu_selecting_2014,wang_impact_2013}.  Population ecology places online groups in the position of the biological organism and the set of groups on an online platform occupy the position of a population of species.  This highlights the similarity of groups as members of the same populations while minimizing the diverse roles that groups can play in the online ecosystem.   Community ecology by contrast analyzes populations as distinct interdependent constituents of an ``ecological community'' \citep{astley_two_1985-1}.  Community ecology places each community in the conceptual position of a distinct biological population and seeks to understand how communities relate to one another.  
+\item Prior work in HCI tests theories of density dependence from population ecology based on overlapping users and content \citep{zhu_impact_2014,zhu_selecting_2014,wang_impact_2013}.  Population ecology places online groups in the position of the biological organism and the set of groups on an online platform occupy the position of a population of species.  This highlights the similarity of groups as members of the same populations while minimizing the distinct roles that groups can play in the online ecosystem.   Community ecology by contrast analyzes populations as distinct interdependent constituents of an ``ecological community'' \citep{astley_two_1985-1}.  Community ecology places each community in the conceptual position of a distinct biological population and seeks to understand how communities relate to one another.  Like population ecology, community ecology has been adopted in the social sciences, but is somewhat less developed \citep[e.g.][]{margolin_normative_2012,ruef_emergence_2000,powell_network_2005,mcpherson_testing_1996-1}. 
 
-In their empirical analyses, the above studies already take steps toward a community ecology approach by modeling density dependence as structured by overlapping memberships and topics between online groups.  Rather than assuming all communities face the same environment in strict population ecology approach, each group in their analysis faces a distinct environment of overlapping groups. They use the ``niche'' concept to refer to fit between a group and it's participants and content. Yet they stop short of explicating community ecology concepts or estimating the ``community matrix'' which quantifies relations of interdependence between online communities. 
+In their empirical analyses, the above HCI studies already take steps toward a community ecology approach by modeling density dependence as structured by overlapping memberships and topics between online groups.  Rather than assuming all communities face the same environment in strict population ecology approach, each group in their analysis faces a distinct environment of overlapping groups. They use the ``niche'' concept to refer to fit between a group and it's participants and content. Yet they stop short of explicating community ecology concepts or estimating the ``community matrix'' which quantifies relations of interdependence between online communities. 
 
 % Why are community ecology concepts useful to understanding online communities?
-\item Community ecology provides concepts for how online groups relate to one another.  These can give community managers ways to think about the role of individual communities in the broader context, to help answer questions like ``How might groups about similar topics shape activity and participation in one another?'' or ``What topics might we be able to create a new group around?'', ``When will we have more small groups or few large groups?'' Community ecology can also inform design choices like whether to allow users to create new groups and the potential effects of interventions like banning, quarantining, and norms against coordinated cross-participation.
+\item Community ecology provides concepts for how online groups relate to one another.  These can give community managers ways to think about the role of individual communities in the broader context, to help answer questions like ``How might groups about similar topics shape activity and participation in one another?'' or ``What topics might we be able to create a new group around?'', ``When will we have more small groups or few large groups?'' Community ecology can also inform design choices like whether to allow users to create new groups and the potential effects of interventions like banning, quarantining, and norms against coordinated cross-participation. Community ecology introduces a new level of analysis for designers to consider.  What new designs can help different types of users navigate or cultivate ecological communities of groups? 
 
 % Why do we care about estimating the community matrix?
 % Why is estimating the CM a goal of community ecology?
-\item Community ecology provides statistical models tools for understanding sociotechnical ecosystems.  In particular, vector autoregression (VAR) models can infer ecological networks of complementary, competitive, predatory, and communal relationships.  VAR analysis can quantify the stability of the system and affords exploration of counterfactual forecasts to simulate hypothetical interventions. 
+\item Community ecology provides statistical models tools for understanding sociotechnical ecosystems.  In particular, vector autoregression (VAR) models, an established approach in biological ecology, can infer ecological networks of complementary, competitive, predatory, and communal relationships.  VAR analysis can quantify the stability of the system and affords exploration of counterfactual forecasts to simulate hypothetical interventions \citep{ives_estimating_2003}. 
 
 \item Geographically local online communities are important sites in the networked public sphere where people go to make sense of current events and local concerns.  They also generate data that is relatively easy to cast into a community ecology model.  This study contributes to understanding these communities through the lens of community ecology.
 
@@ -143,6 +143,8 @@ In their empirical analyses, the above studies already take steps toward a commu
 \item Provide answers to ``How does the growth/success of an online group depend on the environmental context?''  and ``How can we understand interdependence between online groups?''
 
 \item Provide an overarching conceptual framework for studies of interdependence in social computing.
+
+\item Introduce ``ecological community'' as a distinctive level of analysis in the study of online groups.
 
 \end{itemize}
 
@@ -185,6 +187,15 @@ In their empirical analyses, the above studies already take steps toward a commu
 \section{Conceptual Model}
 
 \label{sec:conc-modeld}
+
+\subsection{Defining Community Ecology}
+
+\begin{figure}[t]
+\centering
+  \includegraphics[width=0.6\textwidth]{resources/ecological_community.jpg}
+  \caption{Illustration of ecological community as a meso level of analysis.\label{fig:ecocom}}
+\end{figure}
+Community ecology is the study of ecological communities, which are conceptually located at a meso level of analysis in between a population and an ecosystem as illustrated in \ref{fig:ecocom}.  An ecological community consists of populations linked by forms of interdependence that effect the growth and survival of the populations.  In our conceptual analogy betweeen social media and ecologies, we place individual participants in communities at the level of individual organisms, online groups as populations, interdependent groups as communities, and platforms as ecosystems. 
 
 \subsection{\textbf{H1:} Competition between generalists}
 
@@ -266,16 +277,16 @@ I will analyze the ecological community of subreddits related to the Seattle are
 The unit of analysis is the \emph{community state} defined as a vector of contributor counts in a given unit of time. 
 
 \subsubsection{Inclusion criteria}
-The choice of subreddits to include in the analysis is coupled with our use of VAR models.  VAR models will be well-behaved when the system is stationary.  A system is stationary if it is approximately at equilibrium (though the model can account for random exogenous shocks as long as they don't change the equilibrium), which implies that the system is stable.  The model can be extended to include events that change the equilibrium or that lead to the creation or destruction of communities, but these extensions are out of scope of the current project.  If there's a secular trend in the entire system (i.e. overall growth or decline) that is not hard to add to the model and can be in scope if it strengthens the analysis considerable. 
+The choice of subreddits to include in the analysis is coupled with our use of VAR models.  VAR models will be well-behaved when the system is stationary.  A system is stationary if it is approximately at equilibrium (though the model can account for random exogenous shocks as long as they don't change the equilibrium).  The model can be extended to include events that change the equilibrium or that lead to the creation or destruction of communities, but these extensions are out of scope of the current project.  If there's a secular trend in the entire system (i.e. overall growth or decline) that is not hard to add to the model and can be in scope if it strengthens the analysis considerably. 
 
-Therefore we'll select data that fit the assumptions of the model well.  This isn't the ideal way to do science, this project emphasizes concept explication not generality.  Right now we're still in a stage of theoretical and methodological development where we're just trying to show that these concepts can be useful in some cases. Later we'll try to go beyond to find boundary conditions or do more large-scale analysis. 
+Therefore we'll select data that fit the assumptions of the model well.  This isn't the ideal way to do science, but this project emphasizes concept explication not generality.  Right now we're still in a stage of theoretical and methodological development where we're just trying to show that these concepts can be useful in some cases. Later we'll try to go beyond to find boundary conditions or do more large-scale analysis. 
 
 This means we'll cherry pick a set of communities to find a dataset including:
 
 \begin{itemize}
 \item At least 2 generalists and at least 2 specialists
 \item There exists a period of time of at least 3 years where all communities are active
-\item All time-series appear stationary on a log-scale upon visual inspection (i.e. no apparent discontinuities ordifficult-to-model trends).
+\item All time-series appear stationary on a log-scale upon visual inspection (i.e. no apparent discontinuities or difficult-to-model trends or oscillations).
 \end{itemize}
 
 
@@ -289,7 +300,7 @@ $$ y_{i,t} = B_i \cdot y_{i,t-1} + \epsilon_{i,i} $$
 
 Where $\epsilon$ is the error term and $B_i$ is the row of the community matrix $B$ for online group $i$.
 
-Since some of the communities we'll study will have small numbers of contributors, a normal distribution will not be a good approximation.  Available VAR modeling packages generally only provide OLS-based approaches. But I implemented count models in Stan that work by modeling the system in a latent Gaussian space and then use a negative binomial or Poisson link function. A second reason to use Stan is that the asymptotic for matrix-parameterized models such as VAR are not as good as you'd expect from the central limit theorem in the univariate case.  Fitting models using MCMC solves that problem and Stan can fit the models in a reasonable amount of time.  Furthermore, a probablistic programming language like Stan makes it easier to extend models to include exogenous shocks, impose sparsity assumptions or other things we might like to do in future work. Finally, and most importantly, being Bayesian provides an easy solution to testing hypotheses that average across many ecological relationships as discussed below.
+Since some of the communities we'll study will have small numbers of contributors, a normal distribution will not be a good approximation.  Available VAR modeling packages generally only provide OLS-based approaches. But I implemented count models in Stan that work by modeling the system in a latent Gaussian space and then use a negative binomial or Poisson link function. A second reason to use Stan is that the asymptotics for matrix-parameterized models such as VAR are not as good as you'd expect from the central limit theorem in the univariate case.  Fitting models using MCMC solves that problem and Stan can fit the models in a reasonable amount of time.  Furthermore, a probablistic programming language like Stan makes it easier to extend models to include exogenous shocks, impose sparsity assumptions or other things we might like to do in future work. Finally, and most importantly, being Bayesian provides an easy solution to testing hypotheses that aggregate across many ecological relationships as discussed below.
 
 We'll choose whether to use a Poisson or a negative binomial model depending on whether our counts are over-dispersed.  Say we use a negative binomial model then:
 
@@ -307,27 +318,29 @@ A first pass analysis stops here, but the model can be easily improved if it tur
   \caption{Flow chart showing planned decision tree for iterating on selecting a time window. \label{fig:analytic_plan}}
 \end{figure}
 
-If we can't find a length of window without serial correlation then we can continue by extending our models using $VAR(p)$ models that have multiple time lags. The disadvantages of this are that we now have to infer many more parameters, we have to choose $p$ (this isn't so bad using information-theoretic model selection), and hypothesis tests become more complicated because we can model more complex relationships that are different on different time scales. While ecological relationships can be interpreted directly from the coefficient matrix $B$ of a $VAR(1)$ model, for a $VAR(p)$ model we'll have to inspect impulse response functions and decide how we'll draw conclusions about our hypotheses if we find relationships like short-run competition but long-run mutualism.  Figure \ref{fig:analytic_plan} summarizes this decision process.
+If we can't find a length of window without serial correlation then we can continue by extending our models using $VAR(p)$ models that have multiple time lags. The disadvantages of this are that we now have to infer many more parameters, we have to choose $p$ (this isn't so bad using information-theoretic model selection), and hypothesis tests become more complicated because we can model more complex relationships that are different on different time scales. While ecological relationships can be interpreted directly from the coefficient matrix $B$ of a $VAR(1)$ model, for a $VAR(p)$ model we'll have to inspect impulse response functions and decide how we'll draw conclusions about our hypotheses if we find relationships like short-run competition but long-run mutualism.  I'll leave these questions aside for now.  If necessary we can re-work this outline. Figure \ref{fig:analytic_plan} summarizes this decision process.
 
 \subsection{Hypothesis tests}
 \label{sec:hypothesis_tests}
 
-One complication in our analytic plan is that we test hypotheses about the relationship between generalists and specialists and our data only includes a handful of each.  Limited sample size means we can't infer the general relationship between types of groups and coefficients in the community matrix.  But we still have to average across all the dyads to test our hypotheses. Since we are Bayesians we can sum over posterior draws for each of the parameters in the community matrix that are relevant for a hypothesis test to generate a posterior distribution of the average.  
+One complication in our analytic plan is that we test hypotheses about the relationship between generalists and specialists and our data only includes a handful of each.  Limited sample size means we can't infer the general relationship between types of groups and coefficients in the community matrix.  But we still have to average across all the dyads to test our hypotheses. Since we are Bayesians we can sum over posterior draws for each of the parameters in the community matrix that are relevant for a hypothesis test to generate an overall posterior distribution.
 
 \subsubsection{\textbf{H1:} Competition between generalists}
 
-We test \textbf{H1} by averaging over the marginal posteriors of elements $b_{i,j}$ of $B$ such that subreddits $i$ and $j$ are both generalists to calculate $\overline{b_{gen,gen}}$, the average relationship between generalists. 
-We say that our analysis supports \textbf{H1} if the 95\% credible interval of $\overline{b_{gen,gen}}$ is strictly negative.
+We test \textbf{H1} by aggregating the marginal posteriors of elements $b_{i,j}$ of $B$ such that subreddits $i$ and $j$ are \emph{both generalists} to calculate $\sum_{i,j}{b_{i,j}}=b_{gen,gen}$, the overall influence of generalists on other generalists. We say that our analysis supports \textbf{H1} if the 95\% credible interval of $b_{gen,gen}$ is strictly negative.
 
 
 \subsubsection{\textbf{H2:} Generalists benefit specialists}
 
-We test \textbf{H2} by averaging over the marginal posteriors of elements $b_{i,j}$ of $B$ such that subreddit $i$ is a generalist and subreddit $j$  is a specialist, to calculate $\overline{b_{gen,spec}}$, the average influence of a generalist on a specialist. We say that our analysis supports \textbf{H2} if the 95\% credible interval of $\overline{b_{gen,spec}}$ is strictly positive.
+We test \textbf{H2} by aggregating the marginal posteriors of elements $b_{i,j}$ of $B$ such that \emph{subreddit $i$ is a generalist} and \emph{subreddit $j$  is a specialist}, to calculate $\sum_{i,j}{b_{i,j}} = b_{gen,spec}$, the overall influence of generalists on specialists. We say that our analysis supports \textbf{H2} if the 95\% credible interval of $b_{gen,spec}$ is strictly positive.
 
 
 \subsubsection{\textbf{H3:} Commensalism between generalists and specialists}
 
-We test \textbf{H2} by averaging over the marginal posteriors of elements $b_{i,j}$ of $B$ such that subreddit $i$ is a specialist and subreddit $j$  is a generalist, to calculate $\overline{b_{spec,gen}}$, the average influence of a specialist on a generalist. We say that our analysis supports \textbf{H2} if the 95\% credible interval of $\overline{b_{gen,spec}}$ contains 0 and is less than the absolute value of  $\overline{b_{gen,spec}}$.  This means that a strictly commensal relationship is plausible and that the average influence of specialists on generalists is very likely weaker than that of generalists on specialists.
+We test \textbf{H2} by aggregating the marginal posteriors of elements $b_{i,j}$ of $B$ such that subreddit $i$ is a specialist and subreddit $j$  is a generalist, to calculate $\sum_{i,j}{b_{spec,gen}}= b_{spec,gen}$, the overall influence of specialists on generalists.  We'll also use $b_{gen,spec} - b_{spec,gen} = \Delta_{gen,spec}$ the posterior difference between the influence of generalists on specialists and the influence of specialists on generalists. 
+
+
+We say that our analysis supports \textbf{H2} if the 95\% credible interval of $b_{spec,gen}$ contains 0 and the 95\% credible interval of $\Delta_{gen,spec}$ is greater than 0.  This means that a strictly commensal relationship is plausible and that the average influence of generalists on specialists is very likely greater than the influence of specialists on generalists.
 
 \section{Ethical Concerns}
 
@@ -360,17 +373,32 @@ The data we're using is very minimal as it only includes aggregate counts of act
   & seattle & seattlewa & seattlebike & seattleents \\ \hline
   seattle & 0.50 (0.45, 0.55) & -0.30 (-0.35, -0.23) & 0.20 (0.1, 0.3) & 0.30 (0.04, 0.4) \\
   seattlewa & -0.50 (-0.8,-0.1) & 0.50 (0.43, 0.58) & 0.10 (0.02, 0.20) & 0.20 (0.10, 0.30) \\
-  seattlebike & 0.010 (-0.2, 0.2) & -0.040 (-0.10, 0.20) & -0.01 (-0.70, 0.80) & 0.10 (0.05, 0.15) \\
+  seattlebike & 0.010 (-0.2, 0.2) & -0.040 (-0.10, 0.20) & .1 (0.05, 0.15) & 0.10 (0.05, 0.15) \\
   seattleents & 0.020 (-0.23, 0.4) & 0.040 (0.01, 0.23) & -0.01 (-0.30, 0.20) & 0.20 (0.08, 0.25) \\ \hline
 \end{tabular}
 \caption{Table showing estimated community matrix with 95\% credible intervals}
 \end{table}
 
+
+\begin{figure}[h]
+  \input{resources/dag_tikz.tex}
+  \caption{Network diagram interpreting significant connections in the community matrix.}
+\end{figure}
+
+\section{Threats to validity and limitations}
+
+This analysis is subject to limitations arising from the choice of data and methods. The goals of this analysis are primarily to explicate ecological concepts as applicable to online groups and to demonstrate VAR methodology for testing hypotheses about community ecology.
+
+First off, ecological concepts are analytical tools not material facts or emic understandings.  Participants in the groups we study probably don't  understand their experiences as related to inter-group competition or mutualism.  Our empirical analysis and hypothesis tests help validate that these concepts are analytically useful, but should not be interpreted as evidence of their reality.  Whether such concepts should be thought of as ``real'' is an epistemological, not an empirical question.
+
+Our use of VAR methodology bears the usual assumptions of observational statistical analysis, while our ecological theories make causal propositions that can be represented in our models, our model estimates may be confounded by omitted variables.  For example, exogenous events triggering activity in online groups can confound our analysis if they are correlated with the community matrix.  Furthermore, we knowingly excluded communities that can plausibly have a role in the community ecology due to our modeling requirements of sufficiently long stationary time series. We also excluded communities that could plausibly belong to this ecological community due to their importance to Reddit overall, but are not Seattle-specific. We could have adopted more complicated modeling strategies in attempts to include such communities.  This may have been appropriate if our goal was to obtain the best possible understanding of the community ecology of Seattle related subreddits, but since our goal is rather to introduce community ecology to HCI, a simpler but more limited analysis is preferable.  In sum, readers should be cautious in making causal interpretations of our analysis. We couch the interpretation of our results in terms like ``association'' in an effort discourage such interpretation.
+
+We tested hypotheses stated about the relationships between generalist and specialist online groups in general terms, but we test them in a single ecological community.  This provides quite limited evidence with respect to our hypotheses. Future work might scale out this analysis to other ecological communities on Reddit such as other geographic or topical areas.
+
+
 % bibliography here
 \setcounter{biburlnumpenalty}{9001}
 \printbibliography[title = {References}, heading=secbib]
-
-
 \end{document}
 
 %  LocalWords: commensalism commensal mutualism predation subreddit Reddit subreddits

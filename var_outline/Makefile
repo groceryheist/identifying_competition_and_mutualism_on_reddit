@@ -6,7 +6,7 @@ all: $(patsubst %.tex,%.pdf,$(wildcard *.tex))
 # %.tex: %.Rnw
 #	Rscript -e "library(knitr); knit('$<')"
 
-%.pdf: %.tex resources/*.tex
+%.pdf: %.tex resources/*.tex resources/*.png
 	latexmk -f -pdf $<
 
 clean: 
