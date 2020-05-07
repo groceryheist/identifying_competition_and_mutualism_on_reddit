@@ -11,9 +11,9 @@
 
       \node[obs] (var1) [below of=t0,yshift=-0.4cm] {$VAR(1)$ model};
 
-      \node[latent] (null1) [below right of=var1, yshift=-0.4cm, xshift=4cm] {null results?};
+%      \node[latent] (null1) [below right of=var1, yshift=-0.4cm, xshift=4cm] {null results?};
 
-      \node[latent] (serial) [below left of=null1, yshift=-0.4cm, xshift=-2cm] {serially correlated errors};
+      \node[latent] (serial) [below  of=var1, yshift=-0.4cm] {serially correlated errors};
       
       \node[obs] (increase_t) [below of=serial,yshift=-0.4cm] {window~$=2*$~window};
       
@@ -27,9 +27,9 @@
 
       \path[every node/.style={font=\sffamily}]
       (t0) edge [] node {} (var1)
-      (var1) edge [] node {} (null1)
+  %    (var1) edge [] node {} (null1)
       (var1) edge [] node {} (serial)
-      (null1) edge [] node {} (write)
+ %     (null1) edge [] node {} (write)
       (serial) edge [] node {Yes} (increase_t)
       (increase_t) edge [] node {} (var2)
       (var2) edge [] node {} (null2)
