@@ -12,6 +12,35 @@ from scipy.stats import special_ortho_group
 import pickle
 import sys
 
+
+def csv_to_stan_data(df,y_name,forecast_len=0):
+
+    # we need to create zero rows where we don't have data 
+    # we can use pivot_table to do this
+    df = df.pivot_table(index='subreddit', columns='created_week',values=y_name,fill_value=0,aggfunc='sum').unstack()
+
+    df = df.reset_index()
+    df = df.rename(columns={0:'Y'})
+
+    # let's start our analysis in October 2015
+
+    df = df.loc[df.created_week >= datetime(2015,9,1)].reset_index()
+
+    # lets try fitting a model to this data
+
+    # transform the data into a NxK matrix 
+    df_mat = df.pivot_table(index='created_week',columns='subreddit',values='Y',fill_value=0, aggfunc='sum')
+    subs = df_mat.columns
+    Y = np.array(df_mat)
+    # drop the last (incomplete) week
+    Y = Y[0:Y.shape[0]-1-forecast_len]
+    K = Y.shape[1]
+    N = Y.shape[0]
+    return (df, subs, {'Y':Y.T,
+                 'K':K,
+                 'N':N,
+                 'forecast_len':forecast_len})
+
 # a community matrix is stable if no eigenvalues are greater than 1 
 # this doesn' generate uniformly random stable matrixes, for
 # more fun it generates matrixes with biased eigenvalues. 
@@ -132,6 +161,22 @@ def convert_negbin_params(mu, theta):
     var = mu + 1 / r * mu ** 2
     p = (var - mu) / var
     return r, 1 - p
+
+def stan_negbin_var_predict(fit, N):
+    pars = fit.extract(['theta','eta_new'])
+    theta = pars['theta']
+    eta_new = pars['eta_new']
+    K = theta.shape[1]
+    forecast_len = eta_new.shape[1]
+    n_draws = eta_new.shape[0]
+
+    y_new = np.empty_like(eta_new)
+    for i in range(forecast_len):
+        n, p = convert_negbin_params(np.exp(eta_new[:,i]), theta)
+        y_new[:,i] = np.random.negative_binomial(n,p)
+
+    return(build_forecast_df(y_new, N))
+
 
 def stan_pois_var_predict(fit,N):
     lambda_new = fit.extract(pars=['lambda_new'])['lambda_new']
