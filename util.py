@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+import pandas as pd
+import plotnine  # python ggplot2 clone
+plotnine.options.figure_size = (10,7)
+from  plotnine import *
+theme_set(theme_minimal())
 import subprocess
 import logging
 from datetime import datetime
@@ -9,6 +14,11 @@ theme_set(theme_minimal())
 import pystan
 import numpy as np
 from scipy.stats import special_ortho_group
+import pickle
+import sys
+import pystan
+import numpy as np
+import os
 import pickle
 import sys
 

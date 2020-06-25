@@ -1,0 +1,22 @@
+---
+title: "Testing stationarity enforcing priors for VAR models in Stan"
+author: "Nate TeBlunthuis"
+date: "June 25, 2020"
+output:
+ html_document:
+  fit_width: 10
+  fig_height: 7
+---
+
+In this notebook I'm testing out [Sarah Heap's method](https://arxiv.org/abs/2004.09455) for fitting var models using priors to enforce stationarity. 
+Stationarity is important to VAR modeling because a non-stationary system will diverge: each variable will go to negative infinity or infinity.  A VAR model can represent non-stationary systems, but non-stationarity creates problems for estimation.  It's often claimed that "you can't (or shouldn't) fit a VAR model to non-stationary data, but this depends on the goals of analysis.  Problems with non-stationarity are more serious in the frequentist framework because the asymptotics depend on stationarity, non-stationary data can lead to 'spurious regerssions' with bias and incorrect standard errors.  
+
+In a Bayesian framework this issue is less important, one simply doesn't have to worry about whether non-stationary data will mislead your sampler.  An issue with Bayesian var models though is that a sampler can simulate non-stationary systems, but these will diverge leading to divergent transitions in Stan.  This isn't much of a problem when the lags or the dimensionality of the system are low because your chances of drawing parameters from outside the stationary zone is not very high.  But the complexity of the system increases the non-stationary region grows faster than the stationary region leading to slow sampling and divergent transitions.  So from a practical perspective assuming stationarity should help stan sample *faster* and *avoid divergent transitions*.  
+
+Is assuming stationarity realistic? This depends on the data, but in many cases it is realistic since it essentially just assumes that you won't forecast that the world will explode. The restrictions of the VAR model are already strict compared to the addition of a stationarity assumption.  We'll try not to reach beyond contexts where the stationarity assumption seems plausible. 
+
+```{python, cache=FALSE}
+
+from util import *
+os.sched_setaffinity(0,range(os.cpu_count())) # I did this on the int-machine and need this line to use multiple cores
+```

@@ -61,17 +61,6 @@ generated quantities{
 Let's fit the model to some simulated data.  This way we can check that our model works and can estimate known paramters.
 
 ```{python, cache=FALSE}
-
-import pandas as pd
-import plotnine  # python ggplot2 clone
-plotnine.options.figure_size = (10,7)
-from  plotnine import *
-theme_set(theme_minimal())
-import pystan
-import numpy as np
-import os
-import pickle
-import sys
 from util import *  # I have some helper functions in this file.
 os.sched_setaffinity(0,range(os.cpu_count())) # I did this on the int-machine and need this line to use multiple cores
 ```
