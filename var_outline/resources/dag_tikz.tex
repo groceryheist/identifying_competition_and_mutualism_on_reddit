@@ -1,0 +1,35 @@
+\centering
+\begin{tikzpicture}  [->,>=stealth',shorten >=1pt,auto,
+      thick,
+      obs/.style={ellipse,draw,font=\sffamily\small,inner sep=0.5em},
+      latent/.style={rectangle,draw,font=\sffamily\small,fill=gray!20, inner sep=0.5em},
+      label/.style={font=\scshape\small},
+      obsmic node/.style={ellipse,draw,font=\sffamily\small},
+      unobsmic node/.style={ellipse,draw,font=\sffamily\small,fill=gray!20}]
+
+
+      \node[obs] (seattle) at (-3,3) {/r/seattle};
+      \node[obs] (seattlewa) at (3,3) {/r/seattlewa};
+      \node[obs] (seattlebike) at (-3, 0) {/r/seattlebike};
+      \node[obs] (seattleents) at (3,0) {/r/seattleents};
+
+      \path[every node/.style={font=\sffamily}]
+      (seattle) edge[bend left=15, color=nullhypothesizedcell,line width=1.5] (seattlewa)
+      (seattle) edge[color=hypothesizedcell,line width=1] (seattlebike)
+      (seattle) edge[color=hypothesizedcell,line width=1.5] (seattleents)
+      (seattle) edge[loop above, color=hypothesizedcell,line width=2.5] (seattle)
+      (seattlewa) edge[loop above, color=hypothesizedcell,line width=2.5] (seattlewa)
+      (seattlewa) edge[bend left=15, color=nullhypothesizedcell,line width=2.5] (seattle)
+      (seattlewa) edge[color=hypothesizedcell,line width=0.5] (seattlebike)
+      (seattlewa) edge[color=hypothesizedcell,line width=1] (seattleents)
+      (seattlebike) edge[loop below, color=hypothesizedcell,line width=0.75] (seattlebike)
+      (seattlebike) edge[color=hypothesizedcell,line width=0.5] (seattleents)
+      (seattleents) edge[loop below, color=hypothesizedcell,line width=1] (seattleents)
+      (seattleents) edge[loop below, color=hypothesizedcell,line width=0.2] (seattlebike)
+      ;
+
+\end{tikzpicture}
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

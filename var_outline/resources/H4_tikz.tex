@@ -1,0 +1,33 @@
+\centering
+\def\gencircle{(0,0) circle (1.5cm)}
+\def\speccircle{(0:0.8cm) circle (0.4cm)}
+
+\tikzstyle{frame_black} = [line width=1pt, draw=black,inner sep=0.8em,minimum width=\textwidth,minimum height=3cm]
+\begin{tikzpicture}  [->,>=stealth',shorten >=1pt,auto,
+      thick,
+      obs/.style={rectangle,draw,font=\sffamily\small,inner sep=0.5em},
+      latent/.style={rectangle,draw,font=\sffamily\small,fill=gray!20, inner sep=0.5em},
+      label/.style={font=\scshape\small},
+      obsmic node/.style={ellipse,draw,font=\sffamily\small},
+      unobsmic node/.style={ellipse,draw,font=\sffamily\small,fill=gray!20}]
+
+      \draw \gencircle node [below] {};
+      \draw \speccircle node [below] {};
+
+      \begin{scope}
+        \clip \gencircle;
+        \fill[gray!20] \speccircle;fill
+      \end{scope}
+
+      \node[] (nichea) [xshift=-3.5cm] {Generalist's niche}; 
+      \node[] (nicheb) [xshift=3.8cm,fill=gray!20] {Specialist's niche}; 
+      \node[obs] (overlap) [xshift=0cm,yshift=-2cm] {Asymmetrical niche overlap};
+      \node[obs] (comensalism) [below of=overlap, yshift=-0.5cm]{Comensalism};
+      \path[every node/.style={font=\sffamily}]
+      (overlap) edge [] node {} (comensalism);
+\end{tikzpicture}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

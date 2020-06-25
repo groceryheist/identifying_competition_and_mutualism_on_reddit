@@ -1,0 +1,47 @@
+\centering
+\begin{tikzpicture}  [->,>=stealth',shorten >=1pt,auto,
+  thick,
+  obs/.style={rectangle,draw,font=\sffamily\small,inner sep=0.5em},
+      latent/.style={rectangle,draw,font=\sffamily\small,fill=gray!20, inner sep=0.5em},
+      label/.style={font=\scshape\small},
+      obsmic node/.style={ellipse,draw,font=\sffamily\small},
+      unobsmic node/.style={ellipse,draw,font=\sffamily\small,fill=gray!20}]
+
+      \node[obs] (t0) [] {window$~=~$ 1 week};
+
+      \node[obs] (var1) [below of=t0,yshift=-0.4cm] {$VAR(1)$ model};
+
+%      \node[latent] (null1) [below right of=var1, yshift=-0.4cm, xshift=4cm] {null results?};
+
+      \node[latent] (serial) [below  of=var1, yshift=-0.4cm] {serially correlated errors};
+      
+      \node[obs] (increase_t) [below of=serial,yshift=-0.4cm] {window~$=2*$~window};
+      
+      \node[obs] (var2) [below of=increase_t,yshift=-0.4cm] {$VAR(1)$ model;};
+
+      \node[latent] (null2) [below of=var2,yshift=-0.4cm] {Enough variation left?};
+
+      \node[obs] (write) [right of=increase_t,xshift=3cm] {write it up!};
+
+      \node[obs] (reoutline) [below of=null2,yshift=-0.4cm] {Rework outline around $VAR(p)$ models.};
+
+      \path[every node/.style={font=\sffamily}]
+      (t0) edge [] node {} (var1)
+  %    (var1) edge [] node {} (null1)
+      (var1) edge [] node {} (serial)
+ %     (null1) edge [] node {} (write)
+      (serial) edge [] node {Yes} (increase_t)
+      (increase_t) edge [] node {} (var2)
+      (var2) edge [] node {} (null2)
+      (null2) edge [] node {no} (reoutline)
+      (null2.west) edge [bend left=40] node {Yes} (serial.190)
+      (serial.east) edge [bend left=25] node {No} (write.155);
+
+\end{tikzpicture}
+
+
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
