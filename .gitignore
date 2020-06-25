@@ -25,3 +25,12 @@
 /stan_compile.log
 /table_beta_hat.html
 /var_12_pois_fit.pdf
+/notebook-woven.md
+/notebook.html
+/notebook_share.tar
+/notebook_share/
+/var_outline/resources/.Rhistory
+*.aux
+/var_outline/resources/auto/
+*.\#*
+/stan_code/stan_code
