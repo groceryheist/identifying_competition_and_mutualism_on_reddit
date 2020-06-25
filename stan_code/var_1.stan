@@ -14,7 +14,7 @@ parameters{
   /* matrix<lower=0>[K,K] beta_hat_scale; */
   /* vector<lower=0>[K] tau_scale; */
   /* vector[K] tau_location; */
-  vector[K] tau;
+  vector<lower=0>[K] tau;
   // LJK parameterize the covariance matrix 
   cholesky_factor_corr[K] L_Omega; // covariance matrix in cholesky form
   matrix[K,K] beta;
@@ -65,13 +65,3 @@ generated quantities{
   }
 }
 
-
-/* generated quantities{ */
-/*   matrix[N,K] y_new; */
-/*   cov_matrix[K] Sigma; */
-/*   { */
-/*     Sigma = multiply_lower_tri_self_transpose(L_Sigma); */
-/*     y_new[1] = Y[1]; */
-/*     y_new[n] = multi_normal_cholesky_rng(alpha + beta*y_new[n-1], L_Sigma)'; */
-/*   } */
-/* }   */

@@ -1,25 +1,35 @@
-.# Fitting VAR models in stan using pystan
+---
+title: "Building VAR models for social media ecology in Stan"
+author: "Nate TeBlunthuis"
+date: "April 17, 2020"
+output:
+ html_document:
+  fit_width: 10
+  fig_height: 7
+---
 
-In this notebook, we'll walk through fitting VAR models in pystan. 
-We'll write down stan code for fitting our model and test that we can recover parameters from VAR models with full bayesian inference.
-We'll test out *multithreading* using the Pystan interface.
-We'll also test out regularizing priors that will help us fit models in complex systems with many time series. 
-Eventually, we'll build up to hierarchical VAR models.
+
+In this notebook, I'll walk through devloping stan code to fit vector autoregression (VAR) models.  A vector autoregression model simply models the state of a (multidimensional, discrete-time) system as a linear function of previous state(s). 
+
+I'll fit the models using pystan, the Python interface to So far, I can write down stan code for fitting our models and test that we can recover parameters from VAR models with full bayesian inference. My model code supports generating forecasts in stan which makes it easy to build forecasts with predictive intervals. I have models for normal data and count data with poisson and negative binomial link functions. I can also fit the model to real data from Reddit. 
+
+I don't think anybody has applied a VAR approach in ecological studies in social sciences before.  But it's an established approach in community ecology in biology, where it's referred to as MAR for multivariate autoregression. [Ives et al. 2003](http://doi.wiley.com/10.1890/0012-9615(2003)073[0301:ECSAEI]2.0.CO;2 "link to paper") introduced the approach in ecology and argue for their use in terms of ease of estimation and show how they can interpreted in terms of different conceptualizations of stability.  This paper is great and I would recommend it as a future reading for this group. [Certain et al. 2018](https://besjournals.onlinelibrary.wiley.com/doi/full/10.1111/2041-210X.13021 "link to paper") conduct a simulation analysis to evaluate how these models are robust to nonlinearities in ecological systems.
+
+Var models are often used in the social sciences, often in conjunction with Granger causality tests (it turns out that a Granger causality test is equivalent to a test of statistical significance in a VAR(P) model for large P).  They are also common in macroeconomics.  I've seen applications of hierarchical VAR models in finance and in neuroscience. 
 
 ## A basic autoregressive model in stan
-Since vector autoregressions generalize univariate autoregressive time series models to the multivariate case, we'll start with a time series model to test out a framework for simulating and testing stan code in python. 
+Since vector autoregressions generalize univariate autoregressive time series models to the multivariate case, we'll start with a time series model to test out a framework for simulating and testing stan code in python.
 
-The the [stan user's guide](https://mc-stan.org/docs/2_22/stan-users-guide-2_22.pdf "link to pdf") provides code for an AR(1) model. 
+The the [stan user's guide](https://mc-stan.org/docs/2_22/stan-users-guide-2_22.pdf "link to pdf") provides code for an AR(1) model (an autoregressive model with one error term).  This gives us a nice place to start building up vector autoregression models.
 ```{r, echo=FALSE}
 knitr::opts_chunk$set(cache=FALSE)
 ```
 
 ```stan
 // stan_code/ar_1_nopriors.stan
+
 // the model fits a vector y, of N datapoints
-
 data {
-
   int<lower=0> N;
   vector[N] y;
 }
@@ -31,10 +41,12 @@ parameters{
 }
 
 model {
+  // this line says "y_t+1 is normally distributed with mean=a + b*y_t and variance .
   y[2:N] ~ normal(alpha + beta * y[1:(N-1)], sigma); // fit the model in vectorized form
 }
 
 // use this block to generate time series with the same parameters
+// we're just going to forecast the same length of the input
 generated quantities{
   real y0 = y[1];
   vector[N] y_new;
@@ -46,11 +58,13 @@ generated quantities{
 }
 ```
 
-Let's try to fit this model using pystan
+Let's fit the model to some simulated data.  This way we can check that our model works and can estimate known paramters.
 
 ```{python, cache=FALSE}
 
 import pandas as pd
+import plotnine  # python ggplot2 clone
+plotnine.options.figure_size = (10,7)
 from  plotnine import *
 theme_set(theme_minimal())
 import pystan
@@ -58,24 +72,21 @@ import numpy as np
 import os
 import pickle
 import sys
-from util import *
-os.sched_setaffinity(0,range(os.cpu_count()))
-
-
+from util import *  # I have some helper functions in this file.
+os.sched_setaffinity(0,range(os.cpu_count())) # I did this on the int-machine and need this line to use multiple cores
 ```
-
 
 ```{python}
 
 recompile = False # flag to use to recompile all the models
-refit = False
+refit =  False # flag to refit models
 
 alpha = 10
 beta = 0.87
 sigma = 6
 y0 = 0
 N = 50 
-
+np.random.seed(105)
 def next_y(y0):
     return np.random.normal(alpha + beta*y0, sigma, 1)[0]
 
@@ -97,6 +108,9 @@ data = {'N':N,
         'forecast_len':forecast_len}
 og_stderr = sys.stderr
 sys.stderr = open("stan_compile.log",'a')
+
+# unpickle_or_create is a function for caching expensive computations
+# this compiles the stan code
 sm = unpickle_or_create("stan_code/ar_1_unifpriors.pkl",
                    overwrite=recompile,
                    function=pystan.StanModel,
@@ -104,6 +118,7 @@ sm = unpickle_or_create("stan_code/ar_1_unifpriors.pkl",
                    model_name='ar_1_unif_priors')
 og_stderr = sys.stderr
 
+# this runs the stan code
 fit = unpickle_or_create("stan_models/ar1_unif_priors.pkl",
                          overwrite=refit,
                          function = sm.sampling,
@@ -115,43 +130,51 @@ print(fit.stansummary(pars=['alpha','beta','sigma']))
 
 ```
 
-Looks like we were able to recover the parameters pretty well, but our estimate of beta is a bit too low. Let's compare the data and the model. 
+Looks like we were able to recover the parameters pretty well.  Our point estimates aren't exactly right, but they are all within the 50% credible interval. Let's compare the data and the forecast.
 
-```{python}
-
+```{python,warning=F}
+# plot_ar is a helper function that merges the forecast from the model object with the data to generate a forecast.  
 plot_ar(fit, y_vec, true_forecast).draw()
 
 ```
 
-## Using proper priors
-By default, stan uses uniform priors for each parameter.  This works ok for our toy ar(1) model, but is going to be a bad idea when we get into more complex models that wpill be difficult to fit.  We'll need to use priors to help the sampler concentrate on realistic values for each parameter. Uniform priors are improper and not truely uninformative anyway. 
+The red line shows the mean of our forecasts and the grey region shows the 95% prediction interval. Looks alright!
+So far this has been a pretty smooth and easy warm-up. Things get hairier when we turn to vector autoregresisons.  
 
-```{python,echo=FALSE}
+<!-- ## Using proper priors -->
+<!-- By default, stan uses uniform priors for each parameter.  This works ok for our toy ar(1) model, but is going to be a bad idea when we get into more complex models that wpill be difficult to fit.  We'll need to use priors to help the sampler concentrate on realistic values for each parameter. Uniform priors are improper and not truely uninformative anyway.  -->
 
-sm = unpickle_or_create("stan_code/ar_1.pkl",
-                        overwrite=recompile,
-                        function=pystan.StanModel,
-                        file="stan_code/ar_1.stan",
-                        model_name='ar_1_unif_priors')
+<!-- ```{python,echo=FALSE,warning=F} -->
 
-fit = unpickle_or_create("stan_models/test_ar1.pkl",
-                         overwrite = refit,
-                         function = sm.sampling,
-                         iter=1000,
-                         chains=4,
-                         data=data)
+<!-- sm = unpickle_or_create("stan_code/ar_1.pkl", -->
+<!--                         overwrite=recompile, -->
+<!--                         function=pystan.StanModel, -->
+<!--                         file="stan_code/ar_1.stan", -->
+<!--                         model_name='ar_1_priors') -->
 
-print(fit.stansummary(pars=['alpha','beta','sigma']))
-plot_ar(fit, y_vec, true_forecast)
+<!-- fit = unpickle_or_create("stan_models/test_ar1.pkl", -->
+<!--                          overwrite = refit, -->
+<!--                          function = sm.sampling, -->
+<!--                          iter=1000, -->
+<!--                          chains=4, -->
+<!--                          data=data) -->
 
-```
-It appears to make little difference whether we use proper or uniform priors.
+<!-- print(fit.stansummary(pars=['alpha','beta','sigma'])) -->
+<!-- plot_ar(fit, y_vec, true_forecast) -->
+
+<!-- ``` -->
+<!-- It appears to make little difference whether we use proper or uniform priors. -->
 
 ## Vector autoregreesion (VAR) models.
 
-One of the promises of VAR modeling approaches is that they can model complex dynamics at equillibria.  For example, below we have a predetor-prey that's stable, but ossillating.  For now we'll stick with VAR(1) models. Though down the line we may wish to adopt models that have more memory. 
+The promise of VAR modeling approaches is to model complex dynamics at equillibria.  For example, below we'll fit a predetor-prey with ossilations.  For now we'll stick with VAR(1) models, which limits the complexity of dynamics we can model. Though down the line we may wish to adopt models that have more memory. The equillibria assumption is of course dubious as it assumes that exogenous shocks don't exist.  A second assumption is that the system is stationary.  This isn't really a problem since it just means we won't be able to forecast that the world explodes (the system going to infinity).
 
-A predetor-prey system
+Advantages of fitting VAR models in Stan is we'll have valid statistical inference (of course this is conditional on the model being correct) without strong OLS assumptions.  We can also fit VAR models on count data (available software packages generally only provide OLS). We'll also be able to fit hierarchical models and models with sparsity-inducing priors.
+
+A disadvantage of using STAN to fit VAR models is that Stan cannot (presently, though it seems like they are working on solutions) cannot enforce stationarity constraints. In other words, Stan can sample a community matrix that leads the system to diverge.  This leads to exceptions in the sampler (i.e. rejected samples).  The Stan developers are working on it, but it seems like a bit of a  For well-constructed data this only happens in the warmup phase before the sampler converges in the stable region so it doesn't really affect inference.  In practice this should only be a problem for fitting models using monte-carlo sampling.  Stan can also fit models using  penalized maximum liklihood estimation and variational inference so if monte-carlo doesn't work out I can still estimate my models using these inferior approximations.
+
+
+We'll test out a VAR(1) stan model on this constructed predetor-prey system.
 ```{python, cache=F}
 
 K = 2
@@ -160,11 +183,21 @@ forecast_len = N
 
 ## a predetor-prey system
 alpha = np.array([10,100])
+
+## beta = 
+## 0.3  0.5
+## -0.8 0.9
+
+# This is interpreted as a population of predetors (y1) consuming (y2)
+# The off-diagonal elements mean that an increase in predetors at a rate of 0.5
+# comes with a decrease in prey at a rate of -0.8.
+
 beta = np.array([[0.3,-0.8],[0.5, 0.9]])
-sigma = np.array([[10.0,5],[5,10]])
+sigma = np.array([[5,3],[3,5]])
 
 y0 = np.array([150,100])
 
+## a helper function for simulating a var system
 y, df = evolve_var_system(alpha, beta, sigma, y0, N, forecast_len)
 
 p = ggplot(df) + geom_line(aes(x='x', y='y',group='variable',color='variable'))
@@ -173,57 +206,59 @@ p.draw()
 ```
 
 
-Now let's try fitting a var model in STAN!
+Now let's try fitting the model in STAN!
  
 ```stan
-
 // stan_code/var_1.stan
+
 data{
   int<lower=0> forecast_len;  // length of the forecast to generate
   int<lower=0> N; // length of the time series
-  int<lower=0> k; // number of series
-  matrix[N,K] y; // output matrix
+  int<lower=0> K; // number of series
+  vector[K] Y[N]; // output matrix
 }
 
-	parameters{
-	  vector[K] alpha_hat_location; // intrinsic growth rates
-	  vector<lower=0>[K] alpha_hat_scale; // intrinsic growth rates
-	  matrix[K,K] beta_hat_location; // community matrix of competition / correlation coefficients
-	  matrix<lower=0>[K,K] beta_hat_scale;
-	  vector<lower=0>[K] tau_scale;
-	  vector[K] tau_location;
-	  // LJK parameterize the covariance matrix 
-	  cholesky_factor_corr[K] L_Omega; // covariance matrix in cholesky form
-	}
-transformed parameters{
+parameters{
+  vector<lower=0>[K] tau;
+  // LJK parameterize the covariance matrix 
+  cholesky_factor_corr[K] L_Omega; // covariance matrix in cholesky form
   matrix[K,K] beta;
   vector[K] alpha;
-  beta = beta_hat_location + beta_hat_scale;
-  alpha = alpha_hat_location + alpha_hat_scale;
+ 
+}
+
+transformed parameters{
+  matrix[K,K] L_Sigma;
+
+  L_Sigma = diag_pre_multiply(tau, L_Omega);
 }
 
 model{
+  vector[K] mu[N-1];
+
+  for (n in 1:N-1){
+    mu[n] = alpha + beta*Y[n];
+  }
+
   L_Omega ~ lkj_corr_cholesky(1); // prior on Omega
-  tau_location ~ cauchy(0,1);
-  tau_scale ~ cauchy(0,1);
-  tau ~ normal(tau_location,tau_scale);
-  to_vector(beta_hat_location) ~ normal(0,0.5);
-  to_vector(beta_hat_scaule) ~ cauchy(0,0.5);
-  L_Sigma = diag_pre_multiply(tau, Omega);
-  y[2:N] ~ multi_normal(alpha + beta*y[1:(N-1)], L_Sigma);
-	}
+  to_vector(beta) ~ normal(0,0.8); // prior on beta, to encourage stationarity
+  alpha ~ normal(0,4);
+
+  Y[2:N] ~ multi_normal_cholesky(mu, L_Sigma);
+}
 
 generated quantities{
   vector[K] y_new[forecast_len];
-  vector[K] y0 = y[1];
-  corr_matrix[K] Sigma;
+  cov_matrix[K] Sigma;
   {
-	Sigma = L_Sigma * L_Sigma;
-	y_new[1] = y0;
-	for(n in 2:forecast_len)
-	  y_new[n] = multi_normal_cholesky_rng(alpha + beta*y_new[n-1], L_sigma);
+    Sigma = multiply_lower_tri_self_transpose(L_Sigma);
+    y_new[1] = multi_normal_cholesky_rng(alpha+beta*Y[N], L_Sigma);
+    for (n in 2:forecast_len){
+      y_new[n] = multi_normal_cholesky_rng(alpha + beta*y_new[n-1], L_Sigma);
+    }
   }
 }
+
 ```
 
 ```{python, cache=F}
@@ -253,13 +288,6 @@ fit = unpickle_or_create("stan_models/var_1_sim.pkl",
 print(fit.stansummary(pars=['alpha','beta','Sigma']))
 
 df_pred = stan_var_predict(fit,N)
-
-
-# df_pred = df_pred.melt(id_vars=['x','y1_lower','y1_upper','y2_lower','y2_upper'], value_vars=['y1','y2'], value_name='y')
-# df_pred = df_pred.melt(id_vars=['x','y','y1_upper','y2_upper','variable'], value_vars=['y1_lower','y2_lower'], value_name='y_lower',var_name='var_1')
-# df_pred = df_pred.melt(id_vars=['x','y','y_lower'], value_vars=['y1_upper','y2_upper'], value_name='y_upper', var_name=['variable'])
-# df_pred.loc[df_pred.variable == 'y1_upper','variable'] = 'y1'
-# df_pred.loc[df_pred.variable == 'y2_upper','variable'] = 'y2'
 
 p = ggplot(df_pred,aes(y='y',ymax='y_upper',ymin='y_lower', x='x',group='variable')) + geom_ribbon(alpha=0.5) + geom_line(aes(color='variable'), linetype='-')
 p = p + geom_line(aes(y='y',x='x',color='variable',group='variable'), data=df, inherit_aes=False)
@@ -320,7 +348,7 @@ K = 8
 N = 400 # we'll probably need more data for this
 forecast_len = 50
 
-
+# gen_system is a function for generating VAR systems.
 alpha,beta,sigma = unpickle_or_create("simulation_data/var1_k8.pkl",
                                       overwrite=False,
                                       function=gen_system,
@@ -345,7 +373,7 @@ fit = unpickle_or_create("stan_models/var_1_sim_10.pkl",
                          seed=20
                          )
 
-print(fit.stansummary(pars=['alpha','beta','Sigma']))
+# print(fit.stansummary(pars=['alpha','beta','Sigma']))
 
 df_pred = stan_var_predict(fit,N)
 p = ggplot(df_pred,aes(y='y',ymax='y_upper',ymin='y_lower', x='x',group='variable')) + geom_ribbon(alpha=0.5) + geom_line(aes(color='variable'), linetype='-')
@@ -357,29 +385,42 @@ p.draw()
 
 ## Can we do a possion model?
 
+
 ```{python}
-K = 3
+
+K = 4
 N = 200
 forecast_len=20
-alpha, beta, sigma = unpickle_or_create("simulation_data/var_1_sim_3_pois.pkl",
-                                        overwrite=True,
+alpha, beta, sigma = unpickle_or_create("simulation_data/var_1_sim_4_pois_uncentered.pkl",
+                                        overwrite=False,
                                         function=gen_system,
+                                        growth=6,
+                                        growth_var=2,
+                                        community=0.90,
+                                        community_var=0.1,
                                         K=K,
                                         N=N,
-                                        growth=5,
-                                        growth_var=1.5,
-                                        community=0.2,
-                                        noise=1)
+                                        noise=0.2,
+                                        seed=1)
 y0 = alpha
 
+# a count var model is a latent var model linked through a discrete distribution.
 y, df = evolve_var_system(alpha, beta, sigma, y0, N, forecast_len, link = lambda x: np.random.poisson(np.exp(x)))
 
-sm = unpickle_or_create("stan_code/var_1_pois.pkl",
-                        overwrite=True,
+sm_centered = unpickle_or_create("stan_code/var_1_pois.pkl",
+                        overwrite=False,
                         function=pystan.StanModel,
                         file="stan_code/var_1_pois.stan",
                         model_name="var_1_poisson_2"
                         )
+
+sm_uncentered = unpickle_or_create("stan_code/var_1_pois_noncentered.pkl",
+                                   overwrite=False,
+                                   function=pystan.StanModel,
+                                   file="stan_code/var_1_pois_noncentered.stan",
+                                   model_name="var_1_poisson_noncentered"
+)
+
                         
 
 data = {"forecast_len":forecast_len,
@@ -387,11 +428,13 @@ data = {"forecast_len":forecast_len,
         "K":K,
         "Y":y.T}
 
-fit = unpickle_or_create("stan_models/var_1_pois.pkl",
-                         overwrite=True,
+fit = unpickle_or_create("stan_models/var_4_pois.pkl",
+                         overwrite=False,
                          function=sm.sampling,
                          data=data,
-                         chains=4)
+                         chains=2,
+                         control={"max_treedepth":12,
+                                   "adapt_delta":0.9})
 
 ## since stan has overflow issues generating numbers from a poisson distribution we'll use
 
@@ -401,17 +444,188 @@ print(fit.stansummary(pars=['alpha','beta','Sigma']))
 
 p = ggplot(df_pred,aes(y='y',ymax='y_upper',ymin='y_lower', x='x',group='variable')) + geom_ribbon(alpha=0.5) + geom_line(aes(color='variable'), linetype='-')
 p = p + geom_line(aes(y='y',x='x',color='variable',group='variable'), data=df, inherit_aes=False)
-p = p + theme(legend_position = 'top')
+p = p + theme(legend_position = 'top') + scale_y_log10()
+p.save("plots/poisson_4.pdf")
 p.draw()
 
 ```
 
+## Negative binomial models
 
-## Hierarchical VAR models 
+Once we have a poisson model. Generalizing to negative binomial is straightforward. I juts needed to add a theta parameter and change the link function.
+```{python,warning=F}
+
+K = 8
+N = 400
+forecast_len=100
+alpha, beta, sigma = unpickle_or_create("simulation_data/var_1_sim_4_negbin.pkl",
+                                        overwrite=False,
+                                        function=gen_system,
+                                        growth=5,
+                                        growth_var=4,
+                                        community=-0.3,
+                                        community_var=1.0,
+                                        K=K,
+                                        N=N,
+                                        noise=0.01,
+                                        seed=1234)
+y0 = alpha
+
+# we need overdispersion parameters
+thetas = np.random.chisquare(25,K)
+
+link = lambda mu, theta: np.random.negative_binomial(* convert_negbin_params(np.exp(mu), theta))
+
+y, df = evolve_var_system(alpha, beta, sigma, y0, N, forecast_len, link_args=[thetas], link = link)
+
+p = ggplot() + geom_line(aes(y='y',x='x',color='variable',group='variable'), data=df, inherit_aes=False)
+p = p + theme(legend_position = 'top') + scale_y_log10()
+
+p.save("plots/negbin_sim.pdf")
+
+sm = unpickle_or_create("stan_code/var_1_negbin.pkl",
+                        overwrite=False,
+                        function=pystan.StanModel,
+                        file="stan_code/var_1_negbin.stan",
+                        model_name='var_1_negbin'
+                        )
+
+data = {"forecast_len":forecast_len,
+        "N":N,
+        "K":K,
+        "Y":y.T}
+
+fit = unpickle_or_create("stan_models/var_1_negbin_4.pkl",
+                         overwrite=False,
+                         function=sm.sampling,
+                         data=data,
+                         control={'adapt_delta':0.9,
+                                  'max_treedepth':12})
+ 
+df_pred = stan_negbin_var_predict(fit, N)
+p = ggplot(df_pred,aes(y='y',ymax='y_upper',ymin='y_lower', x='x',group='variable')) + geom_ribbon(alpha=0.5) + geom_line(aes(color='variable'), linetype='-')
+p = p + geom_line(aes(y='y',x='x',color='variable',group='variable'), data=df, inherit_aes=False)
+p = p + theme(legend_position = 'top') + scale_y_log10()
+
+p.save("negbin_4_sim_pred.pdf")
+p.draw()
+```
+
+# Fitting a Bayesian count VAR model to Reddit data
+
+I hope to apply this approach to answer questions like "Why are there so many Bernie Sanders subreddits?" I'm looking for an ecological answer related to competitive and mutualistic relationships between communities.  I'm still working on choosing exactly which subreddits will go in this model. For now I rather lazily found 14 subreddits related to bernie sanders. This is just a proof-of-concept.
+
+I started running a bunch of models including normal, negbin, and poisson models for both numbers of posts and numbers of posters. But the only one that's done at this moment is the poisson model for posts.  Here's the data that we'll fit. Wow it looks much worse than our simulations!  In fact, it is virtually impossible for VAR(1) system to generate data like this at all.
+
+```{python} 
+posts = pd.read_csv("bernie_subs_posts_per_week.csv", parse_dates=['created_week'])
+posts, subs, data = csv_to_stan_data(posts,'id',forecast_len=14)
+
+p = ggplot(posts, aes(x='created_week', y='Y', group='subreddit',color='subreddit')) + geom_line()
+p.draw()
+```
+One a log scale it's clearer.
+
+```{python}
+posts = pd.read_csv("bernie_subs_posts_per_week.csv", parse_dates=['created_week'])
+posts, subs, data = csv_to_stan_data(posts,'id',forecast_len=14)
+
+p = ggplot(posts, aes(x='created_week', y='Y', group='subreddit',color='subreddit')) + geom_line() + scale_y_log10()
+p.draw()
+```
+
+Let's load up the model that I already fit and check out the community matrix. In the community matrix, the entries correspond to the estimated effect of the column on the row. As I said before I wouldn't put much stock in this :) Proof of concept.
+
+```{python, warning=F,results='asis'}
+sm_pois = pickle.load(open('stan_code/var_1_pois.pkl','rb'))
+posts_fit_pois = pickle.load(open("stan_models/bernie_subs_posts_poisson.pkl",'rb'))
+
+beta = posts_fit_pois.extract(['beta'])['beta']
+
+# visualize the estimated community matrix
+
+beta_hat = beta.mean(axis=0)
+beta_upper = np.quantile(beta, 0.975, axis=0)
+beta_lower = np.quantile(beta, 0.025, axis=0)
+
+sig = np.sign(beta_upper) == np.sign(beta_lower)
+beta_hat = pd.DataFrame(beta_hat)
+beta_hat = beta_hat.rename(columns={i:sub for i,sub in enumerate(subs)})
+pos = beta_hat > 0
+neg = beta_hat < 0
+blue = pos & sig
+yellow = neg & sig
+
+beta_hat['subreddit'] = list(subs)
+beta_hat = beta_hat[ ['subreddit'] + list(subs)]
+
+def my_style(df):
+    attr1 = 'background-color: blue'
+    attr2 = 'background-color: yellow'
+    return pd.DataFrame(np.where(blue, attr1, np.where(yellow,attr2,'')),index=df.index,columns=df.columns)
+
+pd.set_option('precision',2)
+
+with open('beta_table.html','w') as of:
+    of.write(beta_hat.style.apply(my_style,axis=None, subset=list(subs)).render())
+
+```
+
+```{r}
+library(htmltools)
+htmltools::includeHTML("table_beta_hat.html")
+```
+
+And here are some plots of the forecast on a log scale.
+
+```{python}
+N = len(data['Y'])
+forecast_len = data['forecast_len']
+df_pred = stan_pois_var_predict(posts_fit_pois, N)
+
+x_dates = pd.date_range(posts.created_week.max(), periods=forecast_len,freq='W')
+dates = pd.DataFrame({'created_week' : x_dates, 'x':np.arange(df_pred['x'].min(), df_pred['x'].max()+1)})
+df_pred = df_pred.merge(dates, on='x')
+K = len(list(subs))
+subs_df = pd.DataFrame({'subreddit' : subs, 'variable':[f"y{i}" for i in range(1, K+1)]})
+df_pred = df_pred.merge(subs_df, on='variable')
+posts = posts.rename(columns={'Y':'y'})
+posts = posts.drop('index',axis=1)
+posts['y_upper'] = posts.y
+posts['y_lower'] = posts.y
+df_pred = df_pred.drop(['x','variable'],axis=1)
+
+plot_df = pd.concat([posts,df_pred],axis=0)
+
+plot_df = plot_df.sort_values(['created_week','subreddit'])
+
+p = ggplot(plot_df, aes(y='y',ymax='y_upper', ymin='y_lower',x='created_week',group='subreddit', color='subreddit'))
+p = p + geom_line() + geom_ribbon(alpha=0.1) + scale_y_log10()
+p.draw()
+```
+
+Looking at forecasts for all the subreddits is pretty incomprehensible!
+
+```{python}
+subs_to_plot = ['politics','ChapoTrapHouse','WayOfTheBern','SandersForPresident','BernieSanders','OurPresident']
+
+#p = ggplot(plot_df.loc[plot_df.subreddit.isin(subs_to_plot)], aes(y='y',ymax='y_upper', ymin='y_lower',x='created_week',group='subreddit', color='subreddit'))
+p = ggplot(plot_df.loc[plot_df.subreddit.isin(subs_to_plot)], aes(y='y',ymax='y_upper', ymin='y_lower',x='created_week',group='subreddit', color='subreddit'))
+p = p + geom_line() + geom_ribbon(alpha=0.1) + scale_y_log10()
+p.draw()
+```
+
+
+## Next steps
+
+Some work remains to make this modeling approach analytically useful.  Most important, I have to troubleshoot some bad MC diagnostics that appear when I the models fit to larger systems, including the real data..  Next, I want to speed up the count models using new paralleism features in stan. A more sophisticated prior structure should help with modeling larger systems by enforcing sparsity.  Supporting more lags is relatively straightforward.  Eventually I want to add information about resource overlaps to the model to test whether participant and content overlaps are associated with positive or negative coefficients in the community matrix.  These might be explicitly in the model or I might do something hackier.
 
 
 
-Jim Savage wrote a nice tutorial on hierarchical var modeling in Stan that we're building upon. 
+<!-- ## Hierarchical VAR models  -->
+
+
+
+<!-- Jim Savage wrote a nice tutorial on hierarchical var modeling in Stan that we're building upon.  -->
 
  
-.
