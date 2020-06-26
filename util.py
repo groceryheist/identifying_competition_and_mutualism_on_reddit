@@ -113,7 +113,7 @@ def evolve_var_system(alpha, beta, sigma, y0, N, forecast_len, link_args=[], lin
     K = beta.shape[0]
 
     def y_next(y0):
-        return np.random.multivariate_normal(alpha + np.matmul(y0,beta), sigma)
+        return alpha + np.random.multivariate_normal(np.matmul(y0-alpha,beta), sigma)
 
     for n in range(1, N):
         y_star.append(y_next(y_star[-1]))

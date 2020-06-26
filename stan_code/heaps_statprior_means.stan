@@ -1,6 +1,6 @@
 functions {
   /* Function to compute the matrix square root */
-  /* This approach uses diagonalization, but we 
+  /* This approach uses diagonalization */ 
   matrix sqrtm(matrix A) {
     int m = rows(A);
     vector[m] root_root_evals = sqrt(sqrt(eigenvalues_sym(A)));

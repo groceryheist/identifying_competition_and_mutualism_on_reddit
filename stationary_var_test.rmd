@@ -28,8 +28,8 @@ K = 3
 N=1000
 forecast_len=20
 
-# i set growth_var to 0 since heap's model assumes 0 mean. 
-alpha, beta, sigma = unpickle_or_create("simulation_data/gaussian_var_k5.pkl",
+# i set growth_var to 0 since heap's model assumes 0 mean.
+alpha, beta, sigma = unpickle_or_create("simulation_data/gaussian_var_k3.pkl",
                                         overwrite=True,
                                         growth=0,
                                         growth_var=0,
@@ -60,7 +60,7 @@ heaps_model = unpickle_or_create("stan_code/heaps_statprior.pkl",
                                  model_name='heaps_statprior')
 
         
-test_heaps_fit = unpickle_or_create("stan_models/var_1_heaps_5.pkl",
+test_heaps_fit = unpickle_or_create("stan_models/var_1_heaps_3.pkl",
                                     overwrite=False,
                                     function=heaps_model.sampling,
                                     iter=2000,
@@ -76,7 +76,7 @@ p = ggplot(df_pred,aes(y='y',ymax='y_upper',ymin='y_lower', x='x',group='variabl
 p = p + geom_line(aes(y='y',x='x',color='variable',group='variable'), data=df, inherit_aes=False)
 p = p + theme(legend_position = 'top')
 p.draw()
-p.save("plots/test_heaps_fit.png")
+p.save("plots/test_heaps_fit.png") 
 
 phi = test_heaps_fit.extract('phi')['phi']
 
@@ -95,15 +95,12 @@ With this prior it becomes possible to fit much larger systems.
 
 ```{python, cache=FALSE}
 
-from util import *
-
-os.sched_setaffinity(0,range(os.cpu_count())) # I did this on the int-machine and need this line to use multiple cores
-K = 40
+K = 20
 N=1000
 forecast_len=20
 
 # i set growth_var to 0 since heap's model assumes 0 mean. 
-alpha, beta, sigma = unpickle_or_create("simulation_data/gaussian_var_k5.pkl",
+alpha, beta, sigma = unpickle_or_create("simulation_data/gaussian_var_k10.pkl",
                                         overwrite=True,
                                         growth=0,
                                         growth_var=0,
@@ -122,8 +119,8 @@ data = {'m':K,
         'fs' : [np.sqrt(0.7), np.sqrt(0.3)], # top-level prior for the precision of means. a pretty tight prior seems to help avoid multimodality
         'gs' : [2.1,1.5], # top-level prior for the position of the scales,
         'hs' : [1/3,1/5], # top-level prior for the precision of the scales,
-        'scale_diag':1, # diagonal elements of the inverse wishart prior on the scale matrix
-        'scale_offdiag':0.2, # off-diagonal elements of the inverse wishart prior on the scale matrix
+        'scale_diag':0.2, # diagonal elements of the inverse wishart prior on the scale matrix
+        'scale_offdiag':0.02, # off-diagonal elements of the inverse wishart prior on the scale matrix
         'df':K+3,
         'forecast_len':forecast_len} # degrees of freedom in the inverse wishart prior on the scale matrix.
         
@@ -163,8 +160,8 @@ neg = phi_hat < 0
 
 There are a few extensions to make for Heap's approach to be useful in my application. 
 
-1. We want to generate forecasts. 
-2. We want to have seperate means instead of mean 0 processes. 
+1. We want to generate forecasts. (Done)
+2. We want to have seperate means instead of mean 0 processes. (Done and we can recover parameters for mu and phi and sigma.)
 3. We want to fit on data that are poisson or negative binomial distributed.
 4. Use a more numerically stable algorithm for computing the matrix square root.
 4. (Later) We want to encourage sparsity. 
@@ -198,8 +195,8 @@ data = {'m':K,
         'fs' : [np.sqrt(0.7), np.sqrt(0.7)], # top-level prior for the precision of means. a pretty tight prior seems to help avoid multimodality
         'gs' : [2.1,2.1], # top-level prior for the position of the scales,
         'hs' : [1/3,1/3], # top-level prior for the precision of the scales,
-        'scale_diag':1, # diagonal elements of the inverse wishart prior on the scale matrix
-        'scale_offdiag':0.2, # off-diagonal elements of the inverse wishart prior on the scale matrix
+        'scale_diag':0.5, # diagonal elements of the inverse wishart prior on the scale matrix
+        'scale_offdiag':0.0, # off-diagonal elements of the inverse wishart prior on the scale matrix
         'df':10,
         'forecast_len':forecast_len,
         'alpha':0,  # hyper prior for mean of alpha
@@ -216,12 +213,12 @@ model_mu = unpickle_or_create("stan_code/heaps_statprior_means.pkl",
 
         
 
-test_mu_fit = unpickle_or_create("stan_models/var_heaps_means.pkl",
-                                    overwrite=True,
-                                    function=model_mu.sampling,
-                                    iter=2000,
-                                    chains=4,
-                                    data=data)
+test_mu_fit = unpickle_or_create("stan_models/var_heaps_means_2.pkl",
+                                 overwrite=True,
+                                 function=model_mu.sampling,
+                                 iter=2000,
+                                 chains=4,
+                                 data=data)
 
 ### it fits with no warnings!
 
@@ -231,8 +228,8 @@ df_pred = stan_var_predict(test_mu_fit,N)
 p = ggplot(df_pred,aes(y='y',ymax='y_upper',ymin='y_lower', x='x',group='variable')) + geom_ribbon(alpha=0.5) + geom_line(aes(color='variable'), linetype='-')
 p = p + geom_line(aes(y='y',x='x',color='variable',group='variable'), data=df, inherit_aes=False)
 p = p + theme(legend_position = 'top')
-pp.draw()
-p.save("plots/test_heaps_fit.png")
+p.draw()
+p.save("plots/test_heaps_fit_means.png")
 
 mu = test_mu_fit.extract('mu')['mu']
 
@@ -243,6 +240,8 @@ phi = test_mu_fit.extract('phi')['phi']
 phi_hat = phi.mean(axis=0)
 phi_upper = np.quantile(phi, 0.975, axis=0)
 phi_lower = np.quantile(phi, 0.025, axis=0)
+
+sigma_hat = test_mu_fit.extract('Sigma')['Sigma'].mean(axis=0)
 
 sig = np.sign(phi_upper) == np.sign(phi_lower)
 phi_hat = pd.DataFrame(phi_hat[0])
