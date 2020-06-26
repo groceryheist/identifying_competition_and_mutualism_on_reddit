@@ -135,6 +135,7 @@ def evolve_var_system(alpha, beta, sigma, y0, N, forecast_len, link_args=[], lin
     true_forecast.shape
     all_y = np.row_stack([y, true_forecast])
 
+    
     vardict = {'x':np.concatenate([all_x for i in range(K)]),
                'y_star':np.concatenate(all_y_star),
                'y':np.concatenate(all_y.T),

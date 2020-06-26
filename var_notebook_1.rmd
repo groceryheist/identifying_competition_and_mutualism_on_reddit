@@ -62,7 +62,7 @@ Let's fit the model to some simulated data.  This way we can check that our mode
 
 ```{python, cache=FALSE}
 from util import *  # I have some helper functions in this file.
-os.sched_setaffinity(0,range(os.cpu_count())) # I did this on the int-machine and need this line to use multiple cores
+os.sched_setaffinity(0,range(os.cpu_count())) # I did this on the int-machine and need this line to use multiple coresx
 ```
 
 ```{python}
@@ -336,7 +336,7 @@ p.draw()
 K = 8
 N = 400 # we'll probably need more data for this
 forecast_len = 50
-
+p
 # gen_system is a function for generating VAR systems.
 alpha,beta,sigma = unpickle_or_create("simulation_data/var1_k8.pkl",
                                       overwrite=False,

@@ -1,5 +1,6 @@
 functions {
   /* Function to compute the matrix square root */
+  /* This approach uses diagonalization, but we 
   matrix sqrtm(matrix A) {
     int m = rows(A);
     vector[m] root_root_evals = sqrt(sqrt(eigenvalues_sym(A)));
@@ -78,11 +79,15 @@ data {
   real<lower=-scale_diag/(m-1)> scale_offdiag; // Off-diagonal element in scale matrix
   real<lower=m+3> df;                          /* Degrees of freedom (limit ensures 
                                                  finite variance) */
+  real alpha; //hyperparameters in prior for mu
+  real<lower=0> sd0; 
+  real<lower=0> g0;
+  real<lower=0> h0;
+
   int<lower=0> forecast_len;
 }
 transformed data {
   vector[p*m] y_1top;                // y_1, ..., y_p
-  vector[m] mu = rep_vector(0.0, m); // (Zero)-mean of VAR process
   matrix[m, m] scale_mat;            // Scale-matrix in prior for Sigma
   for(t in 1:p) y_1top[((t-1)*m+1):(t*m)] = y[t];
   for(i in 1:m) {
@@ -97,6 +102,10 @@ parameters {
   cov_matrix[m] Sigma; // Error variance, Sigma
   // Means and precisions in top-level prior for the diagonal and off-diagonal
   // elements in the A_i
+  vector[m] mu; // mean of VAR process
+  vector[m] mu0;
+  vector<lower=0>[m] omega0;
+
   vector[p] Amu[2];
   vector<lower=0>[p] Aomega[2];
 }
@@ -120,6 +129,7 @@ transformed parameters {
 model {
   vector[p*m] mut_init;    // Marginal mean of (y_1^T, ..., y_p^T)^T
   vector[m] mut_rest[N-p]; // Conditional means of y_{p+1}, ..., y_{N}
+
   // Likelihood:
   for(t in 1:p) mut_init[((t-1)*m+1):(t*m)] = mu;
   for(t in (p+1):N) {
@@ -131,6 +141,8 @@ model {
   y_1top ~ multi_normal(mut_init, Gamma);
   y[(p+1):N] ~  multi_normal(mut_rest, Sigma);
   // Prior:
+  mu ~ normal(mu0, omega0);
+
   Sigma ~ inv_wishart(df, scale_mat);
   for(s in 1:p) {
     diagonal(A[s]) ~ normal(Amu[1, s], 1 / sqrt(Aomega[1, s]));
@@ -145,7 +157,12 @@ model {
     Amu[i] ~ normal(es[i], fs[i]);
     Aomega[i] ~ gamma(gs[i], hs[i]); 
   }
+  
+  mu0 ~ normal(alpha, sd0);
+  omega0 ~ gamma(g0, h0);
+
 }
+
 
 generated quantities {
   vector[m] y_new[forecast_len];
