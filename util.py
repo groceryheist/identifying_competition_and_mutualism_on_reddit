@@ -108,12 +108,15 @@ def plot_ar(fit, y_vec, true_forecast):
     p.draw()
     return p
 
-def evolve_var_system(alpha, beta, sigma, y0, N, forecast_len, link_args=[], link = lambda x:x):
+def evolve_var_system(alpha, beta, sigma, y0, N, forecast_len, link_args=[], link = lambda x:x,nested_alpha=False):
     y_star = [y0]
     K = beta.shape[0]
 
     def y_next(y0):
-        return alpha + np.random.multivariate_normal(np.matmul(y0-alpha,beta), sigma)
+        if not nested_alpha:
+            return np.random.multivariate_normal(np.matmul(y0,beta) + alpha, sigma)
+        else:
+            return alpha + np.random.multivariate_normal(np.matmul(y0-alpha,beta), sigma)
 
     for n in range(1, N):
         y_star.append(y_next(y_star[-1]))

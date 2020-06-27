@@ -95,13 +95,13 @@ With this prior it becomes possible to fit much larger systems.
 
 ```{python, cache=FALSE}
 
-K = 20
-N=1000
+K = 15
+N=1500
 forecast_len=20
 
 # i set growth_var to 0 since heap's model assumes 0 mean. 
-alpha, beta, sigma = unpickle_or_create("simulation_data/gaussian_var_k10.pkl",
-                                        overwrite=True,
+alpha, beta, sigma = unpickle_or_create("simulation_data/gaussian_var_k15.pkl",
+                                        overwrite=False,
                                         growth=0,
                                         growth_var=0,
                                         noise=1,
@@ -125,25 +125,25 @@ data = {'m':K,
         'forecast_len':forecast_len} # degrees of freedom in the inverse wishart prior on the scale matrix.
         
 
-test_heaps_fit_2 = unpickle_or_create("stan_models/var_1_heaps_40.pkl",
+test_heaps_fit_2 = unpickle_or_create("stan_models/var_1_heaps_15.pkl",
                                     overwrite=True,
-                                    function=heaps_model.sampling,
+                                    function=heaps_model_means.sampling,
                                     iter=2000,
                                     chains=4,
                                     data=data,
                                     refresh=25)
 
 ### it fits with no warnings!
-assert(all(pystan.check_hmc_diagnostics(test_heaps_fit)))
+assert(all(pystan.check_hmc_diagnostics(test_heaps_fit_2)))
 
-df_pred = stan_var_predict(test_heaps_fit,N)
+df_pred = stan_var_predict(test_heaps_fit_2,N)
 p = ggplot(df_pred,aes(y='y',ymax='y_upper',ymin='y_lower', x='x',group='variable')) + geom_ribbon(alpha=0.5) + geom_line(aes(color='variable'), linetype='-')
 p = p + geom_line(aes(y='y',x='x',color='variable',group='variable'), data=df, inherit_aes=False)
 p = p + theme(legend_position = 'top')
 p.draw()
-p.save("plots/test_heaps_fit.png")
+p.save("plots/test_heaps_fit_15.png")
 
-phi = test_heaps_fit.extract('phi')['phi']
+phi = test_heaps_fit_2.extract('phi')['phi']
 
 phi_hat = phi.mean(axis=0)
 phi_upper = np.quantile(phi, 0.975, axis=0)
@@ -163,7 +163,7 @@ There are a few extensions to make for Heap's approach to be useful in my applic
 1. We want to generate forecasts. (Done)
 2. We want to have seperate means instead of mean 0 processes. (Done and we can recover parameters for mu and phi and sigma.)
 3. We want to fit on data that are poisson or negative binomial distributed.
-4. Use a more numerically stable algorithm for computing the matrix square root.
+4. Use a more numerically stable algorithm for computing the matrix square root. (might be a real challenge)
 4. (Later) We want to encourage sparsity. 
 5. (Later) We want to have trends.
 
@@ -225,8 +225,9 @@ test_mu_fit = unpickle_or_create("stan_models/var_heaps_means_2.pkl",
 assert(all(pystan.check_hmc_diagnostics(test_mu_fit)))
 
 df_pred = stan_var_predict(test_mu_fit,N)
-p = ggplot(df_pred,aes(y='y',ymax='y_upper',ymin='y_lower', x='x',group='variable')) + geom_ribbon(alpha=0.5) + geom_line(aes(color='variable'), linetype='-')
+p = ggplot(df_pred,aes(y='y',ymax='y_upper',ymin='y_lower', x='x',group='variable')) + geom_ribbon(alpha=0.5) + geom_line(aes(color='variable'), linetype='-',size=2)
 p = p + geom_line(aes(y='y',x='x',color='variable',group='variable'), data=df, inherit_aes=False)
+p = p + xlim(800,1020)
 p = p + theme(legend_position = 'top')
 p.draw()
 p.save("plots/test_heaps_fit_means.png")
@@ -246,6 +247,101 @@ sigma_hat = test_mu_fit.extract('Sigma')['Sigma'].mean(axis=0)
 sig = np.sign(phi_upper) == np.sign(phi_lower)
 phi_hat = pd.DataFrame(phi_hat[0])
 
-
-
 ```
+
+Now let's see if we can do it with a poisson link.
+
+```{python}
+1=1
+
+K=3
+N=1000
+forecast_len=20
+
+# i set growth_var to 0 since heap's model assumes 0 mean. 
+alpha, beta, sigma = unpickle_or_create("simulation_data/gaussian_var_k3_nonzero.pkl",
+                                        overwrite=True,
+                                        growth=3,
+                                        growth_var=1,
+                                        community=0.3,
+                                        community_var=0.1,
+                                        noise=0.2,
+                                        function=gen_system,
+                                        K=K,
+                                        N=N)
+
+
+y, df = evolve_var_system(alpha,beta,sigma,y0,N,forecast_len,link=lambda x: np.random.poisson(np.exp(x)),nested_alpha=False)
+
+data = {'m':K,
+        'p':1,
+        'N':N,
+        'y':y.T,
+        'es' : [0,0], # top-level prior for the means of the means (diag, off-diag)
+        'fs' : [np.sqrt(0.7), np.sqrt(0.7)], # top-level prior for the precision of means. a pretty tight prior seems to help avoid multimodality
+        'gs' : [2.1,2.1], # top-level prior for the position of the scales,
+        'hs' : [1/3,1/3], # top-level prior for the precision of the scales,
+        'scale_diag':0.5, # diagonal elements of the inverse wishart prior on the scale matrix
+        'scale_offdiag':0.0, # off-diagonal elements of the inverse wishart prior on the scale matrix
+        'df':10,
+        'forecast_len':forecast_len,
+        'alpha':0,  # hyper prior for mean of alpha
+        'sd0': 5, # hyper prior precision of mu0
+        'g0':4, # hyper prior for variance of m0
+        'h0':3, # hyper prior for variance of m0
+} # degrees of freedom in the inverse wishart prior on the scale matrix.
+
+model_pois = unpickle_or_create("stan_code/heaps_statprior_poisson_nonnested.pkl",
+                                 overwrite=True,
+                                 function=pystan.StanModel,
+                                 file='stan_code/heaps_statprior_poisson_nonnested.stan',
+                                 model_name='heaps_statprior_poisv')
+
+test_pois_fit = unpickle_or_create("stan_models/var_heaps_pois_3.pkl",
+                                 overwrite=True,
+                                 function=model_pois.sampling,
+                                 iter=2000,
+                                 chains=4,
+                                 data=data)
+
+### it fits with no warnings!
+
+assert(all(pystan.check_hmc_diagnostics(test_pois_fit)))
+
+df_pred = stan_var_predict(test_pois_fit,N)
+p = ggplot(df_pred,aes(y='y',ymax='y_upper',ymin='y_lower', x='x',group='variable')) + geom_ribbon(alpha=0.5) + geom_line(aes(color='variable'), linetype='-',size=2)
+p = p + geom_line(aes(y='y',x='x',color='variable',group='variable'), data=df, inherit_aes=False)
+p = p + xlim(800,1020)
+p = p + theme(legend_position = 'top')
+p.draw()
+p.save("plots/test_heaps_fit_means.png")
+
+mu = test_pois_fit.extract('mu')['mu']
+
+mu_hat = mu.mean(axis=0)
+
+phi = test_pois_fit.extract('phi')['phi']
+
+phi_hat = phi.mean(axis=0)
+phi_upper = np.quantile(phi, 0.975, axis=0)
+phi_lower = np.quantile(phi, 0.025, axis=0)
+
+sigma_hat = test_mu_fit.extract('Sigma')['Sigma'].mean(axis=0)
+
+sig = np.sign(phi_upper) == np.sign(phi_lower)
+phi_hat = pd.DataFrame(phi_hat[0])
+```
+
+I am having some trouble with the poisson link.  The questions are:
+
+1. Should I multiply phi by lambda (latent gaussian distributed paramter) or by y or y - mu?  
+   There are two reasons to multiply by y not lambda.  Multiplying paramters by parameters creates funnels in the posterior leading to sampling problems.  Also, multiplying by y makes things easier to interpret.
+   
+2. Should I multiply phi by y or by y - mu? 
+   The reason to multily by y-mu is 1. that's what Sarah Heaps did and I think this is good because the matrix-vector multiplication will be more stable if the vector is near to 0. The reason not to is that mu is a parameter so that means multiplying a parameter by a parameter.  That doesn't seem to be a problem with the gaussian models though. 
+   
+3. Do I even need a multinomial normal prior on lambda at all? I think I do. 
+
+4. Was the problems I was having earlier just because my data was at an absurd scale for poisson distributed data? Maybe. 
+   
+
