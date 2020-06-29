@@ -185,7 +185,7 @@ generated quantities {
    for(t in (p+1):forecast_len){
      mu_forecast[t] = mu;
      for(i in 1:p){
-       mu_forecast[t] = phi[i] * (y_new[t-i] - mu);
+       mu_forecast[t] += phi[i] * (y_new[t-i] - mu);
      }
      y_new[t] = multi_normal_rng(mu_forecast[t], Sigma);
    }

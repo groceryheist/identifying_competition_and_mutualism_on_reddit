@@ -92,7 +92,6 @@ data {
 }
 transformed data {
 
-  vector[m] y_real[N];
   matrix[m, m] scale_mat;            // Scale-matrix in prior for Sigma
   vector[0] global[m];
   real xr[m,0];
@@ -102,9 +101,6 @@ transformed data {
       if(i==j) scale_mat[i, j] = scale_diag;
       else scale_mat[i, j] = scale_offdiag;
     }
-  }
-  for(i in 1:m){
-    y_real[1:N][i] = y[i];
   }
 }
 
@@ -156,7 +152,7 @@ model {
     mut_rest[t-p] = mu;
     for(i in 1:p) {
       // do this without multiplying parameters by parameters. That's a recipe for failure. 
-      mut_rest[t-p] += phi[i] * (y_real[t-i] - mu);
+      mut_rest[t-p] += phi[i] * (lambda[t-i] - mu);
     }
   }
 

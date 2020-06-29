@@ -63,8 +63,6 @@ functions {
     for(i in 1:p) phiGamma[2, i] = Gamma_trans[i]';
     return phiGamma;
   }
-
-
 }
 
 // for the poisson model things are the same except at the latent lambda level and the poisson_log link.
@@ -92,23 +90,16 @@ data {
 }
 transformed data {
 
-  vector[m] y_real[N];
   matrix[m, m] scale_mat;            // Scale-matrix in prior for Sigma
-  vector[0] global[m];
-  real xr[m,0];
-
   for(i in 1:m) {
     for(j in 1:m) {
       if(i==j) scale_mat[i, j] = scale_diag;
       else scale_mat[i, j] = scale_offdiag;
     }
   }
-  for(i in 1:m){
-    y_real[1:N][i] = y[i];
-  }
 }
-
 parameters {
+  vector[m] lambda[N]; 
   matrix[m, m] A[p];   // The A_i
   cov_matrix[m] Sigma; // Error variance, Sigma
   // Means and precisions in top-level prior for the diagonal and off-diagonal
@@ -119,15 +110,14 @@ parameters {
 
   vector[p] Amu[2];
   vector<lower=0>[p] Aomega[2];
-  vector[m] lambda[N]; 
-  
-}
 
+  // latent negbin scale parameters, one for each series
+  vector[m] theta[N];
+}
 transformed parameters {
-  vector[p*m] lambda_1top;                // lambda_1, ..., lambda_p
   matrix[m, m] phi[p];    // The phi_i
   matrix[p*m, p*m] Gamma; // (Stationary) variance of (y_1, ..., y_p)
-
+  vector[p*m] lambda_1top;                // lambda_1, ..., lambda_p
   {
     matrix[m, m] P[p];
     matrix[m, m] phiGamma[2, p];
@@ -143,9 +133,7 @@ transformed parameters {
   }
 
   for(t in 1:p) lambda_1top[((t-1)*m+1):(t*m)] = lambda[t];
-  
 }
-
 model {
   vector[p*m] mut_init;    // Marginal mean of (lambda_1^T, ..., lambda_p^T)^T
   vector[m] mut_rest[N-p]; // Conditional means of lambda_{p+1}, ..., lambda_{N}
@@ -155,21 +143,19 @@ model {
   for(t in (p+1):N) {
     mut_rest[t-p] = mu;
     for(i in 1:p) {
-      // do this without multiplying parameters by parameters. That's a recipe for failure. 
-      mut_rest[t-p] += phi[i] * (y_real[t-i] - mu);
+      mut_rest[t-p] += phi[i] * (lambda[t-i] - mu);
     }
   }
-
   lambda_1top ~ multi_normal(mut_init, Gamma);
-  
   lambda[(p+1):N] ~  multi_normal(mut_rest, Sigma);
 
   for(i in 1:m)
-    y[i] ~ poisson_log(lambda[1:N,i]);
-
+    y[i] ~ neg_binomial_2_log(lambda[1:N,i],theta[i]);
 
   // Prior:
   mu ~ normal(mu0, omega0);
+
+  theta ~ cauchy(0,10);
 
   Sigma ~ inv_wishart(df, scale_mat);
   for(s in 1:p) {
@@ -213,7 +199,7 @@ generated quantities {
    for(t in (p+1):forecast_len){
      mu_forecast[t] = mu;
      for(i in 1:p){
-       mu_forecast[t] += phi[i] * (lambda_new[t-i] - mu);
+       mu_forecast[t] = phi[i] * (lambda_new[t-i] - mu);
      }
      lambda_new[t] = multi_normal_rng(mu_forecast[t], Sigma);
    }

@@ -1,3 +1,4 @@
+
 ---
 title: "Testing stationarity enforcing priors for VAR models in Stan"
 author: "Nate TeBlunthuis"
@@ -19,7 +20,7 @@ Heap's code fits var models to stationary space. Let's get started by simulating
 
 
 ```{python, cache=FALSE}
-
+##
 from util import *
 
 os.sched_setaffinity(0,range(os.cpu_count())) # I did this on the int-machine and need this line to use multiple cores
@@ -36,8 +37,8 @@ alpha, beta, sigma = unpickle_or_create("simulation_data/gaussian_var_k3.pkl",
                                         noise=1,
                                         function=gen_system,
                                         K=K,
-                                        N=N)
-y0 = alpha
+                                        Ny0 = alpha
+
 y, df = evolve_var_system(alpha,beta,sigma,y0,N,forecast_len)
 
 data = {'m':K,
@@ -184,6 +185,7 @@ alpha, beta, sigma = unpickle_or_create("simulation_data/gaussian_var_k3_nonzero
                                         function=gen_system,
                                         K=K,
                                         N=N)
+
 y0 = alpha
 y, df = evolve_var_system(alpha,beta,sigma,y0,N,forecast_len)
 
@@ -252,14 +254,15 @@ phi_hat = pd.DataFrame(phi_hat[0])
 Now let's see if we can do it with a poisson link.
 
 ```{python}
-1=1
+####
 
-K=3
-N=1000
-forecast_len=20
+
+K = 3
+N = 200
+forecast_len = 20
 
 # i set growth_var to 0 since heap's model assumes 0 mean. 
-alpha, beta, sigma = unpickle_or_create("simulation_data/gaussian_var_k3_nonzero.pkl",
+alpha, beta, sigma = unpickle_or_create("simulation_data/gaussian_var_k3_n200_nonzero.pkl",
                                         overwrite=True,
                                         growth=3,
                                         growth_var=1,
@@ -271,7 +274,7 @@ alpha, beta, sigma = unpickle_or_create("simulation_data/gaussian_var_k3_nonzero
                                         N=N)
 
 
-y, df = evolve_var_system(alpha,beta,sigma,y0,N,forecast_len,link=lambda x: np.random.poisson(np.exp(x)),nested_alpha=False)
+y, df = evolve_var_system(alpha,beta,sigma,alpha,N,forecast_len,link=lambda x: np.random.poisson(np.exp(x)),nested_alpha=False)
 
 data = {'m':K,
         'p':1,
@@ -291,10 +294,10 @@ data = {'m':K,
         'h0':3, # hyper prior for variance of m0
 } # degrees of freedom in the inverse wishart prior on the scale matrix.
 
-model_pois = unpickle_or_create("stan_code/heaps_statprior_poisson_nonnested.pkl",
-                                 overwrite=True,
+model_pois = unpickle_or_create("stan_code/heaps_statprior_poisson.pkl",
+                                 overwrite=False,
                                  function=pystan.StanModel,
-                                 file='stan_code/heaps_statprior_poisson_nonnested.stan',
+                                 file='stan_code/heaps_statprior_poisson.stan',
                                  model_name='heaps_statprior_poisv')
 
 test_pois_fit = unpickle_or_create("stan_models/var_heaps_pois_3.pkl",
@@ -304,17 +307,33 @@ test_pois_fit = unpickle_or_create("stan_models/var_heaps_pois_3.pkl",
                                  chains=4,
                                  data=data)
 
+# model_pois_non_nested = unpickle_or_create("stan_code/heaps_statprior_poisson_nonnested.pkl",
+#                                  overwrite=True,
+#                                  function=pystan.StanModel,
+#                                  file='stan_code/heaps_statprior_poisson_nonnested.stan',
+#                                  model_name='heaps_statprior_pois_nonnested')
+
+# test_pois_fit_nonnested = unpickle_or_create("stan_models/var_heaps_pois_3_nonnested.pkl",
+#                                  overwrite=False,
+#                                  function=model_pois.sampling,
+#                                  iter=2000,
+#                                  chains=4,
+#                                  data=data)
+
+
 ### it fits with no warnings!
+
+
 
 assert(all(pystan.check_hmc_diagnostics(test_pois_fit)))
 
-df_pred = stan_var_predict(test_pois_fit,N)
+df_pred = stan_pois_var_predict(test_pois_fit,N)
 p = ggplot(df_pred,aes(y='y',ymax='y_upper',ymin='y_lower', x='x',group='variable')) + geom_ribbon(alpha=0.5) + geom_line(aes(color='variable'), linetype='-',size=2)
 p = p + geom_line(aes(y='y',x='x',color='variable',group='variable'), data=df, inherit_aes=False)
 p = p + xlim(800,1020)
 p = p + theme(legend_position = 'top')
 p.draw()
-p.save("plots/test_heaps_fit_means.png")
+p.save("plots/test_heaps_fit_means_pois.png")
 
 mu = test_pois_fit.extract('mu')['mu']
 
@@ -326,22 +345,84 @@ phi_hat = phi.mean(axis=0)
 phi_upper = np.quantile(phi, 0.975, axis=0)
 phi_lower = np.quantile(phi, 0.025, axis=0)
 
+sigma_hat = test_pois_fit.extract('Sigma')['Sigma'].mean(axis=0)
+
+sig = np.sign(phi_upper) == np.sign(phi_lower)
+phi_hat = pd.DataFrame(phi_hat[0])
+```
+
+
+Now let's see if we can do it with the gaussian model fully embedded.
+
+```{python}
+##
+
+model_pois_embedded = unpickle_or_create("stan_code/heaps_statprior_poisson_latent.pkl",
+                                         overwrite=True,
+                                         function=pystan.StanModel,
+                                         file='stan_code/heaps_statprior_poisson_latent.stan',
+                                         model_name='heaps_statprior_pois_latent')
+
+test_pois_embedded_fit = unpickle_or_create("stan_models/var_heaps_pois_3_latent.pkl",
+                                            overwrite=True,
+                                            function=model_pois_embedded.sampling,
+                                            iter=2000,
+                                            chains=4,
+                                            data=data,
+                                            control={'adapt_delta':0.92} # jacking up adapt_delta removes divergences
+)
+
+# Model_pois_non_nested = unpickle_or_create("stan_code/heaps_statprior_poisson_nonnested.pkl",
+#                                  overwrite=True,
+#                                  function=pystan.StanModel,
+#                                  file='stan_code/heaps_statprior_poisson_nonnested.stan',
+#                                  model_name='heaps_statprior_pois_nonnested')
+
+# test_pois_fit_nonnested = unpickle_or_create("stan_models/var_heaps_pois_3_nonnested.pkl",
+#                                  overwrite=False,
+#                                  function=model_pois.sampling,
+#                                  iter=2000,
+#                                  chains=4,
+#                                  data=data)
+
+
+### it fits with no warnings!
+
+assert(all(pystan.check_hmc_diagnostics(test_pois_embedded_fit)))
+
+df_pred = stan_pois_var_predict(test_pois_embedded_fit,N)
+p = ggplot(df_pred,aes(y='y',ymax='y_upper',ymin='y_lower', x='x',group='variable')) + geom_ribbon(alpha=0.5) + geom_line(aes(color='variable'), linetype='-',size=2)
+p = p + geom_line(aes(y='y',x='x',color='variable',group='variable'), data=df, inherit_aes=False)
+
+p = p + theme(legend_position = 'top')
+p.draw()
+p = p + theme(plot_background=element_rect(fill='white'))
+p.save("plots/test_heaps_fit_pois_embedded.png")
+
+
+mu = test_pois_embedded_fit.extract('mu')['mu']
+
+mu_hat = mu.mean(axis=0)
+
+phi = test_pois_embedded_fit.extract('phi')['phi']
+
+phi_hat = phi.mean(axis=0)
+phi_upper = np.quantile(phi, 0.975, axis=0)
+phi_lower = np.quantile(phi, 0.025, axis=0)
+
 sigma_hat = test_mu_fit.extract('Sigma')['Sigma'].mean(axis=0)
 
 sig = np.sign(phi_upper) == np.sign(phi_lower)
 phi_hat = pd.DataFrame(phi_hat[0])
 ```
 
-I am having some trouble with the poisson link.  The questions are:
+I was having some trouble figuring out a model structure that would work best.  I was confused for some time by a bug. 
+There seem to be two options that can work: 
 
-1. Should I multiply phi by lambda (latent gaussian distributed paramter) or by y or y - mu?  
-   There are two reasons to multiply by y not lambda.  Multiplying paramters by parameters creates funnels in the posterior leading to sampling problems.  Also, multiplying by y makes things easier to interpret.
-   
-2. Should I multiply phi by y or by y - mu? 
-   The reason to multily by y-mu is 1. that's what Sarah Heaps did and I think this is good because the matrix-vector multiplication will be more stable if the vector is near to 0. The reason not to is that mu is a parameter so that means multiplying a parameter by a parameter.  That doesn't seem to be a problem with the gaussian models though. 
-   
-3. Do I even need a multinomial normal prior on lambda at all? I think I do. 
+1. Have Heap's model as a latent gaussian model for the $log(\lambda)$ in the poisson model. In this we multiply parmaeter Phi by parameter lambda. Multiplying parameters can lead to sampling difficulties.
 
-4. Was the problems I was having earlier just because my data was at an absurd scale for poisson distributed data? Maybe. 
-   
+
+2. Follow Brandt and Sandler's approach with the var process in non-exponentiated space. This is more complicated and might break Heap's model (not 100% sure about this).  The issue is that this model doesn't have a model for the covariance of the errors, which is a second drawback: the model assumes heterogeneity. The main advantage is that we can avoid multiplying parameters.
+
+I'm going with option 1 for now. There might be some sampling difficulties and divergent transitions on the real data. 
 
