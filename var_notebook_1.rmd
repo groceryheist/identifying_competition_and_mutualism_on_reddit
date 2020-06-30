@@ -447,7 +447,7 @@ Once we have a poisson model. Generalizing to negative binomial is straightforwa
 K = 8
 N = 400
 forecast_len=100
-alpha, beta, sigma = unpickle_or_create("simulation_data/var_1_sim_4_negbin.pkl",
+alpha, beta, sigma = unpickle_or_create("simulation_data/var_1_sim_8_negbin.pkl",
                                         overwrite=False,
                                         function=gen_system,
                                         growth=5,
