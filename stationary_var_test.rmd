@@ -163,7 +163,7 @@ There are a few extensions to make for Heap's approach to be useful in my applic
 
 1. We want to generate forecasts. (Done)
 2. We want to have seperate means instead of mean 0 processes. (Done and we can recover parameters for mu and phi and sigma.)
-3. We want to fit on data that are poisson or negative binomial distributed.
+3. We want to fit on data that are poisson (Done) or negative binomial distributed.
 4. Use a more numerically stable algorithm for computing the matrix square root. (might be a real challenge)
 4. (Later) We want to encourage sparsity. 
 5. (Later) We want to have trends.
@@ -253,9 +253,18 @@ phi_hat = pd.DataFrame(phi_hat[0])
 
 Now let's see if we can do it with a poisson link.
 
+I was having some trouble figuring out a model structure that would work best.  I was confused for some time by a bug. 
+There seem to be two options that can work: 
+
+1. Have Heap's model as a latent gaussian model for the $log(\lambda)$ in the poisson model. In this we multiply parmaeter $\phi$ by parameter $\lambda$. Multiplying parameters can lead to sampling difficulties.
+
+2. Follow Brandt and Sandler's approach with the var process in non-exponentiated space. This is more complicated and might break Heap's model (not 100% sure about this).  The issue is that this model doesn't have a model for the covariance of the errors, which is a second drawback: the model assumes heterogeneity. The main advantage is that we can avoid multiplying parameters.  This model also has fewer latent parameters. 
+
+I'm going with option 1 for now. There might be some sampling difficulties and divergent transitions on the real data.  Code for option 2 is in `heaps\_poisson\__nonexp.stan`.
+
+
 ```{python}
 ####
-
 
 K = 3
 N = 200
@@ -294,76 +303,14 @@ data = {'m':K,
         'h0':3, # hyper prior for variance of m0
 } # degrees of freedom in the inverse wishart prior on the scale matrix.
 
-model_pois = unpickle_or_create("stan_code/heaps_statprior_poisson.pkl",
-                                 overwrite=False,
-                                 function=pystan.StanModel,
-                                 file='stan_code/heaps_statprior_poisson.stan',
-                                 model_name='heaps_statprior_poisv')
 
-test_pois_fit = unpickle_or_create("stan_models/var_heaps_pois_3.pkl",
-                                 overwrite=True,
-                                 function=model_pois.sampling,
-                                 iter=2000,
-                                 chains=4,
-                                 data=data)
-
-# model_pois_non_nested = unpickle_or_create("stan_code/heaps_statprior_poisson_nonnested.pkl",
-#                                  overwrite=True,
-#                                  function=pystan.StanModel,
-#                                  file='stan_code/heaps_statprior_poisson_nonnested.stan',
-#                                  model_name='heaps_statprior_pois_nonnested')
-
-# test_pois_fit_nonnested = unpickle_or_create("stan_models/var_heaps_pois_3_nonnested.pkl",
-#                                  overwrite=False,
-#                                  function=model_pois.sampling,
-#                                  iter=2000,
-#                                  chains=4,
-#                                  data=data)
-
-
-### it fits with no warnings!
-
-
-
-assert(all(pystan.check_hmc_diagnostics(test_pois_fit)))
-
-df_pred = stan_pois_var_predict(test_pois_fit,N)
-p = ggplot(df_pred,aes(y='y',ymax='y_upper',ymin='y_lower', x='x',group='variable')) + geom_ribbon(alpha=0.5) + geom_line(aes(color='variable'), linetype='-',size=2)
-p = p + geom_line(aes(y='y',x='x',color='variable',group='variable'), data=df, inherit_aes=False)
-p = p + xlim(800,1020)
-p = p + theme(legend_position = 'top')
-p.draw()
-p.save("plots/test_heaps_fit_means_pois.png")
-
-mu = test_pois_fit.extract('mu')['mu']
-
-mu_hat = mu.mean(axis=0)
-
-phi = test_pois_fit.extract('phi')['phi']
-
-phi_hat = phi.mean(axis=0)
-phi_upper = np.quantile(phi, 0.975, axis=0)
-phi_lower = np.quantile(phi, 0.025, axis=0)
-
-sigma_hat = test_pois_fit.extract('Sigma')['Sigma'].mean(axis=0)
-
-sig = np.sign(phi_upper) == np.sign(phi_lower)
-phi_hat = pd.DataFrame(phi_hat[0])
-```
-
-
-Now let's see if we can do it with the gaussian model fully embedded.
-
-```{python}
-##
-
-model_pois_embedded = unpickle_or_create("stan_code/heaps_statprior_poisson_latent.pkl",
+model_pois = unpickle_or_create("stan_code/heaps_poisson.pkl",
                                          overwrite=True,
                                          function=pystan.StanModel,
-                                         file='stan_code/heaps_statprior_poisson_latent.stan',
+                                         file='stan_code/heaps_poisson.stan',
                                          model_name='heaps_statprior_pois_latent')
 
-test_pois_embedded_fit = unpickle_or_create("stan_models/var_heaps_pois_3_latent.pkl",
+test_pois_fit = unpickle_or_create("stan_models/var_heaps_pois_3_latent.pkl",
                                             overwrite=True,
                                             function=model_pois_embedded.sampling,
                                             iter=2000,
@@ -372,39 +319,22 @@ test_pois_embedded_fit = unpickle_or_create("stan_models/var_heaps_pois_3_latent
                                             control={'adapt_delta':0.92} # jacking up adapt_delta removes divergences
 )
 
-# Model_pois_non_nested = unpickle_or_create("stan_code/heaps_statprior_poisson_nonnested.pkl",
-#                                  overwrite=True,
-#                                  function=pystan.StanModel,
-#                                  file='stan_code/heaps_statprior_poisson_nonnested.stan',
-#                                  model_name='heaps_statprior_pois_nonnested')
-
-# test_pois_fit_nonnested = unpickle_or_create("stan_models/var_heaps_pois_3_nonnested.pkl",
-#                                  overwrite=False,
-#                                  function=model_pois.sampling,
-#                                  iter=2000,
-#                                  chains=4,
-#                                  data=data)
-
 
 ### it fits with no warnings!
+assert(all(pystan.check_hmc_diagnostics(test_pois_fit)))
 
-assert(all(pystan.check_hmc_diagnostics(test_pois_embedded_fit)))
-
-df_pred = stan_pois_var_predict(test_pois_embedded_fit,N)
+df_pred = stan_pois_var_predict(test_pois_fit,N)
 p = ggplot(df_pred,aes(y='y',ymax='y_upper',ymin='y_lower', x='x',group='variable')) + geom_ribbon(alpha=0.5) + geom_line(aes(color='variable'), linetype='-',size=2)
 p = p + geom_line(aes(y='y',x='x',color='variable',group='variable'), data=df, inherit_aes=False)
 
 p = p + theme(legend_position = 'top')
 p.draw()
 p = p + theme(plot_background=element_rect(fill='white'))
-p.save("plots/test_heaps_fit_pois_embedded.png")
+p.save("plots/test_heaps_fit_pois.png")
 
-
-mu = test_pois_embedded_fit.extract('mu')['mu']
+mu = test_pois_fit.extract('mu')['mu']
 
 mu_hat = mu.mean(axis=0)
-
-phi = test_pois_embedded_fit.extract('phi')['phi']
 
 phi_hat = phi.mean(axis=0)
 phi_upper = np.quantile(phi, 0.975, axis=0)
@@ -415,14 +345,4 @@ sigma_hat = test_mu_fit.extract('Sigma')['Sigma'].mean(axis=0)
 sig = np.sign(phi_upper) == np.sign(phi_lower)
 phi_hat = pd.DataFrame(phi_hat[0])
 ```
-
-I was having some trouble figuring out a model structure that would work best.  I was confused for some time by a bug. 
-There seem to be two options that can work: 
-
-1. Have Heap's model as a latent gaussian model for the $log(\lambda)$ in the poisson model. In this we multiply parmaeter Phi by parameter lambda. Multiplying parameters can lead to sampling difficulties.
-
-
-2. Follow Brandt and Sandler's approach with the var process in non-exponentiated space. This is more complicated and might break Heap's model (not 100% sure about this).  The issue is that this model doesn't have a model for the covariance of the errors, which is a second drawback: the model assumes heterogeneity. The main advantage is that we can avoid multiplying parameters.
-
-I'm going with option 1 for now. There might be some sampling difficulties and divergent transitions on the real data. 
 
