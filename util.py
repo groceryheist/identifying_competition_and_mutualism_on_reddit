@@ -23,6 +23,7 @@ import pickle
 import sys
 
 
+
 def csv_to_stan_data(df,y_name,forecast_len=0):
 
     # we need to create zero rows where we don't have data 
@@ -176,10 +177,10 @@ def convert_negbin_params(mu, theta):
     p = (var - mu) / var
     return r, 1 - p
 
-def stan_negbin_var_predict(fit, N):
-    pars = fit.extract(['theta','eta_new'])
+def stan_negbin_var_predict(fit, N, mean_name='eta_new'):
+    pars = fit.extract(['theta',mean_name])
     theta = pars['theta']
-    eta_new = pars['eta_new']
+    eta_new = pars[mean_name]
     K = theta.shape[1]
     forecast_len = eta_new.shape[1]
     n_draws = eta_new.shape[0]
@@ -262,3 +263,5 @@ def get_loglevel(arg_loglevel):
         print("Choose a valid log level: debug, info, warning, error, or critical", file=sys.stderr)
         return logging.INFO
 
+
+                            
