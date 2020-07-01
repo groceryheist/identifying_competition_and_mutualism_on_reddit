@@ -267,11 +267,11 @@ I'm going with option 1 for now. There might be some sampling difficulties and d
 ####
 
 K = 3
-N = 200
+N = 400
 forecast_len = 20
 
 # i set growth_var to 0 since heap's model assumes 0 mean. 
-alpha, beta, sigma = unpickle_or_create("simulation_data/gaussian_var_k3_n200_nonzero.pkl",
+alpha, beta, sigma = unpickle_or_create("simulation_data/gaussian_var_k3_n400_nonzero.pkl",
                                         overwrite=True,
                                         growth=3,
                                         growth_var=1,
@@ -304,38 +304,39 @@ data = {'m':K,
 } # degrees of freedom in the inverse wishart prior on the scale matrix.
 
 
-model_pois = unpickle_or_create("stan_code/heaps_poisson.pkl",
-                                         overwrite=True,
+model_pois_noncentered = unpickle_or_create("stan_code/heaps_poisson_noncentered.pkl",
+                                         overwrite=False,
                                          function=pystan.StanModel,
-                                         file='stan_code/heaps_poisson.stan',
-                                         model_name='heaps_statprior_pois_latent')
+                                         file='stan_code/heaps_poisson_noncentered.stan',
+                                         model_name='heaps_statprior_pois_noncentered')
 
-test_pois_fit = unpickle_or_create("stan_models/var_heaps_pois_3_latent.pkl",
-                                            overwrite=True,
-                                            function=model_pois_embedded.sampling,
-                                            iter=2000,
-                                            chains=4,
-                                            data=data,
-                                            control={'adapt_delta':0.92} # jacking up adapt_delta removes divergences
+test_pois_fit_noncentered = unpickle_or_create("stan_models/var_heaps_pois_3_latent_noncentered_n400.pkl",
+                                               overwrite=True,
+                                               function=model_pois_noncentered.sampling,
+                                               iter=2000,
+                                               chains=4,
+                                               data=data,
+                                               control={'adapt_delta':0.92} # jacking up adapt_delta removes divergences
 )
 
 
 ### it fits with no warnings!
-assert(all(pystan.check_hmc_diagnostics(test_pois_fit)))
+assert(all(pystan.check_hmc_diagnostics(test_pois_fit_noncentered)))
 
-df_pred = stan_pois_var_predict(test_pois_fit,N)
+df_pred = stan_pois_var_predict(test_pois_fit_noncentered,N)
 p = ggplot(df_pred,aes(y='y',ymax='y_upper',ymin='y_lower', x='x',group='variable')) + geom_ribbon(alpha=0.5) + geom_line(aes(color='variable'), linetype='-',size=2)
 p = p + geom_line(aes(y='y',x='x',color='variable',group='variable'), data=df, inherit_aes=False)
 
 p = p + theme(legend_position = 'top')
 p.draw()
 p = p + theme(plot_background=element_rect(fill='white'))
-p.save("plots/test_heaps_fit_pois.png")
+p = p + scale_y_log10()
+p.save("plots/test_heaps_fit_pois_noncentered.png")
 
-mu = test_pois_fit.extract('mu')['mu']
+mu = test_pois_fit_noncentered.extract('mu')['mu']
 
 mu_hat = mu.mean(axis=0)
-
+phi = test_pois_fit_noncentered.extract('phi')['phi']
 phi_hat = phi.mean(axis=0)
 phi_upper = np.quantile(phi, 0.975, axis=0)
 phi_lower = np.quantile(phi, 0.025, axis=0)
@@ -345,4 +346,154 @@ sigma_hat = test_mu_fit.extract('Sigma')['Sigma'].mean(axis=0)
 sig = np.sign(phi_upper) == np.sign(phi_lower)
 phi_hat = pd.DataFrame(phi_hat[0])
 ```
+
+Now that we've got the Poisson model working let's do the negative binomial. 
+
+```{python,warning=F}
+K = 3
+N = 400
+forecast_len=100
+alpha, beta, sigma = unpickle_or_create("simulation_data/var_1_sim_3_negbin.pkl",
+                                        overwrite=True,
+                                        function=gen_system,
+                                        growth=3.1,
+                                        growth_var=0.5,
+                                        community=0,
+                                        community_var=2,
+                                        K=K,
+                                        N=N,
+                                        noise=0.4,
+                                        seed=1234)
+y0 = alpha
+
+# we need overdispersion parameters
+phi = np.abs(np.random.normal(0,1,K))
+thetas = 1/np.sqrt(phi)
+
+link = lambda mu, theta: np.random.negative_binomial(* convert_negbin_params(np.exp(mu), theta))
+
+y, df = evolve_var_system(alpha, beta, sigma, y0, N, forecast_len, link_args=[thetas], link = link, nested_alpha=False)
+
+data = {'m':K,
+        'p':1,
+        'N':N,
+        'y':y.T,
+        'es' : [0,0], # top-level prior for the means of the means (diag, off-diag)
+        'fs' : [np.sqrt(0.3), np.sqrt(0.3)], # top-level prior for the precision of means. a pretty tight prior seems to help avoid multimodality
+        'gs' : [1/2,1/2], # top-level prior for the position of the scales,
+        'hs' : [1/2,1/2], # top-level prior for the precision of the scales,
+        'scale_diag':0.5, # diagonal elements of the inverse wishart prior on the scale matrix
+        'scale_offdiag':0.1, # off-diagonal elements of the inverse wishart prior on the scale matrix
+        'df':8,
+        'forecast_len':forecast_len,
+        'alpha':0,  # hyper prior for mean of alpha
+        'sd0': 5, # hyper prior precision of mu0
+        'g0':4, # hyper prior for variance of m0
+        'h0':3, # hyper prior for variance of m0
+        'ts0':0, # hyper prior for variance of theta (overdispersion parameter)
+        'tss':5, # hyper prior for variance of theta (overdispersion parameter)
+        'tm0':0, # hyper prior for mean of theta (overdispersion parameter)
+        'tms':2, # hyper prior for mean of theta (overdispersion parameter)
+        
+} # degrees of freedom in the inverse wishart prior on the scale matrix.
+
+
+heaps_negbin_mod_noncentered = unpickle_or_create("stan_code/heaps_negbin_noncentered.pkl",
+                                      overwrite=True,
+                                      function=pystan.StanModel,
+                                      file="stan_code/heaps_negbin_noncentered.stan",
+                                      model_name='heaps_negbin_noncentered'
+)
+
+heaps_negbin_mod = unpickle_or_create("stan_code/heaps_negbin.pkl",
+                                      overwrite=False,
+                                      function=pystan.StanModel,
+                                      file="stan_code/heaps_negbin.stan",
+                                      model_name='heaps_negbin_noncentered'
+)
+
+
+# The centered parameterization has divergences and low bfmi
+heaps_negbin_fit = unpickle_or_create("stan_models/heaps_negbin_3.pkl",
+                                      overwrite=True,
+                                      function=heaps_negbin_mod.sampling,
+                                      data=data,
+                                      iter=2000,
+                                      control={'adapt_delta':0.95,
+                                               'max_treedepth':12})
+
+heaps_negbin_noncentered_fit = unpickle_or_create("stan_models/heaps_negbin_3.pkl",
+                                                 overwrite=True,
+                                                 function=heaps_negbin_mod_noncentered.sampling,
+                                                 data=data,
+                                                 iter=2000,
+                                                 control={'adapt_delta':0.99,
+                                                          'max_treedepth':12})
+
+df_pred = stan_pois_var_predict(heaps_negbin_noncentered_fit, N)
+#heaps_negbin_fit = heaps_poisson_fit_on_negbin
+#df_pred = stan_negbin_var_predict(heaps_negbin_fit, N,mean_name='lambda_new')
+
+p = ggplot(df_pred,aes(y='y',ymax='y_upper',ymin='y_lower', x='x',group='variable')) + geom_ribbon(alpha=0.5) + geom_line(aes(color='variable'), linetype='-',size=2)
+p = p + geom_line(aes(y='y',x='x',color='variable',group='variable'), data=df, inherit_aes=False)
+
+p = p + theme(legend_position = 'top')
+
+p.draw()
+p = p + theme(plot_background=element_rect(fill='white'))
+p.save("plots/negbin_3_noncentered_pred.pdf",width=12,height=10)
+
+mu = heaps_negbin_fit.extract('mu')['mu']
+
+mu_hat = mu.mean(axis=0)
+
+phi = heaps_negbin_fit.extract('phi')['phi']
+phi_hat = phi.mean(axis=0)
+phi_upper = np.quantile(phi, 0.975, axis=0)
+phi_lower = np.quantile(phi, 0.025, axis=0)
+
+sigma_hat = heaps_negbin_fit.extract('Sigma')['Sigma'].mean(axis=0)
+theta_hat = heaps_negbin_fit.extract('theta')['theta'].mean(axis=0)
+
+# check the pairs plot_ar
+
+#df = heaps_negbin_fit.to_dataframe(inc_warmup=True,diagnostics=True,pars=['A','mu','theta','Sigma'])
+df = heaps_negbin_noncentered_fit.to_dataframe(inc_warmup=True,diagnostics=True,pars=['A','mu','Sigma','theta'])
+pairsdata = df.melt(id_vars=['energy__','divergent__'])
+#pairsdata['xdraw'] = (pairsdata.draw.astype(str) + '0' + pairsdata.chain.astype(str)).astype(int)
+
+p = ggplot(pairsdata, aes(x='energy__',y='value',color='divergent__')) + geom_point(alpha=0.5) + facet_wrap(('variable'),ncol=3,scales='free')
+p = p + theme(plot_background=element_rect(fill='white'))
+p.save('plots/negbin_noncentered_pairs.png',width=12,height=150,limitsize=False)
+
+```
+
+So even with the stationarity enforcing prior, the negative binomial models still seem to struggle. I spent a lot of time experimenting with and thinking about the Poisson and Negative binomial models.  For a time I thought that stronger priors would be the solution, and while that can help that doesn't give me much confidence about being able to scale the analysis on real data. I tried out non-centered parameterizations. This can help in some situations, but  doesn't solve the underlying multimodality problem inherent in the model.
+
+Both of the models struggle with identifiability issues that I believe are linked to dependence between the variance terms in the link and the variance-covariance matrix.  My intuition is that there's simply too many places for noise to go. It can show up in the covariance matrix and in the overdispersion parameter. So it's going to have a hard time splitting between the errors and the negative binomial. 
+
+In the case of the Poisson model (though things are clearely worse in the case of the negbin), the model (ignoring priors) is: 
+
+$Y_t \sim Pois(\lambda_t)$
+
+$\lambda_t \sim \mathrm(MVN)(\mu_t, \Sigma) + \alpha$
+
+$\mu_t = A mu_{t-1}$
+
+Since this is a poisson model the maringal mean and variance of the outcome are:
+
+$E[Y_t] = VAR[Y_t] = \lambda_t$
+
+So the variance depends on both $\Sigma$ and $A$. In the case of Poisson my intuition is that this might not be a huge problem since $\lambda_t$ can probably be identified by $\mu_t$.  The situation is worse for negative binomial models because
+
+$\Y_t \sim NB(\lambda_t, \theta)$ 
+
+$ E[Y_t] = \lambda_t$
+
+$ VAR[Y_t] = \lambda_t + \frac{\lambda_t}{\theta} $
+
+So now variance of $Y_t$ depends on $\Sigma$, $\theta$, and $A$. And $\Sigma$ and $\theta$ are both largely informed by the variance. This seems like a recipe for identifiability problems. 
+
+Following an approach like Brandt and Sandler's proposal seems like it will help with this issue by getting rid of $\Sigma$. 
+Getting rid of $\Sigma$ essentially assumes that there's no simultaneous covariance between the series, which seems dubious.  This change will almost certainly affect our predictive uncertainty, the overall shape of the posterior and might lead to new sampling problems.  It isn't obvious is this is better or worse than log-transforming count data, which introduces bias, but is commonly done anyway. 
 
