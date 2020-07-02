@@ -5,6 +5,7 @@ import pyarrow.dataset as ds
 import pathlib
 
 # creating a Dataset object loads nothing into memory, it only crawls the directory to find all the files and infer the schema. 
+
 dataset = ds.dataset(pathlib.Path('/gscratch/comdata/output/reddit_comments.parquet/'), format='parquet')
 
 # the sweet thing about a dataet is that we can filter by columns
@@ -23,7 +24,7 @@ seattle_wiki = ["SportsRadioKJR","SeattleMoviePass","SkagitCounty","bellevuewa",
 search = ["SeattleHNL","SeattleDragons","SeaWA","CoronavirusWA","The_Seattle","WashingtonForSanders","seattle_bicycling"]
 
 # https://www.reddit.com/r/Seattle/comments/f1eny/list_of_other_seattle_reddits/
-seattlethread = ["seattleendts"]
+seattlethread = ["seattlents"]
 
 subreddits_to_track = set(main + seattlewa_sidebar + seattlewa_wiki + seattle_wiki + seattlethread + search)
 
@@ -31,4 +32,4 @@ table = dataset.to_table(filter = ds.field('subreddit').isin(subreddits_to_track
 
 # then write it to a feather file
 import pyarrow.feather as feather
-feather.write_feather(table, 'seattle_subreddits.feather')
+feather.write_feather(table, 'data/seattle_subreddits.feather')
