@@ -1,0 +1,3 @@
+[submodule "cdsc_reddit"]
+	path = cdsc_reddit
+	url = code:cdsc_reddit
