@@ -6,7 +6,7 @@ import pathlib
 
 # creating a Dataset object loads nothing into memory, it only crawls the directory to find all the files and infer the schema. 
 
-dataset = ds.dataset(pathlib.Path('/gscratch/comdata/output/reddit_comments.parquet/'), format='parquet')
+dataset = ds.dataset(pathlib.Path('/gscratch/comdata/output/reddit_comments.parquet/'), format='parquet', partitioning='hive')
 
 # the sweet thing about a dataet is that we can filter by columns
 
