@@ -28,8 +28,14 @@ seattlethread = ["seattlents"]
 
 subreddits_to_track = set(main + seattlewa_sidebar + seattlewa_wiki + seattle_wiki + seattlethread + search)
 
-table = dataset.to_table(filter = ds.field('subreddit').isin(subreddits_to_track), columns=['id','subreddit','link_id','parent_id','edited','time_edited','CreatedAt','author','ups','downs','score','edited','time_edited','subreddit_type','subreddit_id','stickied','is_submitter'])
+table = dataset.to_table(filter = ds.field('subreddit').isin(subreddits_to_track), columns=['id','subreddit','link_id','parent_id','edited','time_edited','CreatedAt','author','ups','downs','score','subreddit_type','subreddit_id','stickied','is_submitter'])
 
 # then write it to a feather file
 import pyarrow.feather as feather
 feather.write_feather(table, 'data/seattle_subreddits.feather')
+
+import pandas as pd
+
+df = table.to_pandas()
+
+df.to_csv("data/seattle_subreddits.csv")
