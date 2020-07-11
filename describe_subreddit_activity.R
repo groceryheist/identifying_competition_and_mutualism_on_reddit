@@ -54,8 +54,9 @@ plot_subreddit_ts <- function(df){
 
     if (! dir.exists(outdir)) dir.create(outdir)
     
-    pdf(file.path(outdir,paste0(srname,".pdf")))
+    pdf(file.path(outdir,paste0(srname,".pdf")),height=8,width=18)
     p <- ggplot(df, aes(x=week, y=N.authors)) + geom_line() + ggtitle(srname)
+    p <- p + scale_x_datetime(date_breaks='3 months',date_minor_breaks='1 month',date_labels="%y-%m")
     print(p)
     dev.off()
 }
