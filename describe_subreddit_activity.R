@@ -1,6 +1,7 @@
 # for R 4.0.2
 library(ggplot2)
 library(data.table)
+library(arrow)
 
 ## # this package provides read_feather for feather 2.0
 ## library(arrow)
@@ -14,17 +15,17 @@ library(data.table)
 parse.date <- function(s) as.POSIXct(s, format="%Y-%m-%d", tz='UTC')
 
 print("loading data")
-df <- fread('data/seattle_subreddits.csv')
+df <- data.table(read_feather('data/seattle_subreddit_submissions.feather',columns=c('author','CreatedAt','ups','downs','score','subreddit')))
 
 print("Parsing Dates")
 
-df[,CreatedAt := parse.date(CreatedAt)]
+df <- df[,CreatedAt := parse.date(CreatedAt)]
 
-df[,week := as.POSIXct(as.character(cut(CreatedAt,"week")))]
+df <- df[,week := as.POSIXct(as.character(cut(CreatedAt,"week")))]
 
 print("Group by subreddit-week-author")
 
-authorsByWeekSub <- df[,.(N.comments = .N,
+authorsByWeekSub <- df[,.(N.posts = .N,
                           total.ups = sum(ups),
                           total.downs = sum(downs),
                           total.score = sum(score),
@@ -35,19 +36,25 @@ authorsByWeekSub <- df[,.(N.comments = .N,
 print("Group by subreddit-week")
 
 byWeekSub <- authorsByWeekSub[,.(N.authors = .N,
-                                 N.comments = sum(N.comments),
+                                 N.posts = sum(N.posts),
                                  total.score = sum(total.score),
                                  author.mean.score = mean(total.score),
                                  author.var.score = var(total.score))
                              ,
                               by=.(subreddit,week)]
 
+
 ## remember that I can't make pdfs on hyak.
 ## so let's just make one png for each and look at them one at a time.
 
 plot_subreddit_ts <- function(df){
     srname = first(df$subreddit)
-    pdf(file.path('plots','subreddit_timeseries',paste0(srname,".pdf")))
+    print(srname)
+    outdir = file.path('plots','subreddit_posts_timeseries')
+
+    if (! dir.exists(outdir)) dir.create(outdir)
+    
+    pdf(file.path(outdir,paste0(srname,".pdf")))
     p <- ggplot(df, aes(x=week, y=N.authors)) + geom_line() + ggtitle(srname)
     print(p)
     dev.off()

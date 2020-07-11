@@ -6,8 +6,6 @@ import pathlib
 
 # creating a Dataset object loads nothing into memory, it only crawls the directory to find all the files and infer the schema. 
 
-dataset = ds.dataset(pathlib.Path('/gscratch/comdata/output/reddit_comments.parquet/'), format='parquet', partitioning='hive')
-
 # the sweet thing about a dataet is that we can filter by columns
 
 main = ['Seattle','SeattleWA','SeaWA']
@@ -26,16 +24,19 @@ search = ["SeattleHNL","SeattleDragons","SeaWA","CoronavirusWA","The_Seattle","W
 # https://www.reddit.com/r/Seattle/comments/f1eny/list_of_other_seattle_reddits/
 seattlethread = ["seattlents"]
 
-subreddits_to_track = set(main + seattlewa_sidebar + seattlewa_wiki + seattle_wiki + seattlethread + search)
+subreddits_to_track = main + seattlewa_sidebar + seattlewa_wiki + seattle_wiki + seattlethread + search
+subreddits_to_track = [sr.lower() for sr in subreddits_to_track]
 
-table = dataset.to_table(filter = ds.field('subreddit').isin(subreddits_to_track), columns=['id','subreddit','link_id','parent_id','edited','time_edited','CreatedAt','author','ups','downs','score','subreddit_type','subreddit_id','stickied','is_submitter'])
+dataset = ds.dataset(pathlib.Path('/gscratch/comdata/output/reddit_submissions_by_subreddit.parquet/'), format='parquet', partitioning='hive')
+
+table = dataset.to_table(filter = ds.field('subreddit').isin(subreddits_to_track), columns=['id','author','subreddit','title','CreatedAt','permalink','score','ups','downs','over_18','url','num_comments','gilded','subreddit_subscribers','subreddit_id','stickied'])
 
 # then write it to a feather file
 import pyarrow.feather as feather
-feather.write_feather(table, 'data/seattle_subreddits.feather')
+feather.write_feather(table, 'data/seattle_subreddit_submissions.feather', compression='lz4')
 
 import pandas as pd
 
 df = table.to_pandas()
 
-df.to_csv("data/seattle_subreddits.csv")
+df.to_csv("data/seattle_subreddit_submissions.csv")
