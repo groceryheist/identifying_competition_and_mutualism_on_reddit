@@ -110,8 +110,8 @@ parameters {
   // Means and precisions in top-level prior for the diagonal and off-diagonal
   // elements in the A_i
   vector[m] mu; // mean of VAR process
-  vector[m] mu0;
-  vector<lower=0>[m] omega0;
+  real mu0;
+  real<lower=0> omega0;
 
   vector[p] Amu[2];
   vector<lower=0>[p] Aomega[2];
@@ -160,9 +160,9 @@ model {
   
   lambda[(p+1):N] ~  multi_normal(mut_rest, Sigma);
 
-  for(i in 1:m)
+  for(i in 1:m){
     y[i] ~ poisson_log(lambda[1:N,i]);
-
+  }
 
   // Prior:
   mu ~ normal(mu0, omega0);
@@ -200,7 +200,7 @@ generated quantities {
     // second loop: t = 1; i = 2; N-(i-t) = N-1
     // t = 2; i = 1; (t-i) = 1
     for(i in 1:p){
-      if(t <= i) mu_forecast[t] += phi[i] * (lambda[N-(i-t)] - mu);
+      if(t <= i) mu_forecast[t] += phi[i] * (lambda[N-i+t] - mu);
       else mu_forecast[t] += phi[i] * (lambda_new[t-i] - mu);
     }
     lambda_new[t] = multi_normal_rng(mu_forecast[t], Sigma);

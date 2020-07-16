@@ -3,58 +3,22 @@ library(ggplot2)
 library(data.table)
 library(arrow)
 
-## # this package provides read_feather for feather 2.0
-## library(arrow)
-
-
-## this is using comments right now, but it will probably be better to use submissions
 ## submissions seems like a better measure of a commited contributor. 
 ## comment dynamics are also interesting though. 
-## since i'm waiting for comments to download, let's look number of unique commentors each week.
+source("helper.R")
 
-parse.date <- function(s) as.POSIXct(s, format="%Y-%m-%d", tz='UTC')
-
-print("loading data")
-df <- data.table(read_feather('data/seattle_subreddit_submissions.feather',columns=c('author','CreatedAt','ups','downs','score','subreddit')))
-
-print("Parsing Dates")
-
-df <- df[,CreatedAt := parse.date(CreatedAt)]
-
-df <- df[,week := as.POSIXct(as.character(cut(CreatedAt,"week")))]
-
-print("Group by subreddit-week-author")
-
-authorsByWeekSub <- df[,.(N.posts = .N,
-                          total.ups = sum(ups),
-                          total.downs = sum(downs),
-                          total.score = sum(score),
-                          mean.score = mean(score),
-                          var.score = var(score)),
-                       by=.(subreddit,week,author)]
-                          
-print("Group by subreddit-week")
-
-byWeekSub <- authorsByWeekSub[,.(N.authors = .N,
-                                 N.posts = sum(N.posts),
-                                 total.score = sum(total.score),
-                                 author.mean.score = mean(total.score),
-                                 author.var.score = var(total.score))
-                             ,
-                              by=.(subreddit,week)]
-
-
+byWeekSub <- load_weekly_posts()
 ## remember that I can't make pdfs on hyak.
 ## so let's just make one png for each and look at them one at a time.
 
-plot_subreddit_ts <- function(df){
+plot_subreddit_ts <- function(df,min_date,max_date){
     srname = first(df$subreddit)
     print(srname)
     outdir = file.path('plots','subreddit_posts_timeseries')
 
     if (! dir.exists(outdir)) dir.create(outdir)
     
-    pdf(file.path(outdir,paste0(srname,".pdf")),height=8,width=18)
+    png(file.path(outdir,paste0(srname,".png")),height=800,width=1800)
     p <- ggplot(df, aes(x=week, y=N.authors)) + geom_line() + ggtitle(srname)
     p <- p + scale_x_datetime(date_breaks='3 months',date_minor_breaks='1 month',date_labels="%y-%m")
     print(p)

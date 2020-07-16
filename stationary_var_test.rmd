@@ -1,5 +1,4 @@
-
----
+.---
 title: "Testing stationarity enforcing priors for VAR models in Stan"
 author: "Nate TeBlunthuis"
 date: "June 25, 2020"
@@ -30,16 +29,17 @@ N=1000
 forecast_len=20
 
 # i set growth_var to 0 since heap's model assumes 0 mean.
-alpha, beta, sigma = unpickle_or_create("simulation_data/gaussian_var_k3.pkl",
+alpha, beta, sigma, _ = unpickle_or_create("simulation_data/gaussian_var_k3.pkl",
                                         overwrite=True,
                                         growth=0,
                                         growth_var=0,
                                         noise=1,
                                         function=gen_system,
                                         K=K,
-                                        Ny0 = alpha
+                                        N=N)
 
-y, df = evolve_var_system(alpha,beta,sigma,y0,N,forecast_len)
+
+y, df = evolve_var_system(alpha,beta,sigma,alpha,N,forecast_len)
 
 data = {'m':K,
         'p':1,
@@ -497,3 +497,223 @@ So now variance of $Y_t$ depends on $\Sigma$, $\theta$, and $A$. And $\Sigma$ an
 Following an approach like Brandt and Sandler's proposal seems like it will help with this issue by getting rid of $\Sigma$. 
 Getting rid of $\Sigma$ essentially assumes that there's no simultaneous covariance between the series, which seems dubious.  This change will almost certainly affect our predictive uncertainty, the overall shape of the posterior and might lead to new sampling problems.  It isn't obvious is this is better or worse than log-transforming count data, which introduces bias, but is commonly done anyway. 
 
+From looking at the data I think it will be important to model trends. Probably a linear trend will suffice (the early period looks like exponential growth, but most of the time it just looks pretty linear.  So let's make a stan model 
+
+```{python}
+
+
+```{python, cache=FALSE}
+
+K = 2
+N= 200
+forecast_len=20
+
+# i set growth_var to 0 since heap's model assumes 0 mean. 
+alpha, beta, sigma, slopes = unpickle_or_create("simulation_data/gaussian_var_k2_slopes.pkl",
+                                        overwrite=False,
+                                        growth=3,
+                                        growth_var=4,
+                                                community=0.7,
+                                                community_var=0.2,
+                                        noise=0.2,
+                                        function=gen_system,
+                                        K=K,
+                                        N=N,
+                                        time_slopes_mean = 1,
+                                        time_slopes_var = 0.5
+)
+
+y0 = alpha
+y, df = evolve_var_system(alpha,beta,sigma,y0,N,forecast_len,slopes)
+
+data = {'m':K,
+        'p':1,
+        'N':N,
+        'y':y,
+        'es' : [0,0], # top-level prior for the means of the means (diag, off-diag)
+        'fs' : [np.sqrt(10), np.sqrt(10)], # top-level prior for the precision of means. a pretty tight prior seems to help avoid multimodality
+        'gs' : [2.1,1.5], # top-level prior for the position of the scales,
+        'hs' : [1/3,1/5], # top-level prior for the precision of the scales,
+        'scale_diag':0.2, # diagonal elements of the inverse wishart prior on the scale matrix
+        'scale_offdiag':0.02, # off-diagonal elements of the inverse wishart prior on the scale matrix
+        'df':K+3,
+        'forecast_len':forecast_len,
+        'alpha':0,  # hyper prior for mean of alpha
+        'sd0': 5, # hyper prior precision of mu0
+        'g0':4, # hyper prior for variance of m0
+        'h0':3, # hyper prior for variance of m0
+        'alpha_time':0.0,
+        'sd_time':1,
+        'g_time':0.5,
+        'h_time':1
+} # degrees of freedom in the inverse wishart prior on the scale matrix.
+# 
+  # real alpha_time;
+  # real<lower=0> sd_time;
+  # real<lower=0> g_time;
+  # real<lower=0> h_time;
+
+heaps_trend_mod = unpickle_or_create("stan_code/heaps_trend.pkl",
+                                      overwrite=False,
+                                      function=pystan.StanModel,
+                                      file="stan_code/heaps_trend.stan",
+                                      model_name='heaps_trend'
+)
+
+
+test_trend_fit = unpickle_or_create("stan_models/var_1_heaps_k2_slopes.pkl",
+                                    overwrite=True,
+                                    function=heaps_trend_mod.sampling,
+                                    iter=2000,
+                                    chains=4,
+                                    data=data
+)
+
+
+test_mu_fit = model_mu.sampling(data=data)
+
+# can we recover the means?
+
+df = test_trend_fit.to_dataframe(inc_warmup=True,diagnostics=True,pars=['A','mu','Sigma','beta_time'])
+pairsdata = df.melt(id_vars=['energy__','divergent__'])
+#pairsdata['xdraw'] = (pairsdata.draw.astype(str) + '0' + pairsdata.chain.astype(str)).astype(int)
+
+p = ggplot(pairsdata, aes(x='energy__',y='value',color='divergent__')) + geom_point(alpha=0.5) + facet_wrap(('variable'),ncol=3,scales='free')
+p = p + theme(plot_background=element_rect(fill='white'))
+p = p + scale_x_log10()
+p.save('plots/trends_pairs.png',width=12,height=150,limitsize=False)
+
+
+```
+
+
+I'm having trouble with that. So I'm going to try working up from an even simpler model. Just an AR(1) model with a trend. This works fine:
+
+```{python}
+
+a = 0.5
+b = 0.2
+N = 400
+
+y = [b]
+
+def y_next(y, a, b,i):
+    return y*a + b*(i+1) + np.random.normal(0,0.1)
+
+for i in range(1,N):
+    y.append(y_next(y[i-1], a, b,i))
+
+ar1_trend_mod = unpickle_or_create("stan_code/ar_with_trend.pkl",
+                                   overwrite=True,
+                                   function=pystan.StanModel,
+                                   file='stan_code/ar_with_trend.stan',
+                                   model_name='ar_trend')
+
+data = {'N':N,
+        'Y':y}
+                                   
+test_ar1 = ar1_trend_mod.sampling(data=data)
+
+```
+
+
+The time trend is difficult to solve using a VAR(1) + time trend approach.  Probably the answer is just to have multiple lags.  Models with multiple lags can represent complex trajectories as long as they are smooth / stationary.  We should test out our poisson models with multiple lags. 
+
+```{python}
+
+K = 2
+N = 800
+forecast_len = 20
+P = 2
+
+# i set growth_var to 0 since heap's model assumes 0 mean. 
+alpha, beta, sigma = unpickle_or_create("simulation_data/gaussian_var_k2_p2_nonzero.pkl",
+                                        overwrite=True,
+                                        growth=3,
+                                        growth_var=1,
+                                        community=[0.9,0.8],
+                                        community_var=[0.1,0.1],
+                                        noise=0.2,
+                                        function=gen_system,
+                                        K=K,
+                                        N=N)
+
+yinit = list(reversed([np.repeat(0,K), alpha]))
+y, df = evolve_var_system(alpha,beta,sigma,yinit,N,forecast_len,nested_alpha=True)
+
+data = {'m':K,
+        'p':P,
+        'N':N,
+        'y':y,
+        'es' : [0,0], # top-level prior for the means of the means (diag, off-diag)
+        'fs' : [np.sqrt(1.7), np.sqrt(1.7)], # top-level prior for the precision of means. a pretty tight prior seems to help avoid multimodality
+        'gs' : [2.1,2.1], # top-level prior for the position of the scales,
+        'hs' : [1/3,1/3], # top-level prior for the precision of the scales,
+        'scale_diag':0.5, # diagonal elements of the inverse wishart prior on the scale matrix
+        'scale_offdiag':0.0, # off-diagonal elements of the inverse wishart prior on the scale matrix
+        'df':10,
+        'forecast_len':forecast_len,
+        'alpha':0,  # hyper prior for mean of alpha
+        'sd0': 5, # hyper prior precision of mu0
+        'g0':4, # hyper prior for variance of m0
+        'h0':3, # hyper prior for variance of m0
+} # degrees of freedom in the inverse wishart prior on the scale matrix.
+
+
+model_normal = unpickle_or_create("stan_code/heaps_statprior_means.pkl",
+                                         overwrite=False,
+                                         function=pystan.StanModel,
+                                         file='stan_code/heaps_statprior_means.stan',
+                                         model_name='heaps_statprior_means')
+
+test_fit = unpickle_or_create("stan_models/var_heaps_p2_k2_n400.pkl",
+                              overwrite=True,
+                              function=model_normal.sampling,
+                              iter=2000,
+                              chains=4,
+                              data=data,
+                              control={'adapt_delta':0.92} # jacking up adapt_delta removes divergences
+)
+
+test_pois_fit = test_fit
+
+df_pred = stan_pois_var_predict(test_pois_fit,N)
+
+p = ggplot(df_pred,aes(y='y',ymax='y_upper',ymin='y_lower', x='x',group='variable')) + geom_ribbon(alpha=0.5) + geom_line(aes(color='variable'), linetype='-',size=2)
+
+p = p + geom_line(aes(y='y',x='x',color='variable',group='variable'), data=df, inherit_aes=False)
+
+p = p + theme(legend_position = 'top')
+p.draw()
+p = p + theme(plot_background=element_rect(fill='white'))
+p = p + scale_y_log10()
+p.save("plots/test_heaps_fit_pois_p3.png")
+
+mu = test_pois_fit.extract('mu')['mu']
+
+mu_hat = mu.mean(axis=0)
+phi = test_pois_fit.extract('phi')['phi']
+phi_hat = phi.mean(axis=(0))
+phi_upper = np.quantile(phi, 0.975, axis=0)
+phi_lower = np.quantile(phi, 0.025, axis=0)
+
+sigma_hat = test_pois_fit.extract('Sigma')['Sigma'].mean(axis=0)
+
+sig = np.sign(phi_upper) == np.sign(phi_lower)
+phi_hat = pd.DataFrame(phi_hat[0])
+
+
+test_mu_fit = model_mu.sampling(data=data)
+
+# can we recover the means?
+
+df = test_pois_fit.to_dataframe(inc_warmup=True,diagnostics=True,pars=['A','mu','Sigma','phi'])
+pairsdata = df.melt(id_vars=['energy__','divergent__'])
+#pairsdata['xdraw'] = (pairsdata.draw.astype(str) + '0' + pairsdata.chain.astype(str)).astype(int)
+
+p = ggplot(pairsdata, aes(x='energy__',y='value',color='divergent__')) + geom_point(alpha=0.5) + facet_wrap(('variable'),ncol=3,scales='free')
+p = p + theme(plot_background=element_rect(fill='white'))
+p = p + scale_x_log10()
+p.save('plots/pois_p6_pairs.png',width=12,height=80,limitsize=False)
+
+```

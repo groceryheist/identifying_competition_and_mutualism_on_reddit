@@ -84,11 +84,23 @@ data {
   real<lower=0> g0;
   real<lower=0> h0;
 
+  real alpha_time;
+  real<lower=0> sd_time;
+  real<lower=0> g_time;
+  real<lower=0> h_time;
+
   int<lower=0> forecast_len;
 }
 transformed data {
+xb
+  vector[m] timestep[N];
   vector[p*m] y_1top;                // y_1, ..., y_p
   matrix[m, m] scale_mat;            // Scale-matrix in prior for Sigma
+
+  for(n in 1:N){
+    timestep[n] = n;
+  }
+
   for(t in 1:p) y_1top[((t-1)*m+1):(t*m)] = y[t];
   for(i in 1:m) {
     for(j in 1:m) {
@@ -105,7 +117,7 @@ parameters {
   vector[m] mu; // mean of VAR process
   vector[m] mu0;
   vector<lower=0>[m] omega0;
-
+  vector[m] beta_time;
   vector[p] Amu[2];
   vector<lower=0>[p] Aomega[2];
 }
@@ -131,16 +143,25 @@ model {
   vector[m] mut_rest[N-p]; // Conditional means of y_{p+1}, ..., y_{N}
 
   // Likelihood:
-  for(t in 1:p) mut_init[((t-1)*m+1):(t*m)] = mu;
+  for(t in 1:p){
+    mut_init[((t-1)*m+1):(t*m)] = mu;
+    mu_init += beta_trend * time_step[t];
+  }
+
   for(t in (p+1):N) {
     mut_rest[t-p] = mu;
     for(i in 1:p) {
       mut_rest[t-p] += phi[i] * (y[t-i] - mu);
+      mut_rest[t-p] += beta_trend * time_step[t-p];
     }
   }
+
   y_1top ~ multi_normal(mut_init, Gamma);
   y[(p+1):N] ~  multi_normal(mut_rest, Sigma);
   // Prior:
+  
+  beta_trend ~ normal(mu_time, omega_time);
+
   mu ~ normal(mu0, omega0);
 
   Sigma ~ inv_wishart(df, scale_mat);
@@ -160,6 +181,9 @@ model {
   
   mu0 ~ normal(alpha, sd0);
   omega0 ~ gamma(g0, h0);
+
+  mu_time ~ normal(alpha_time, sd_time);
+  omega_time ~ normal(g_time, h_time);
 
 }
 

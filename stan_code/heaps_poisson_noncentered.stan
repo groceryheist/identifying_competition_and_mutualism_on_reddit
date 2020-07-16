@@ -183,7 +183,7 @@ model {
   // try a centered parameterization
   lambda_1top_raw ~ std_normal();
   
-  lambda_raw[(p+1):N] ~  multi_normal(rep_vector(1,m),diag_matrix(rep_vector(1,m)));
+  lambda_raw[(p+1):N] ~  multi_normal(rep_vector(0,m),diag_matrix(rep_vector(1,m)));
 
   for(i in 1:m)
     y[i] ~ poisson_log(lambda[1:N,i]);

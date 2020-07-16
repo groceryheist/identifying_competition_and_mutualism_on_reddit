@@ -110,36 +110,45 @@ def plot_ar(fit, y_vec, true_forecast):
     return p
 
 def evolve_var_system(alpha, beta, sigma, y0, N, forecast_len, link_args=[], link = lambda x:x,nested_alpha=False):
-    y_star = [y0]
-    K = beta.shape[0]
 
-    def y_next(y0):
+    y_star = y0
+    P = beta.shape[0]
+    K = beta.shape[1]
+
+    def y_next(y):
+
         if not nested_alpha:
-            return np.random.multivariate_normal(np.matmul(y0,beta) + alpha, sigma)
+            mut = alpha
+            for i in range(P):
+                mut = mut + np.matmul(y[i],beta[i])
+            return np.random.multivariate_normal(mut, sigma)
         else:
-            return alpha + np.random.multivariate_normal(np.matmul(y0-alpha,beta), sigma)
+            mut = alpha - alpha
+            for i in range(P):
+                mut = mut + np.matmul(y[i] - alpha, beta[i])
+            return alpha + np.random.multivariate_normal(np.matmul(mut, beta[i]), sigma)
 
-    for n in range(1, N):
-        y_star.append(y_next(y_star[-1]))
+    for n in range(P,N):
+        y_star.append(y_next(y_star))
 
-    true_forecast = [y_star[-1]]
+    true_forecast = y_star[-(P+1):-1]
     for n in range(forecast_len):
-        true_forecast.append(y_next(true_forecast[-1]))
+        true_forecast.append(y_next(true_forecast))
 
-    true_forecast = true_forecast[1:]
+    true_forecast = true_forecast[P:]
     y_star = np.column_stack(y_star)
-    true_forecast = np.column_stack(true_forecast)
+
+    true_forecast = np.column_stack(true_forecast) 
         
     all_x = range(N + forecast_len)
     all_y_star = np.column_stack([y_star, true_forecast])
     y = link(y_star.T, *link_args)
 
     true_forecast = link(true_forecast.T, *link_args)
-    y.shape
+    
     true_forecast.shape
     all_y = np.row_stack([y, true_forecast])
 
-    
     vardict = {'x':np.concatenate([all_x for i in range(K)]),
                'y_star':np.concatenate(all_y_star),
                'y':np.concatenate(all_y.T),
@@ -193,8 +202,8 @@ def stan_negbin_var_predict(fit, N, mean_name='eta_new'):
     return(build_forecast_df(y_new, N))
 
 
-def stan_pois_var_predict(fit,N):
-    lambda_new = fit.extract(pars=['lambda_new'])['lambda_new']
+def stan_pois_var_predict(fit,N,param_name='lambda_new'):
+    lambda_new = fit.extract(pars=[param_name])[param_name]
     y_new = np.random.poisson(np.exp(lambda_new))
     return build_forecast_df(y_new, N)
 
@@ -205,18 +214,29 @@ def stan_var_predict(fit,N):
 ### for testing stability is more important than sparsity
 ### figure out how to generate sparse stable matrixes later
 ### we might be able to do that by taking QR decompositions of sparse matrixes
-def gen_system(K,N,sparsity=0.5,growth=3,growth_var=9,community=0.95, community_var=0.1,noise=3,seed=1234):
+def gen_system(K,N,sparsity=0.5,growth=3,growth_var=9,community=0.95, community_var=0.1,noise=3, seed=1234):
+
+    beta = list()
+    if type(community) is not list:
+        beta.append(gen_fun_matrix(K, growth=community, growth_var=community_var))
+
+    else:
+        for i in range(len(community)):
+            beta.append(gen_fun_matrix(K, growth=community[i], growth_var=community_var[i]))
+        beta = np.array(beta)
+        
     np.random.seed(seed)
     alpha = np.random.normal(growth,growth_var,K)
     # we want beta to be sparse
     # sparsify the betas
-    beta = gen_fun_matrix(K, growth=community, growth_var=community_var)
 
     sigma = np.array([np.random.normal(0,noise,K) for i in range(K)])
     sigma = np.dot(sigma,sigma.T)
+
     return (alpha,
             beta,
-            sigma)
+            sigma
+    )
 
 # save obj if filename not exists, or overwrite, else load
 def unpickle_or_create(filename, overwrite, function, *args, **kwargs):
