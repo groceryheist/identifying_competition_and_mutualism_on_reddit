@@ -22,17 +22,17 @@ playoff_games = []
 for year in years:
     try:
         reg_games = nflgame.games(year,kind='REG')
-    except TypeError:
+    except (TypeError, AttributeError):
         reg_games = []
 
     try:
         pre_games = nflgame.games(year,kind='PRE')
-    except TypeError:
+    except (TypeError, AttributeError):
         pre_games = []
 
     try:
         post_games = nflgame.games(year,kind='POST')
-    except TypeError:
+    except (TypeError, AttributeError):
         post_games = []
 
     games = reg_games + pre_games + post_games
@@ -40,24 +40,25 @@ for year in years:
         schedule = game.schedule
         if (game.home == team) or (game.away == team):
             day = datetime(schedule['year'],schedule['month'],schedule['day'])
+            week = schedule.get('week',None)
             schedule = game.schedule
             if schedule['season_type'] == 'REG':
-                regular_season_games.append(day)
+                regular_season_games.append((day,week))
             if schedule['season_type'] == 'POST':
-                playoff_games.append(day)
+                playoff_games.append((day,week))
             if schedule['season_type'] == 'PRE':
-                preseason_games.append(day)
+                preseason_games.append((day,week))
 
 #the data on playoff games was incomplete so we'll manually add some playoff games
-preseason_games.append(datetime(2019,8,8))
-preseason_games.append(datetime(2019,8,18))
-preseason_games.append(datetime(2019,8,24))
-preseason_games.append(datetime(2019,8,29))
-playoff_games.append(datetime(2017,1,7))
-playoff_games.append(datetime(2017,1,14))
-playoff_games.append(datetime(2019,1,5))
-playoff_games.append(datetime(2020,1,5))
-playoff_games.append(datetime(2020,1,12))
+preseason_games.append((datetime(2019,8,8),1))
+preseason_games.append((datetime(2019,8,18),2))
+preseason_games.append((datetime(2019,8,24),3))
+preseason_games.append((datetime(2019,8,29),4))
+playoff_games.append((datetime(2017,1,7),1))
+playoff_games.append((datetime(2017,1,14),2))
+playoff_games.append((datetime(2019,1,5),1))
+playoff_games.append((datetime(2020,1,5),1))
+playoff_games.append((datetime(2020,1,12),2))
 
 nfl_draft_dates = [
     datetime(2009,4,25),datetime(2009,4,26),
@@ -73,11 +74,17 @@ nfl_draft_dates = [
     datetime(2019,4,25),datetime(2019,4,27),
     datetime(2020,4,23),datetime(2020,4,25)
 ]
+nfl_draft_dates_2 = []
+i = 0
+for d in nfl_draft_dates:
+    nfl_draft_dates_2.append((d, i%2+1))
+    i = i + 1
 
-date = regular_season_games + preseason_games + playoff_games + nfl_draft_dates
+date, week_no = zip(* regular_season_games + preseason_games + playoff_games + nfl_draft_dates_2)
+
 type = ['reg' for i in regular_season_games] + ['pre' for i in preseason_games] + ['post' for i in playoff_games] + ['draft' for i in nfl_draft_dates]
 
 import pandas as pd
-output = pd.DataFrame({'date':date,'type':type,'subreddit':'seahawks'})
+output = pd.DataFrame({'date':date,'type':type,'subreddit':'seahawks','week_no':week_no})
 output.to_feather("data/seasonality_levels.feather")
 output.to_csv("data/seasonality_levels.csv")
