@@ -6,6 +6,9 @@
 
 # we obtain nfl data using the pygame-redux python package which queries data from nfl.com
 
+# let's have 2 types of sports seasonality: type 1 are weeks where the team plays (either regular season or post season, include bye weeks). type 2 are weeks when there are other league events (either pre-season weeks, post-season weeks where the team doesn't play, and the nfl draft).
+
+
 import pandas as pd
 import nflgame
 from datetime import datetime
@@ -18,7 +21,7 @@ team = 'SEA'
 preseason_games = []
 regular_season_games = []
 playoff_games = []
-
+season_ends = []
 for year in years:
     try:
         reg_games = nflgame.games(year,kind='REG')
@@ -36,10 +39,17 @@ for year in years:
         post_games = []
 
     games = reg_games + pre_games + post_games
+    last_week = None
+
     for game in games:
         schedule = game.schedule
+        day = datetime(schedule['year'],schedule['month'],schedule['day'])
+        if last_week is None:
+            last_week = day
+        elif last_week < day:
+            last_week = day
+
         if (game.home == team) or (game.away == team):
-            day = datetime(schedule['year'],schedule['month'],schedule['day'])
             week = schedule.get('week',None)
             schedule = game.schedule
             if schedule['season_type'] == 'REG':
@@ -48,6 +58,7 @@ for year in years:
                 playoff_games.append((day,week))
             if schedule['season_type'] == 'PRE':
                 preseason_games.append((day,week))
+    season_ends.append((day, year))
 
 #the data on playoff games was incomplete so we'll manually add some playoff games
 preseason_games.append((datetime(2019,8,8),1))
@@ -80,9 +91,9 @@ for d in nfl_draft_dates:
     nfl_draft_dates_2.append((d, i%2+1))
     i = i + 1
 
-date, week_no = zip(* regular_season_games + preseason_games + playoff_games + nfl_draft_dates_2)
+date, week_no = zip(* regular_season_games + preseason_games + playoff_games + nfl_draft_dates_2 + season_ends)
 
-type = ['reg' for i in regular_season_games] + ['pre' for i in preseason_games] + ['post' for i in playoff_games] + ['draft' for i in nfl_draft_dates]
+type = ['reg' for i in regular_season_games] + ['pre' for i in preseason_games] + ['post' for i in playoff_games] + ['draft' for i in nfl_draft_dates] + ['end season' for i in season_ends]
 
 import pandas as pd
 output = pd.DataFrame({'date':date,'type':type,'subreddit':'seahawks','week_no':week_no})
