@@ -36,7 +36,7 @@ df <- load_weekly_posts()
 ## notably a discontinuity.
 ## we can extend our approach using state space models in future work.
 
-min_yearly_nonzero_prop <- 0.15
+min_yearly_nonzero_prop <- 0.2
 remember(min_yearly_nonzero_prop,'min_yearly_nonzero_prop')
 
 df <- df[,':='(w.year=year(week))]
@@ -46,7 +46,7 @@ df2 <- df[,.(prop.0 = mean(N.authors==0)),by=.(w.year,subreddit)]
 df2 <- df2[,':='(prop.0.too.high = (prop.0 > min_yearly_nonzero_prop))]
 include <- df2[,.(include = sum(prop.0.too.high) == 0),by=.(subreddit)]
 include <- include[include==TRUE,.(subreddit)]
-df <- df[subreddit %in% include]
+df <- df[subreddit %in% include$subreddit]
 
 remember(include, 'included_subreddits')
 ## our inclusion criteria is having no more than 15% of weeks without posts each year from 2012 through 2019.
