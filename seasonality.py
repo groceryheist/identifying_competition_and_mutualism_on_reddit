@@ -229,8 +229,111 @@ def load_seahawks_seasonality(ytab):
     seahawks_season = seahawks_season.loc[:,['type','week']]
 
     seahawks_season.loc[seahawks_season.type.isin({'offseason'}),'season_cat'] = 1
-    seahawks_season.loc[seahawks_season.type.isin({'reg','post'}),'season_cat'] = 2
-    seahawks_season.loc[seahawks_season.type.isin({'pre','draft','post_loss'}),'season_cat'] = 3
+    seahawks_season.loc[seahawks_season.type.isin({'pre','draft','post_loss'}),'season_cat'] = 2
+    seahawks_season.loc[seahawks_season.type.isin({'reg','post'}),'season_cat'] = 3
     seahawks_season = seahawks_season.drop_duplicates().reset_index(drop=True)
     seahawks_season.loc[:,'season_cat'] = seahawks_season.season_cat.astype(np.int32)
     return seahawks_season
+
+# for baseball we can use the awesome retrosheet.org database
+# for mariners we have: type 1: regular season + all star break (the mariners never made the playoffs during the study period)
+# type 2: draft, postseason, preseason
+# type 3: offseason 
+
+def load_mariners_seasonality(ytab):
+
+    # helper function for parsing dates from retrosheet.org
+    def dateparse(t):
+        try:
+            return datetime.strptime(str(t), "%Y%m%d")
+        except (ValueError):
+            return np.NaN
+
+
+    playoff_data_files = ['GLDV','GLLC','GLWC','GLWS']
+
+    ytab['next_week'] = ytab.week + timedelta(weeks=1)
+    ytab['season'] = 'offseason'
+
+    years = range(2009,2020)
+
+    min_date = ytab.week.min()
+    chunks = []
+
+    for f in playoff_data_files:
+        file_path = f"data/mlb/{f}.TXT"
+        df = pd.read_csv(file_path,
+                         names=['Date','Game_No','DOW','visitor','visitor_league','visitor_game_no','home','home_league','home_game_no','visitor_score','home_score','len_outs','day_night','completed_date']+[f"col_{i}" for i in range(14,161)],
+                         quotechar='"',
+                         parse_dates=[0,13],
+                         date_parser=dateparse)
+        chunks.append(df)
+
+    postseason = pd.concat(chunks)
+
+    postseason = postseason.drop([f"col_{i}" for i in range(14,161)],axis='columns')
+
+    postseason['year'] = postseason.Date.dt.year
+
+    postseason = postseason.loc[postseason.Date >= min_date]
+
+    postseason_spans = postseason.groupby(postseason.year)['Date'].agg(['min','max']).reset_index(drop=False)
+    
+    i_postseason, j_postseason = np.where((postseason_spans['min'].values[:,None] <= ytab.week.values) &
+                                          (postseason_spans['max'].values[:,None] > ytab.week.values))
+
+    ytab.iloc[j_postseason,ytab.columns == 'season'] = 'postseason_loss'
+
+    # preseason dates from springtrainingconnection.com
+    preseason_spans = pd.DataFrame({'min':[datetime(2009,2,25),datetime(2010,3,3),datetime(2011,2,27),datetime(2012,3,2),datetime(2013,2,22),datetime(2014,2,27),datetime(2015,3,4),datetime(2016,3,2),datetime(2017,2,25),datetime(2018,2,23),datetime(2019,2,21)],
+                                     'max':[datetime(2009,4,2),datetime(2010,4,1),datetime(2011,3,29),datetime(2012,4,4),datetime(2013,3,28),datetime(2014,3,29),datetime(2015,4,4),datetime(2016,4,2),datetime(2017,4,1),datetime(2018,3,27),datetime(2019,3,22)]})
+
+    i_preseason, j_preseason = np.where((preseason_spans['min'].values[:,None] <= ytab.week.values) &
+                                        (preseason_spans['max'].values[:,None] > ytab.week.values))
+
+    ytab.iloc[j_preseason,ytab.columns=='season'] = 'preseason'
+
+    # draft dates are irrelevant since it happens during the regular season
+    # they come from Wikipedia
+    # draft_spans = pd.DataFrame({'min':[datetime(2009,6,9),datetime(2010,6,7),datetime(2011,6,6),datetime(2012,6,4),datetime(2013,6,8),datetime(2014,6,5),datetime(2015,6,8),datetime(2016,6,9),datetime(2017,6,12),datetime(2018,6,4),datetime(2019,6,3)]
+    #                             'max':[datetime(2009,6,11),datetime(2010,6,9),datetime(2011,6,8),datetime(2012,6,6),datetime(2013,6,8),datetime(2014,6,7),datetime(2015,6,10),datetime(2016,6,11),datetime(2017,6,14),datetime(2018,6,6),datetime(2019,6,5)]
+    # })
+
+    chunks = []
+
+    for year in years:
+        file_path = f"data/mlb/{year}SKED.TXT"
+        df = pd.read_csv(file_path,names = ["Date","Game_No","DOW","visitor","visitor_league","vis_game_no","home","home_league","home_game_no","TOD","modified","makeup_date"],quotechar='"',parse_dates = [0,11],date_parser=dateparse)
+
+        chunks.append(df)
+
+    regular_season = pd.concat(chunks)
+    regular_season = regular_season.loc[(regular_season.visitor == 'SEA') | (regular_season.home == 'SEA')]
+
+    i_regular, j_regular = np.where((regular_season['Date'].values[:,None] >= ytab.week.values) &
+                                    (regular_season['Date'].values[:,None] < ytab.next_week.values))
+
+
+    ytab.iloc[j_regular,ytab.columns == 'season'] = 'regular'
+
+
+    sea_postseason = postseason.loc[(postseason.visitor == 'SEA') |
+                                    (postseason.home == 'SEA')]
+
+    sea_postseason_spans = sea_postseason.groupby(sea_postseason.year)['Date'].agg(['min','max']).reset_index(drop=False)
+
+    i_postseason_sea, j_postseason_sea = np.where((sea_postseason_spans['min'].values[:,None] <= ytab.week.values) &
+                                          (sea_postseason_spans['max'].values[:,None] > ytab.week.values))
+
+    ytab.iloc[j_postseason_sea,ytab.columns == 'season'] = 'postseason'
+
+    ytab.loc[ytab.season == 'offseason','season_cat'] = 1
+    ytab.loc[(ytab.season == 'preseason') | (ytab.season == 'postseason_loss'),'season_cat'] = 2
+    ytab.loc[ytab.season == 'regular','season_cat'] = 3
+
+    ytab.season_cat = ytab.season_cat.astype(np.int32)
+    return(ytab)
+
+
+
+
