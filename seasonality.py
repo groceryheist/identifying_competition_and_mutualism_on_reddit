@@ -18,12 +18,12 @@ from itertools import chain
 
 ### We account for seasonal interest in the Seattle sounders according to their sports schedule.
 ### We apply control variables in order of precedence (rules listed first supercede following rules).
-### 1. MLS playoff games, CONECAFF games, and the US Open Cup count as "postseason games" Label (1)
-### 2. Regular season MLS playoff games are "regular season games" Label (2) 
-### 3. Regional tournaments, friendlies, preseason games and the MLS super and reentry drafts are "low level events" Label (3)
+### 1. MLS playoff games, CONECAFF games, and the US Open Cup count as "postseason games" Label (1), also includes egular season MLS playoff games are "regular season games" Label (2) 
+### 2. Regional tournaments, friendlies, preseason games and the MLS super and reentry drafts are "low level events" Label (3)
 ###    also includes MLS playoffs after the sounders have lost or the MLS drafts.
+### 3. other weeks are the off-season
 
-def get_sounders_seasonality_data(ytab):
+def load_sounders_seasonality(ytab):
     # obtained data through 2016 from https://raw.githubusercontent.com/jalapic/engsoccerdata/master/data-raw/mls.csv
     # other data manually entered from Wikipedia
 

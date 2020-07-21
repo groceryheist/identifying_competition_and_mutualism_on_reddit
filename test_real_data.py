@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 from util import *
-from seasonality import load_seahawks_seasonality
+from seasonality import load_seahawks_seasonality, load_sounders_seasonality
 np.set_printoptions(precision=None, suppress=True)
 
 # test out seasonality
@@ -42,8 +42,8 @@ test_data = {'y':y.T,
 }
 
 test_data['n_seas'] = 2
-test_data['seasonality_idx'] = [2]
-test_data['n_seas_levels'] = [3]
+test_data['seasonality_idx'] = [2,5]
+test_data['n_seas_levels'] = [3,3]
 
 # gotta build it.
 
@@ -52,10 +52,12 @@ yforecast = test_df_forecast.pivot(index='week',columns='subreddit',values='N_au
 # gotta build it.
 
 seahawks_season = load_seahawks_seasonality(ytab)
-test_data['season'] = [seahawks_season.season_cat,
+sounders_season = load_sounders_seasonality(ytab)
+test_data['season'] = np.array([seahawks_season.season_cat,sounders_season.season_cat])
 
 seahawks_forecast = load_seahawks_seasonality(yforecast)
-test_data['forecast_season'] = seahawks_forecast.season_cat
+sounders_forecast = load_sounders_seasonality(yforecast)
+test_data['forecast_season'] = np.array([seahawks_forecast.season_cat,sounders_forecast.season_cat])
 test_data['forecast_len'] = len(seahawks_forecast)
 
 ## STILL NEED TO ADD SEASONALITY TO THE FORECAST
