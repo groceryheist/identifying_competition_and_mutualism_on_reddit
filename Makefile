@@ -7,7 +7,7 @@ data/seattle_subreddit_submissions.feather: pull_seattle_subs.py comdata_output/
 	echo "Done"
 
 data/seasonality_levels.feather: seasonality.py
-	python3 seasonality.py
+	source ./bin/activate && python3 seasonality.py
 
 data/included_timeseries.feather: choose_subreddits.R data/seattle_subreddit_submissions.feather
 	Rscript choose_subreddits.R
