@@ -32,6 +32,10 @@ source("helper.R")
 
 df <- load_weekly_posts()
 
+## a limitation of this analysis is that it ignores some subreddits that became active after 2012.
+## notably a discontinuity.
+## we can extend our approach using state space models in future work.
+
 min_yearly_nonzero_prop <- 0.15
 remember(min_yearly_nonzero_prop,'min_yearly_nonzero_prop')
 
