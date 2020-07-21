@@ -8,7 +8,7 @@
 
 ## based on plots of unique posters each week
 # not enough activity
-
+source("RemembR/R/RemembeR.R")
 library(arrow)
 
 def_exclude = c('anacortes','auburnwa','bainbridgeisland','ballard','bellevuewa','belltown','bothell','bremerton','burien','camaswashington','capitolhillsea','clallam','destinationwa','edmonds','emeraldcityfoodies','federalway','fishingwashington','foodseattle','forkswa','grandcoulee','graysharbor','kentwa','kexp','kingcounty','kirkland','kittitas','lewiscounty','longview','lynnwood','lynwoodwa','marysville','mount_rainier','mukilteo','newsofseattle','northseattle','oceanshores','olympicnationalpark','olympic_peninsula','ortingwa','piercecountywa','pnwfestivals','politicswa','portangeles','portorchard','porttownsend','poulsbo','pugetlist','pugetsound','puyallupwa','rainier','renton_wa','sammamish','sanjuanislands','seatac','seattleapartments','seattle_bicycling','seattlecars','seattledragons','seattleevents','seattleents','seattlehistory','seattlehomelessfires','seattlehousing','seattlejobs','seattlemovienight','seattlemusic','seattlephotograhy','seattlequestions','seattleseawolvesrugby','seattlestorm','seattlethunderbirds','seattleu','seattlewarecipes','seawa','shoreline','skagit','skagitcounty','skagitvalley','snohomishcounty','snohomish','snoqualmie','southseattle','stevenspass','the_seattle','tukwila','tulalip','tumwater','uwt','veganseattle','wabeer','wallawalla','waoutdoors','washingtonforsanders','whidbey','wholesomeseattle','wizardsuniteseattle','woodinville','wsucougars','yelm')
@@ -32,7 +32,20 @@ source("helper.R")
 
 df <- load_weekly_posts()
 
-df <- df[subreddit %in% c(include,include_seasonality)]
+min_yearly_nonzero_prop <- 0.15
+remember(min_yearly_nonzero_prop,'min_yearly_nonzero_prop')
+
+df <- df[,':='(w.year=year(week))]
+df <- df[(w.year>=2012)]
+
+df2 <- df[,.(prop.0 = mean(N.authors==0)),by=.(w.year,subreddit)]
+df2 <- df2[,':='(prop.0.too.high = (prop.0 > min_yearly_nonzero_prop))]
+include <- df2[,.(include = sum(prop.0.too.high) == 0),by=.(subreddit)]
+include <- include[include==TRUE,.(subreddit)]
+df <- df[subreddit %in% include]
+
+remember(include, 'included_subreddits')
+## our inclusion criteria is having no more than 15% of weeks without posts each year from 2012 through 2019.
 write_feather(df,'data/included_timeseries.feather',compression="uncompressed")
 
 
