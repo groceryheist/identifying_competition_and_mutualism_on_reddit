@@ -4,3 +4,6 @@
 [submodule "RemembR"]
 	path = RemembR
 	url = git@github.com:groceryheist/RemembR.git
+[submodule "pyRembr"]
+	path = pyRembr
+	url = git@github.com:groceryheist/pyRembr.git
