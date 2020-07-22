@@ -6,7 +6,7 @@ data/seattle_subreddit_submissions.feather: pull_seattle_subs.py comdata_output/
 	python3 pull_seattle_subs.py; \
 	echo "Done"
 
-data/var_df.feather: seasonality.py data/mlb/ data/mls.csv data/included_timeseries.feather
+data/var_df.feather: seasonality.py data/mlb/ data/mls.csv data/ncaa data/included_timeseries.feather build_var_df.py
 	source ./bin/activate && python3 build_var_df.py
 
 data/included_timeseries.feather: choose_subreddits.R data/seattle_subreddit_submissions.feather

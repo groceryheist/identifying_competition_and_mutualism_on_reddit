@@ -346,7 +346,7 @@ def load_ncaa_games(f):
             return np.NaN
 
     ## data from college football reference, curated by https://gamethread.redditcfb.com/gamedb.php
-    soup = BeautifulSoup(open(f,'r').read())
+    soup = BeautifulSoup(open(f,'r').read(),features='lxml')
     game_dates = soup.find_all(attrs={"class":'date'})
     game_seasons = soup.find_all(attrs={"class":"season"})
     
