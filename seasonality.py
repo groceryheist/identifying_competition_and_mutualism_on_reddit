@@ -385,25 +385,26 @@ def load_uni_season(ytab, games_file, aca_spans):
 
     ytab.iloc[j_academic,ytab.columns=='season'] = 'academic'
 
-    game_dates = pd.DataFrame({"game_date":load_ncaa_games(games_file)})
-    
-    game_dates['year'] = game_dates.game_date.dt.year
-    
-    last_game = game_dates.groupby('year')['game_date'].max().reset_index(drop=False)
+    if games_file is not None:
+        game_dates = pd.DataFrame({"game_date":load_ncaa_games(games_file)})
+        
+        game_dates['year'] = game_dates.game_date.dt.year
 
-    last_game.year = last_game.year.astype('int')
+        last_game = game_dates.groupby('year')['game_date'].max().reset_index(drop=False)
 
-    last_game = last_game.set_index("year")
+        last_game.year = last_game.year.astype('int')
 
-    seasons = ncaa_seasons.copy()
-    seasons['year'] = seasons['min'].dt.year
-    seasons = seasons.join(last_game,on='year',lsuffix='_last')
-    seasons.loc[seasons['max'] <= seasons.game_date,'max'] = seasons.game_date
+        last_game = last_game.set_index("year")
 
-    i_ncaa, j_ncaa = np.where((seasons['min'].values[:,None] <= ytab.week.values) &
-                              (seasons['max'].values[:,None] > ytab.week.values))
+        seasons = ncaa_seasons.copy()
+        seasons['year'] = seasons['min'].dt.year
+        seasons = seasons.join(last_game,on='year',lsuffix='_last')
+        seasons.loc[seasons['max'] <= seasons.game_date,'max'] = seasons.game_date
 
-    ytab.iloc[j_ncaa,ytab.columns=='season'] = 'regular_season'
+        i_ncaa, j_ncaa = np.where((seasons['min'].values[:,None] <= ytab.week.values) &
+                                  (seasons['max'].values[:,None] > ytab.week.values))
+
+        ytab.iloc[j_ncaa,ytab.columns=='season'] = 'regular_season'
 
     ytab.loc[ ytab.season == 'offseason','season_cat'] = 1
     ytab.loc[ ytab.season == 'academic','season_cat'] = 2
@@ -419,8 +420,19 @@ def load_udub_season(ytab):
     return(load_uni_season(ytab, 'data/ncaa/_r_CFB Game Database_UW.html', uw_aca_spans))
 
 def load_wsu_season(ytab):
+    # from wsu registrar's website
     wsu_aca_spans = pd.DataFrame({'min':[datetime(2009,8,24),datetime(2010,8,23),datetime(2011,8,22), datetime(2012,8,20),datetime(2013,8,19),datetime(2014,8,25),datetime(2015,8,24),datetime(2016,8,22),datetime(2017,8,21),datetime(2018,8,20), datetime(2019,8,30)],
                                   'max':[datetime(2010,5,7), datetime(2011,5,6), datetime(2012,5,4), datetime(2013,5,3), datetime(2014,5,9),datetime(2015,5,8),datetime(2016,5,7), datetime(2017,5,5), datetime(2018,5,4),datetime(2019,5,3),datetime(2020,5,8)]
                                   })
 
     return(load_uni_season(ytab, 'data/ncaa/_r_CFB Game Database_WSU.html', wsu_aca_spans))
+
+def load_wwu_season(ytab):
+
+    ## from the WWU course catelogs on their website via the wayback machine
+    wwu_aca_spans = pd.DataFrame({'min':[datetime(2009,9,23),datetime(2010,9,22), datetime(2011,9,21), datetime(2012,9,24),datetime(2013,9,25),datetime(2014,9,24), datetime(2015,9,24), datetime(2016,9,21), datetime(2017,9,27),datetime(2018,8,26), datetime(2019,9,25)],
+                                 'max':[datetime(2010,6,11), datetime(2011,6,11), datetime(2012,6,9), datetime(2013,6,14), datetime(2014,6,13), datetime(2015,6,12), datetime(2016,6,10), datetime(2017,6,9), datetime(2018,6,15), datetime(2019,6,14), datetime(2020,6,12)]
+    })
+
+    return(load_uni_season(ytab,None, wwu_aca_spans))
+

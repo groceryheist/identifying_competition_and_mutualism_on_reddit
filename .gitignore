@@ -37,3 +37,7 @@
 /.Rhistory
 /core.*
 /remembr.RDS_LOCK
+/data/schedule.zip
+data/mlb/*.zip
+/data/ncaa/_r_CFB Game Database_WSU_files/
+/data/ncaa/_r_CFB Game Database_UW_files/
