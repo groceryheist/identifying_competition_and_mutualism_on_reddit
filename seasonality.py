@@ -8,7 +8,7 @@
 
 # let's have 2 types of sports seasonality: type 1 are weeks where the team plays (either regular season or post season, include bye weeks). type 2 are weeks when there are other league events (either pre-season weeks, post-season weeks where the team doesn't play, and the nfl draft).
 
-
+from bs4 import BeautifulSoup
 import pandas as pd
 import numpy as np
 import nflgame
@@ -335,5 +335,92 @@ def load_mariners_seasonality(ytab):
     return(ytab)
 
 
+def load_ncaa_games(f):
+    def dateparse(d):
+        try:
+            date = datetime.strptime(str(d), "%m/%d/%Y")
+            if date.month == 1:
+                date = date.replace(year=date.year + 1)
+            return date
+        except ValueError:
+            return np.NaN
 
+    ## data from college football reference, curated by https://gamethread.redditcfb.com/gamedb.php
+    soup = BeautifulSoup(open(f,'r').read())
+    game_dates = soup.find_all(attrs={"class":'date'})
+    game_seasons = soup.find_all(attrs={"class":"season"})
+    
+    game_dates = map(dateparse,
+                     map('/'.join,
+                         zip(
+                             map(lambda t: t.text,game_dates),
+                             map(lambda t: t.text,game_seasons)
+                         )
+                     )
+    )
+    # strip_header
+    game_dates = list(game_dates)
+    return(game_dates)
 
+ncaa_seasons = pd.DataFrame({'min':[datetime(2009,9,3), datetime(2010,9,2), datetime(2011,9,1), datetime(2012,8,30),datetime(2013,8,29), datetime(2014,8,27), datetime(2015,9,3), datetime(2016,8,26), datetime(2017,8,26), datetime(2018,8,25), datetime(2019,8,24)],
+                             'max':[datetime(2009,12,19), datetime(2010,12,11), datetime(2011,12,10), datetime(2012,12,8), datetime(2013,12,14), datetime(2014,12,13), datetime(2015,12,12), datetime(2016,12,10), datetime(2017,12,9), datetime(2018,12,8), datetime(2018,12,14)]
+    })
+
+ncaa_postseasons = pd.DataFrame({'min':[datetime(2009,12,19), datetime(2010,12,18), datetime(2011,12,17), datetime(2012,12,15), datetime(2013,12,21), datetime(2014,12,20), datetime(2015,12,19), datetime(2016,12,17), datetime(2017,12,16), datetime(2018,12,15), datetime(2019,12,21)],
+                                 'max':[datetime(2010,1,7), datetime(2011,1,10), datetime(2012,1,9), datetime(2013,1,7), datetime(2014,1,6), datetime(2015,1,12), datetime(2016,1,11), datetime(2017,1,9), datetime(2018,1,8), datetime(2019,1,7), datetime(2020,1,13)]
+    })
+
+## we apply these rules in order of precedence
+## 1. if it's NCAA football season and the huskies haven't played their last game
+## 2. if it's the school year
+## 3. WWU doesnt have a football team at all :)
+def load_uni_season(ytab, games_file, aca_spans):
+
+    ytab['next_week'] = ytab.week + timedelta(weeks=1)
+    ytab['season'] = 'offseason'
+
+    # academic calendars obtained from websites.
+    i_academic, j_academic = np.where((aca_spans['min'].values[:,None] <= ytab.week.values) &
+                                      (aca_spans['max'].values[:,None] > ytab.week.values))
+
+    ytab.iloc[j_academic,ytab.columns=='season'] = 'academic'
+
+    game_dates = pd.DataFrame({"game_date":load_ncaa_games(games_file)})
+    
+    game_dates['year'] = game_dates.game_date.dt.year
+    
+    last_game = game_dates.groupby('year')['game_date'].max().reset_index(drop=False)
+
+    last_game.year = last_game.year.astype('int')
+
+    last_game = last_game.set_index("year")
+
+    seasons = ncaa_seasons.copy()
+    seasons['year'] = seasons['min'].dt.year
+    seasons = seasons.join(last_game,on='year',lsuffix='_last')
+    seasons.loc[seasons['max'] <= seasons.game_date,'max'] = seasons.game_date
+
+    i_ncaa, j_ncaa = np.where((seasons['min'].values[:,None] <= ytab.week.values) &
+                              (seasons['max'].values[:,None] > ytab.week.values))
+
+    ytab.iloc[j_ncaa,ytab.columns=='season'] = 'regular_season'
+
+    ytab.loc[ ytab.season == 'offseason','season_cat'] = 1
+    ytab.loc[ ytab.season == 'academic','season_cat'] = 2
+    ytab.loc[ (ytab.season == 'regular_season'),'season_cat'] = 3
+    ytab.season_cat = ytab.season_cat.astype(np.int32)
+    return(ytab)
+
+def load_udub_season(ytab):
+    uw_aca_spans = pd.DataFrame({'min':[datetime(2009,9,30),datetime(2010,9,29), datetime(2011,9,28), datetime(2012,9,24),datetime(2013,9,25),datetime(2014,9,24), datetime(2015,9,30), datetime(2016,9,28), datetime(2017,9,27),datetime(2018,8,26), datetime(2019,9,25)],
+                                 'max':[datetime(2010,6,11), datetime(2011,6,10), datetime(2012,6,8), datetime(2013,6,14), datetime(2014,6,13), datetime(2015,6,12), datetime(2016,6,10), datetime(2017,6,9), datetime(2018,6,8), datetime(2019,6,14), datetime(2020,6,12)]
+    })
+
+    return(load_uni_season(ytab, 'data/ncaa/_r_CFB Game Database_UW.html', uw_aca_spans))
+
+def load_wsu_season(ytab):
+    wsu_aca_spans = pd.DataFrame({'min':[datetime(2009,8,24),datetime(2010,8,23),datetime(2011,8,22), datetime(2012,8,20),datetime(2013,8,19),datetime(2014,8,25),datetime(2015,8,24),datetime(2016,8,22),datetime(2017,8,21),datetime(2018,8,20), datetime(2019,8,30)],
+                                  'max':[datetime(2010,5,7), datetime(2011,5,6), datetime(2012,5,4), datetime(2013,5,3), datetime(2014,5,9),datetime(2015,5,8),datetime(2016,5,7), datetime(2017,5,5), datetime(2018,5,4),datetime(2019,5,3),datetime(2020,5,8)]
+                                  })
+
+    return(load_uni_season(ytab, 'data/ncaa/_r_CFB Game Database_WSU.html', wsu_aca_spans))
