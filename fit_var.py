@@ -7,7 +7,7 @@ import fire
 import pickle
 import pystan
 
-def fit_var(p, chains=4, iter=3000, adapt_delta=0.99, max_treedepth=20, infile='data/var_stan_data.pickle', output=None):
+def fit_var(p, chains=4, iter=3000, adapt_delta=0.99, max_treedepth=20, refresh=100, infile='data/var_stan_data.pickle', output=None):
 
     np.set_printoptions(precision=None, suppress=True)
     
@@ -42,6 +42,7 @@ def fit_var(p, chains=4, iter=3000, adapt_delta=0.99, max_treedepth=20, infile='
     fit = heaps_pois_seasonality.sampling(data=stan_data,
                                           chains=chains,
                                           iter=iter,
+                                          refresh=refresh,
                                           control={'adapt_delta':adapt_delta,
                                                    'max_treedepth':max_treedepth}
     )

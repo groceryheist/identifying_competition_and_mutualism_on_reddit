@@ -1,4 +1,4 @@
-all: data/seattle_subreddit_submissions.feather plots/subreddit_posts_timeseries data/included_timeseries.feather data/var_stan_data.pickle
+all: data/seattle_subreddit_submissions.feather plots/subreddit_posts_timeseries data/included_timeseries.feather data/var_stan_data.pickle data/stan_models
 
 data/seattle_subreddit_submissions.feather: pull_seattle_subs.py comdata_output/reddit_submissions_by_subreddit.parquet
 	echo "Pulling subreddit histories from parquet"; \
@@ -19,3 +19,6 @@ clean_intermediate:
 	rm data/seattle_subreddit_submissions.feather
 	rm data/included_timeseries.feather
 	rm plots/subreddit_posts_timeseries/*
+
+data/stan_models:
+	srun -p comdata -A comdata --time=400:00:00 --pty bash run_var_jobs.sh
