@@ -15,7 +15,6 @@ import nflgame
 from datetime import datetime, timedelta
 from itertools import chain
 
-
 ### We account for seasonal interest in the Seattle sounders according to their sports schedule.
 ### We apply control variables in order of precedence (rules listed first supercede following rules).
 ### 1. MLS playoff games, CONECAFF games, and the US Open Cup count as "postseason games" Label (1), also includes egular season MLS playoff games are "regular season games" Label (2) 
@@ -23,7 +22,7 @@ from itertools import chain
 ###    also includes MLS playoffs after the sounders have lost or the MLS drafts.
 ### 3. other weeks are the off-season
 
-def load_sounders_seasonality(ytab):
+def load_sounders_seasons(ytab):
     # obtained data through 2016 from https://raw.githubusercontent.com/jalapic/engsoccerdata/master/data-raw/mls.csv
     # other data manually entered from Wikipedia
 
@@ -189,7 +188,7 @@ def get_seahawks_seasonality_data(ytab):
     output.to_feather("data/seasonality_levels.feather")
     output.to_csv("data/seasonality_levels.csv")
 
-def load_seahawks_seasonality(ytab):
+def load_seahawks_seasons(ytab):
     seasonality_data = pd.read_feather("data/seasonality_levels.feather")
 
     season_end_dates = seasonality_data.loc[seasonality_data.type == 'end season']
@@ -240,7 +239,7 @@ def load_seahawks_seasonality(ytab):
 # type 2: draft, postseason, preseason
 # type 3: offseason 
 
-def load_mariners_seasonality(ytab):
+def load_mariners_seasons(ytab):
 
     # helper function for parsing dates from retrosheet.org
     def dateparse(t):
@@ -374,7 +373,7 @@ ncaa_postseasons = pd.DataFrame({'min':[datetime(2009,12,19), datetime(2010,12,1
 ## 1. if it's NCAA football season and the huskies haven't played their last game
 ## 2. if it's the school year
 ## 3. WWU doesnt have a football team at all :)
-def load_uni_season(ytab, games_file, aca_spans):
+def load_uni_seasons(ytab, games_file, aca_spans):
 
     ytab['next_week'] = ytab.week + timedelta(weeks=1)
     ytab['season'] = 'offseason'
@@ -412,27 +411,26 @@ def load_uni_season(ytab, games_file, aca_spans):
     ytab.season_cat = ytab.season_cat.astype(np.int32)
     return(ytab)
 
-def load_udub_season(ytab):
+def load_udub_seasons(ytab):
     uw_aca_spans = pd.DataFrame({'min':[datetime(2009,9,30),datetime(2010,9,29), datetime(2011,9,28), datetime(2012,9,24),datetime(2013,9,25),datetime(2014,9,24), datetime(2015,9,30), datetime(2016,9,28), datetime(2017,9,27),datetime(2018,8,26), datetime(2019,9,25)],
                                  'max':[datetime(2010,6,11), datetime(2011,6,10), datetime(2012,6,8), datetime(2013,6,14), datetime(2014,6,13), datetime(2015,6,12), datetime(2016,6,10), datetime(2017,6,9), datetime(2018,6,8), datetime(2019,6,14), datetime(2020,6,12)]
     })
 
-    return(load_uni_season(ytab, 'data/ncaa/_r_CFB Game Database_UW.html', uw_aca_spans))
+    return(load_uni_seasons(ytab, 'data/ncaa/_r_CFB Game Database_UW.html', uw_aca_spans))
 
-def load_wsu_season(ytab):
+def load_wsu_seasons(ytab):
     # from wsu registrar's website
     wsu_aca_spans = pd.DataFrame({'min':[datetime(2009,8,24),datetime(2010,8,23),datetime(2011,8,22), datetime(2012,8,20),datetime(2013,8,19),datetime(2014,8,25),datetime(2015,8,24),datetime(2016,8,22),datetime(2017,8,21),datetime(2018,8,20), datetime(2019,8,30)],
                                   'max':[datetime(2010,5,7), datetime(2011,5,6), datetime(2012,5,4), datetime(2013,5,3), datetime(2014,5,9),datetime(2015,5,8),datetime(2016,5,7), datetime(2017,5,5), datetime(2018,5,4),datetime(2019,5,3),datetime(2020,5,8)]
                                   })
 
-    return(load_uni_season(ytab, 'data/ncaa/_r_CFB Game Database_WSU.html', wsu_aca_spans))
+    return(load_uni_seasons(ytab, 'data/ncaa/_r_CFB Game Database_WSU.html', wsu_aca_spans))
 
-def load_wwu_season(ytab):
+def load_wwu_seasons(ytab):
 
     ## from the WWU course catelogs on their website via the wayback machine
     wwu_aca_spans = pd.DataFrame({'min':[datetime(2009,9,23),datetime(2010,9,22), datetime(2011,9,21), datetime(2012,9,24),datetime(2013,9,25),datetime(2014,9,24), datetime(2015,9,24), datetime(2016,9,21), datetime(2017,9,27),datetime(2018,8,26), datetime(2019,9,25)],
                                  'max':[datetime(2010,6,11), datetime(2011,6,11), datetime(2012,6,9), datetime(2013,6,14), datetime(2014,6,13), datetime(2015,6,12), datetime(2016,6,10), datetime(2017,6,9), datetime(2018,6,15), datetime(2019,6,14), datetime(2020,6,12)]
     })
 
-    return(load_uni_season(ytab,None, wwu_aca_spans))
-
+    return(load_uni_seasons(ytab,None, wwu_aca_spans))

@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
-
+from var_data import VarData
 from datetime import datetime, timedelta
-from util import *
-from seasonality import load_seahawks_seasonality, load_sounders_seasonality
+import pandas as pd
+from util import unpickle_or_create, stan_pois_var_predict
+import pystan
+import numpy as np
+from plotnine import *
+
 np.set_printoptions(precision=None, suppress=True)
 
 # test out seasonality
@@ -13,66 +17,124 @@ test_df = test_df.loc[test_df.subreddit.isin({"washington","seattle","eastside",
 test_df = test_df.loc[test_df.week > datetime.fromisoformat("2012-01-01")]
 test_df_fit = test_df.loc[test_df.week < datetime.fromisoformat("2016-01-01")]
 
-test_df_forecast = test_df.loc[(test_df.week >= datetime.fromisoformat("2016-01-01")) & (test_df.week < datetime.fromisoformat("2016-07-01"))]
-ytab = test_df_fit.pivot(index='week',columns='subreddit',values='N_authors')
-ytab = ytab.reset_index(drop=False)
+min_date = "2012-01-01"
+fit_date = "2016-01-01"
+forecast_date = "2017-01-01"
 
-y = ytab.drop('week',axis='columns').to_numpy()
+vardata = VarData.from_df(test_df,min_date,fit_date,forecast_date)
 
-forecast_len = 30
+test_data = vardata.get_stan_data()
 
-test_data = {'y':y.T,
-             'N':y.shape[0],
-             'm':y.shape[1],
-             'p':3,
-             'm_diag':np.repeat(0,y.shape[1]),
-             'scale_diag':1,
-             'scale_offdiag':0,
-             'df':10,
-             'forecast_len':forecast_len,
-             'es' : [1,0], # top-level prior for the means of the means (diag, off-diag)
-             'fs' : [np.sqrt(1.4), np.sqrt(1.4)], # top-level prior for the precision of means. a pretty tight prior seems to help avoid multimodality
-             'gs' : [2.1,2.1], # top-level prior for the position of the scales,
-             'hs' : [1/3,1/3], # top-level prior for the precision of the scales,
-             'df':10,
-             'alpha':0,
-             'sd0': 7, # hyper prior precision of mu0
-             'g0':4, # hyper prior for variance of m0
-             'h0':3, # hyper prior for variance of m0} # degrees of freedom in the inverse wishart prior on the scale matrix.
+## add priors
+test_data = {**test_data,
+             **{'p':3,
+                'm_diag':np.repeat(0,test_data['y'].shape[0]),
+                'scale_diag':1,
+                'scale_offdiag':0,
+                'df':10,
+                'es' : [1,0], # top-level prior for the means of the means (diag, off-diag)
+                'fs' : [np.sqrt(1.4), np.sqrt(1.4)], # top-level prior for the precision of means. a pretty tight prior seems to help avoid multimodality
+                'gs' : [2.1,2.1], # top-level prior for the position of the scales,
+                'hs' : [1/3,1/3], # top-level prior for the precision of the scales,
+                'df':10,
+                'alpha':0,
+                'sd0': 7, # hyper prior precision of mu0
+                'g0':4, # hyper prior for variance of m0
+                'h0':3, # hyper prior for variance of m0} # degrees of freedom in the inverse wishart prior on the scale matrix.
+             }
 }
 
-test_data['n_seas'] = 2
-test_data['seasonality_idx'] = [2,5]
-test_data['n_seas_levels'] = [3,3]
-
-# gotta build it.
-
-yforecast = test_df_forecast.pivot(index='week',columns='subreddit',values='N_authors').reset_index(drop=False)
-
-# gotta build it.
-
-seahawks_season = load_seahawks_seasonality(ytab)
-sounders_season = load_sounders_seasonality(ytab)
-test_data['season'] = np.array([seahawks_season.season_cat,sounders_season.season_cat])
-
-seahawks_forecast = load_seahawks_seasonality(yforecast)
-sounders_forecast = load_sounders_seasonality(yforecast)
-test_data['forecast_season'] = np.array([seahawks_forecast.season_cat,sounders_forecast.season_cat])
-test_data['forecast_len'] = len(seahawks_forecast)
-
-## STILL NEED TO ADD SEASONALITY TO THE FORECAST
+print(test_data['N'])
+print(test_data['m'])
+print(test_data['season'].shape)
 
 heaps_pois_seasonality  = unpickle_or_create("stan_code/heaps_poisson_seasonality.pkl",
-                                             overwrite=True,
+                                             overwrite=False,
                                              function=pystan.StanModel,
                                              file='stan_code/heaps_poisson_seasonality.stan',
                                              model_name='heaps_poisson_seasonality')
 
 
 test_seasonality_fit  = unpickle_or_create("stan_models/test_seasonality_fit.pkl",
-                                           overwrite=True,
+                                           overwrite=False,
                                            function=heaps_pois_seasonality.sampling,
                                            chains=4,
                                            data=test_data,
                                            iter=3000,
                                            control={'adapt_delta':0.99,'max_treedepth':20})
+
+
+df_pred = stan_pois_var_predict(test_seasonality_fit,test_data['y'].shape[1])
+
+df_pred['subreddit'] = ""
+df_pred.loc[df_pred.variable=='y1','subreddit'] = 'eastside'
+df_pred.loc[df_pred.variable=='y2','subreddit'] = 'seahawks'
+df_pred.loc[df_pred.variable=='y3','subreddit'] = 'seattle'
+df_pred.loc[df_pred.variable=='y4','subreddit'] = 'soundersfc'
+df_pred.loc[df_pred.variable=='y5','subreddit'] = 'washington'
+
+df_pred.loc[:,'week'] = list(vardata.df_forecast.week)
+
+p = ggplot(df_pred,aes(y='y',ymax='y_upper',ymin='y_lower', x='week',group='subreddit'))
+p = p + geom_line(aes(y='N_authors',x='week',color='subreddit',group='subreddit'), data=vardata.df_fit, inherit_aes=False, linetype='solid')
+p = p + geom_line() + geom_ribbon(alpha=0.2) + geom_line(aes(color='subreddit'), linetype='dotted',size=1.5)
+p = p + theme(legend_position = 'top',panel_background=element_rect(fill='white'))
+p.save("plots/test_forecast.png")
+
+mut_forecast = test_seasonality_fit.extract(pars=['mut_forecast'])['mut_forecast']
+
+srs = np.concatenate([np.repeat('eastside',mut_forecast.shape[1]), 
+                      np.repeat('seahawks',mut_forecast.shape[1]),
+                      np.repeat('seattle',mut_forecast.shape[1]),
+                      np.repeat('soundersfc',mut_forecast.shape[1]),
+                      np.repeat('washington',mut_forecast.shape[1])])
+
+mut_df = pd.DataFrame({'mut':mut_forecast.mean((0)).flatten(),
+                       'upper':np.quantile(mut_forecast,0.95,(0)).flatten(),
+                       'lower':np.quantile(mut_forecast,0.05,(0)).flatten(),
+                       'subreddit':srs,
+                       'week':vardata.df_forecast.week})
+
+
+p = ggplot(mut_df, aes(y='mut',ymax='upper',ymin='lower',x='week',group='subreddit',color='subreddit'))
+p = p + geom_line()
+p = p + geom_ribbon(alpha=0.2)
+p = p + theme(legend_position = 'top',panel_background=element_rect(fill='white'))
+p.save("plots/test_mut.png")
+
+lambda_forecast = test_seasonality_fit.extract(pars=['lambda_new'])['lambda_new']
+
+lambda_df = pd.DataFrame({'lambda':lambda_forecast.mean((0)).flatten(),
+                          'upper':np.quantile(lambda_forecast,0.95,(0)).flatten(),
+                          'lower':np.quantile(lambda_forecast,0.05,(0)).flatten(),
+                          'subreddit':srs,
+                          'week':vardata.df_forecast.week})
+
+p = ggplot(lambda_df, aes(y='lambda',ymax='upper',ymin='lower',x='week',group='subreddit',color='subreddit'))
+p = p + geom_line()
+p = p + geom_ribbon(alpha=0.2)
+p = p + theme(legend_position = 'top',panel_background=element_rect(fill='white'))
+p.save("plots/test_lambda_forecast.png")
+
+
+lambda_est = test_seasonality_fit.extract(pars=['lambda'])['lambda']
+
+
+srs2 = np.concatenate([np.repeat('eastside',lambda_est.shape[1]), 
+                      np.repeat('seahawks',lambda_est.shape[1]),
+                      np.repeat('seattle',lambda_est.shape[1]),
+                      np.repeat('soundersfc',lambda_est.shape[1]),
+                      np.repeat('washington',lambda_est.shape[1])])
+
+
+lambda_est_df = pd.DataFrame({'lambda':lambda_est.mean((0)).flatten(),
+                              'upper':np.quantile(lambda_est,0.95,(0)).flatten(),
+                              'lower':np.quantile(lambda_est,0.05,(0)).flatten(),
+                              'subreddit':srs2,
+                              'week':test_df_fit.week})
+
+p = ggplot(lambda_est_df, aes(y='lambda',ymax='upper',ymin='lower',x='week',group='subreddit',color='subreddit'))
+p = p + geom_line()
+p = p + geom_ribbon(alpha=0.2)
+p = p + theme(legend_position = 'top',panel_background=element_rect(fill='white'))
+p.save("plots/test_lambda_est.png")
