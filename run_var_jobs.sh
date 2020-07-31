@@ -1,2 +1,3 @@
 #!/usr/bin/env bash
-parallel --jobs 6 < var_jobs_task_list
+source ./bin/activate
+parallel --jobs 7 < var_jobs_task_list

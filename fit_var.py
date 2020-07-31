@@ -9,6 +9,9 @@ import pystan
 
 def fit_var(p, chains=4, iter=3000, adapt_delta=0.99, max_treedepth=20, refresh=100, infile='data/var_stan_data.pickle', output=None):
 
+    if output is None:
+        output = "var_stan_p{p}"
+
     np.set_printoptions(precision=None, suppress=True)
     
     vardata = pickle.load(open(infile,'rb'))
