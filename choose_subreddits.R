@@ -9,7 +9,7 @@
 ## based on plots of unique posters each week
 # not enough activity
 source("RemembR/R/RemembeR.R")
-library(arrow)
+source("helper.R")
 
 def_exclude = c('anacortes','auburnwa','bainbridgeisland','ballard','bellevuewa','belltown','bothell','bremerton','burien','camaswashington','capitolhillsea','clallam','destinationwa','edmonds','emeraldcityfoodies','federalway','fishingwashington','foodseattle','forkswa','grandcoulee','graysharbor','kentwa','kexp','kingcounty','kirkland','kittitas','lewiscounty','longview','lynnwood','lynwoodwa','marysville','mount_rainier','mukilteo','newsofseattle','northseattle','oceanshores','olympicnationalpark','olympic_peninsula','ortingwa','piercecountywa','pnwfestivals','politicswa','portangeles','portorchard','porttownsend','poulsbo','pugetlist','pugetsound','puyallupwa','rainier','renton_wa','sammamish','sanjuanislands','seatac','seattleapartments','seattle_bicycling','seattlecars','seattledragons','seattleevents','seattleents','seattlehistory','seattlehomelessfires','seattlehousing','seattlejobs','seattlemovienight','seattlemusic','seattlephotograhy','seattlequestions','seattleseawolvesrugby','seattlestorm','seattlethunderbirds','seattleu','seattlewarecipes','seawa','shoreline','skagit','skagitcounty','skagitvalley','snohomishcounty','snohomish','snoqualmie','southseattle','stevenspass','the_seattle','tukwila','tulalip','tumwater','uwt','veganseattle','wabeer','wallawalla','waoutdoors','washingtonforsanders','whidbey','wholesomeseattle','wizardsuniteseattle','woodinville','wsucougars','yelm')
 
@@ -27,8 +27,6 @@ might_include_seasonality = c('reignfc')
 include_seasonality = c("huskies",'mariners','pnwhiking','pnwriders','seahawks','soundersfc','udub','wsu','wwu')
 #huskies has 
 potential_competitors_excluded = c('bellevuewa','seawa','seattlejobs','seattle_bicycling','wsucougars','seattleents')
-
-source("helper.R")
 
 df <- load_weekly_posts()
 
