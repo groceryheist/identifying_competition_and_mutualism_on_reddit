@@ -7,18 +7,19 @@ import fire
 import pickle
 import pystan
 
-def fit_var(p, chains=4, iter=3000, adapt_delta=0.99, max_treedepth=20, refresh=100, infile='data/var_stan_data.pickle', output=None):
+def fit_var(p, chains=4, iter=3000, adapt_delta=0.99, max_treedepth=18, refresh=100, infile='data/var_stan_data.pickle', output=None):
 
     if output is None:
-        output = "var_stan_p{p}"
+        output = f"var_stan_p{p}"
 
     np.set_printoptions(precision=None, suppress=True)
     
     vardata = pickle.load(open(infile,'rb'))
     stan_data = vardata.stan_data
+
     ## add priors
     stan_data = {**stan_data,
-                 **{'p':3,
+                 **{'p':p,
                     'm_diag':np.repeat(0,stan_data['y'].shape[0]),
                     'scale_diag':1,
                     'scale_offdiag':0,
@@ -55,6 +56,7 @@ def fit_var(p, chains=4, iter=3000, adapt_delta=0.99, max_treedepth=20, refresh=
     # save a permuted dataframe for analysis
     fit_df = fit.to_dataframe(permuted=True)
     fit_df = fit_df.reset_index(drop=True)
+    print(pystan.check_hmc_diagnostics(fit))
     fit_df.to_feather(f"stan_models/{output}_stanmod.feather")
 
 if __name__ == "__main__":
