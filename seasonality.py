@@ -61,9 +61,10 @@ def load_sounders_seasons(ytab):
     i_mls_postseason, j_mls_postseason = np.where((postseason_spans['min'].values[:,None] <= ytab.week.values) &
                                                           (postseason_spans['max'].values[:,None] > ytab.week.values))
 
-    j_3 = sorted(np.append(np.append(j_friendly, j_preseason),j_mls_postseason))
+    j_3 = np.array(sorted(np.append(np.append(j_friendly, j_preseason),j_mls_postseason)))
 
-    ytab.iloc[j_3,ytab.columns=='season'] = 'preseason_or_league_event'
+    seas_col = np.where(ytab.columns=='season')[0]
+    ytab.iloc[j_3,seas_col] = 'preseason_or_league_event'
 
     regular_season_spans_1 = sounders_games.loc[sounders_games['round']=='regular'].groupby('Season').Date.agg(['min','max'])
 
@@ -78,7 +79,7 @@ def load_sounders_seasons(ytab):
 
     i_regular,j_regular = np.where((regular_season_spans['min'].values[:,None] <= ytab.week.values) & (regular_season_spans['max'].values[:,None] >= ytab.week.values))
 
-    ytab.iloc[j_regular,ytab.columns=='season'] = 'regular_season'
+    ytab.iloc[j_regular,seas_col] = 'regular_season'
 
 
     sounders_postseason_1 = mls_data.loc[(mls_data['round'] != 'regular') & ((mls_data['home'] == 'Seattle Sounders') |
@@ -90,7 +91,7 @@ def load_sounders_seasons(ytab):
     i_sounders_postseason, j_sounders_postseason = np.where((sounders_postseason.values[:,None] >= ytab.week.values) &
                                                             (sounders_postseason.values[:,None] < ytab.next_week.values))
 
-    ytab.iloc[j_sounders_postseason,ytab.columns=='season'] = 'postseason'
+    ytab.iloc[j_sounders_postseason,seas_col] = 'postseason'
 
     ytab.loc[ytab.season=='offseason','season_cat'] = 1
     ytab.loc[ytab.season=='preseason_or_league_event','season_cat'] = 2
@@ -281,7 +282,9 @@ def load_mariners_seasons(ytab):
     i_postseason, j_postseason = np.where((postseason_spans['min'].values[:,None] <= ytab.week.values) &
                                           (postseason_spans['max'].values[:,None] > ytab.week.values))
 
-    ytab.iloc[j_postseason,ytab.columns == 'season'] = 'postseason_loss'
+
+    seas_col = np.where(ytab.columns=='season')[0]
+    ytab.iloc[j_postseason,seas_col] = 'postseason_loss'
 
     # preseason dates from springtrainingconnection.com
     preseason_spans = pd.DataFrame({'min':[datetime(2009,2,25),datetime(2010,3,3),datetime(2011,2,27),datetime(2012,3,2),datetime(2013,2,22),datetime(2014,2,27),datetime(2015,3,4),datetime(2016,3,2),datetime(2017,2,25),datetime(2018,2,23),datetime(2019,2,21)],
@@ -290,7 +293,7 @@ def load_mariners_seasons(ytab):
     i_preseason, j_preseason = np.where((preseason_spans['min'].values[:,None] <= ytab.week.values) &
                                         (preseason_spans['max'].values[:,None] > ytab.week.values))
 
-    ytab.iloc[j_preseason,ytab.columns=='season'] = 'preseason'
+    ytab.iloc[j_preseason,seas_col] = 'preseason'
 
     # draft dates are irrelevant since it happens during the regular season
     # they come from Wikipedia
@@ -313,7 +316,7 @@ def load_mariners_seasons(ytab):
                                     (regular_season['Date'].values[:,None] < ytab.next_week.values))
 
 
-    ytab.iloc[j_regular,ytab.columns == 'season'] = 'regular'
+    ytab.iloc[j_regular,seas_col] = 'regular'
 
 
     sea_postseason = postseason.loc[(postseason.visitor == 'SEA') |
@@ -324,7 +327,7 @@ def load_mariners_seasons(ytab):
     i_postseason_sea, j_postseason_sea = np.where((sea_postseason_spans['min'].values[:,None] <= ytab.week.values) &
                                           (sea_postseason_spans['max'].values[:,None] > ytab.week.values))
 
-    ytab.iloc[j_postseason_sea,ytab.columns == 'season'] = 'postseason'
+    ytab.iloc[j_postseason_sea,seas_col] = 'postseason'
 
     ytab.loc[ytab.season == 'offseason','season_cat'] = 1
     ytab.loc[(ytab.season == 'preseason') | (ytab.season == 'postseason_loss'),'season_cat'] = 2
@@ -382,7 +385,8 @@ def load_uni_seasons(ytab, games_file, aca_spans):
     i_academic, j_academic = np.where((aca_spans['min'].values[:,None] <= ytab.week.values) &
                                       (aca_spans['max'].values[:,None] > ytab.week.values))
 
-    ytab.iloc[j_academic,ytab.columns=='season'] = 'academic'
+    seas_col = np.where(ytab.columns=='season')[0]
+    ytab.iloc[j_academic,seas_col] = 'academic'
 
     if games_file is not None:
         game_dates = pd.DataFrame({"game_date":load_ncaa_games(games_file)})
@@ -403,7 +407,7 @@ def load_uni_seasons(ytab, games_file, aca_spans):
         i_ncaa, j_ncaa = np.where((seasons['min'].values[:,None] <= ytab.week.values) &
                                   (seasons['max'].values[:,None] > ytab.week.values))
 
-        ytab.iloc[j_ncaa,ytab.columns=='season'] = 'regular_season'
+        ytab.iloc[j_ncaa,seas_col] = 'regular_season'
 
     ytab.loc[ ytab.season == 'offseason','season_cat'] = 1
     ytab.loc[ ytab.season == 'academic','season_cat'] = 2

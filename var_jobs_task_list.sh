@@ -1,0 +1,12 @@
+fit_var.py -p 1 --refresh 25 &> stan_logs/var_stan_p1.log
+fit_var.py -p 2 --refresh 25 &> stan_logs/var_stan_p2.log
+fit_var.py -p 3 --refresh 25 &> stan_logs/var_stan_p3.log
+fit_var.py -p 4 --refresh 25 &> stan_logs/var_stan_p4.log
+fit_var.py -p 5 --refresh 25 &> stan_logs/var_stan_p5.log
+fit_var.py -p 6 --refresh 25 &> stan_logs/var_stan_p6.log
+fit_var.py -p 7 --refresh 25 &> stan_logs/var_stan_p7.log
+fit_var.py -p 8 --refresh 25 &> stan_logs/var_stan_p8.log
+fit_var.py -p 9 --refresh 25 &> stan_logs/var_stan_p9.log
+fit_var.py -p 10 --refresh 25 &> stan_logs/var_stan_p10.log
+fit_var.py -p 11 --refresh 25 &> stan_logs/var_stan_p11.log
+fit_var.py -p 12 --refresh 25 &> stan_logs/var_stan_p12.log
