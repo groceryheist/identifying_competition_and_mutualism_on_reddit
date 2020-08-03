@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from var_data import VarData
 from datetime import datetime, timedelta
 import pandas as pd
