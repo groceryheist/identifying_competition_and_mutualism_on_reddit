@@ -129,7 +129,7 @@ parameters {
 transformed parameters {
   vector[p*m] lambda_1top;                // lambda_1, ..., lambda_p
   matrix[m, m] phi[p];    // The phi_i
-  matrix[p*m, p*m] Gamma; // (Stationary) variance of (y_1, ..., y_p)
+  cov_matrix[p*m] Gamma; // (Stationary) variance of (y_1, ..., y_p)
 
   {
     matrix[m, m] P[p];

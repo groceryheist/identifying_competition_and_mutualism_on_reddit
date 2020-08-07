@@ -60,7 +60,7 @@ class VarData(object):
     def add_seasonality(self):
         seasonal_idx = self.tab_fit.columns.isin(VarData.seasonality_map.keys())
         self.stan_data['n_seas'] = seasonal_idx.sum()
-        self.stan_data['seasonality_idx'] = np.where(seasonal_idx == True)
+        self.stan_data['seasonality_idx'] = np.where(seasonal_idx == True)[0]
 
         n_seas_levels = []
         season = []
