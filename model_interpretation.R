@@ -44,33 +44,57 @@ get.irf.forecast <- function(phi, forecast.len = 20){
     p <- dim(phi[[1]])[3]
     ndraws <- length(phi)
 
-    ## they all start with the same initial condition (i.e. phi.0 = diag(m))
-    ## but from there they each have their own path.
-    phi.0s <- lapply(1:ndraws, function(c) diag(m))
-    result <- list(phi.0s)
-    for(i in 2:forecast.len){
-#    result <- Reduce(function(phi.0s,i)
-        result[[i]] <-mapply(
-            function(phi.draw, phi.0)
-                Reduce(function(x,y) matrix(as.numeric(x),m) + matrix(as.numeric(y),m),
-                       apply(phi.draw, 3, function(phi.i) array(as.list(phi.0 %*% matrix(as.numeric(phi.i),m)),dim=c(m,m))),
-                       init=matrix(0,m,m)),
-            phi,
-            phi.0s,
-            SIMPLIFY=FALSE)
-        phi.0s <- result[[i]]
-    }
-#        init = lapply(1:ndraws,function(c) phi.0s))
+    
+    # function getting the next irf for a specific draw
+    next.irf <- function(irf.draw,phi.draw){
+        if(length(irf.draw) == 0){
+            return(diag(m))
+        }
 
-    return(result)
+        res <- matrix(0,m,m)
+        if(length(irf.draw) < p){
+            for(i in 1:length(irf.draw)){
+                res <- res + matrix(as.numeric(irf.draw[[length(irf.draw) - i + 1]]),m) %*% matrix(as.numeric(phi.draw[,,i]),m)
+            }
+            for(i in (1+length(irf.draw)):p){
+                res <- res + diag(m) %*% matrix(as.numeric(phi.draw[,,i]),m)
+            }
+        } else {
+            for(i in 1:p){
+                res <- res + matrix(as.numeric(irf.draw[[length(irf.draw) - i + 1]]),m) %*% matrix(as.numeric(phi.draw[,,i]),m)
+            }
+        }
+        return(res)
+    }
+
+    irf <- list()
+    for(t in 1:forecast.len){
+        irf[[t]] <- list()
+        for(id in 1:length(phi)){
+            phi.draw <- phi[[id]]
+            irf.draw <- list()
+            if(t == 1){
+                irf[[t]][[id]] <- next.irf(irf.draw, phi.draw)
+            } else {
+                for(i in 1:(t-1)){
+                    irf.draw <- c(irf.draw,list(irf[[i]][[id]]))
+                }
+
+                irf[[t]][[id]] <- next.irf(irf.draw, phi.draw)
+            }
+        }
+    }
+    
+    return(irf)
 }
 
 get.irf.ortho <- function(phi, sigma, forecast.len = 20){
     irf.forecast <- get.irf.forecast(phi, forecast.len)
     result <- list()
     F <- lapply(sigma,function(s) chol(s))
+
     for(i in 1:forecast.len){
-        result[[i]] <- mapply(function(p, f) matrix(as.numeric(p),m) %*% matrix(f,m),
+        result[[i]] <- mapply(function(p, f) matrix(as.numeric(p),m) %*% t(matrix(f,m)),
                             irf.forecast[[i]],
                             F,
                             SIMPLIFY=FALSE)
@@ -128,7 +152,7 @@ irf.to.plotdata <- function(irf, matnames){
 
 plot.irf <- function(irf, matnames){
     
-    plot.data <- irf.to.plotdata(irf.ortho, c('seattle','seahawks'))
+    plot.data <- irf.to.plotdata(irf, c('seattle','seahawks'))
     plot.data <- plot.data[,":="(name.row = factor(name.row,levels=matnames),
                                  name.col = factor(name.col,levels=matnames))]
     setnames(plot.data,old=c("5%","95%"),new=c("lower","upper"))
@@ -146,10 +170,17 @@ draws <- as.data.table(draws)
 params <- extract.params(draws)
 mu <- params[['mu']]
 phi <- params[['phi']]
+for(i in 1:length(phi)){
+    for(k in 1:length(phi[[i]])){
+        phi[[i]][[k]] = phi[[i]][[k]] 
+    
+    }
+}
+
 sigma <- params[['sigma']]
 
 # the forecast irf doesn't account for simultaneous covariance.
-irf.forecast <- get.irf.forecast(phi,20)
-matirf.ortho <- get.irf.ortho(phi,sigma,20)
+irf.forecast <- get.irf.forecast(phi,4*6)
+irf.ortho <- get.irf.ortho(phi,sigma,4*6)
 
 plot.irf(irf.ortho, c('seattle','seahawks'))

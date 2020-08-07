@@ -21,5 +21,8 @@ clean_intermediate:
 	rm data/included_timeseries.feather
 	rm plots/subreddit_posts_timeseries/*
 
-data/stan_models:
-	srun -p comdata -A comdata --time=400:00:00 --pty bash run_var_jobs.sh
+stan_code/heaps_poisson_seasonality.pkl: stan_code/heaps_poisson_seasonality.stan compile_model.py
+	source ./bin/activate && srun -p comdata -A comdata --time=2:00:00 --pty compile_model.py 
+
+data/stan_models:stan_code/heaps_poisson_seasonality.pkl data/var_stan_data.pickle
+	srun -p comdata -A comdata --mem=120g --time=400:00:00 --pty run_var_jobs.sh 
