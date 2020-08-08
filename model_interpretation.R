@@ -1,6 +1,7 @@
 library(arrow)
 library(Matrix)
 library(data.table)
+library(ggplot2)
 
 load.draws <- function(model.name){
     draws <- read_feather(paste0(file.path("stan_models",model.name),'.feather'))
@@ -89,6 +90,10 @@ get.irf.forecast <- function(phi, forecast.len = 20){
 }
 
 get.irf.ortho <- function(phi, sigma, forecast.len = 20){
+    m <- dim(phi[[1]])[1]
+    p <- dim(phi[[1]])[3]
+    ndraws <- length(phi)
+
     irf.forecast <- get.irf.forecast(phi, forecast.len)
     result <- list()
     F <- lapply(sigma,function(s) chol(s))
@@ -164,23 +169,63 @@ plot.irf <- function(irf, matnames){
     return(p)
 }
 
-model.name <- 'test_stan_stanmod'
-draws <- load.draws(model.name)
-draws <- as.data.table(draws)
-params <- extract.params(draws)
-mu <- params[['mu']]
-phi <- params[['phi']]
-for(i in 1:length(phi)){
-    for(k in 1:length(phi[[i]])){
-        phi[[i]][[k]] = phi[[i]][[k]] 
+
+## we say the short-run relationship is the first one that is statistically significant
+get.community.edgelists <- function(irf.plotdata){
+    setnames(irf.plotdata,old=c('95%','5%'),new=c('upper','lower'))
+    setnames(irf.plotdata,old=c('80%','20%'),new=c('upper.1','lower.1'))
+
+    first.negative <- irf.plotdata[upper < 0,.(x=min(x)),by=c("name.row","name.col")]
+    first.negative <- first.negative[,'type':='competitor']
+    first.positive <- irf.plotdata[lower > 0,.(x=min(x)),by=c("name.row","name.col")]
+    first.positive <- first.positive[,'type':='mutualist']
+
+    last.negative <-  irf.plotdata[upper < 0,.(x=max(x)),by=c("name.row","name.col")]
+
+    last.negative <- last.negative[,'type':='competitor']
+    last.positive <-  irf.plotdata[lower > 0,.(x=max(x)),by=c("name.row","name.col")]
+    last.positive <- last.positive[,'type':='mutualist']
+ 
+    long.run <- rbind(last.negative,last.positive)
+    long.run <- long.run[long.run[,.(x=max(x)),by=.(name.row,name.col)],on=.(name.row,name.col,x)]
+    short.run <- short.run[short.run[,.(x=min(x)),by=.(name.row,name.col)],on=.(name.row,name.col,x)]
     
-    }
+    return(list('long.run' = long.run, 'short.run' = short.run))
 }
 
-sigma <- params[['sigma']]
+get.forecast.plotdata <- function(){
 
-# the forecast irf doesn't account for simultaneous covariance.
-irf.forecast <- get.irf.forecast(phi,4*6)
-irf.ortho <- get.irf.ortho(phi,sigma,4*6)
+}
 
-plot.irf(irf.ortho, c('seattle','seahawks'))
+plot.forecast <- function(){
+
+}
+
+if (sys.nframe() == 0){
+    model.name <- 'test_stan_stanmod'
+    draws <- load.draws(model.name)
+    draws <- as.data.table(draws)
+    params <- extract.params(draws)
+
+    mu <- params[['mu']]
+    phi <- params[['phi']]
+
+    for(i in 1:length(phi)){
+        for(k in 1:dim(phi[[i]])[3]){
+            phi[[i]][,,k] <- matrix(as.numeric(phi[[i]][[k]] * matrix(c(0.5,0.5,-0.5,0.5),2)),2)
+        }
+    }
+
+    sigma <- params[['sigma']]
+
+                                        # the forecast irf doesn't account for simultaneous covariance.
+    irf.forecast <- get.irf.forecast(phi,4*6)
+    irf.ortho <- get.irf.ortho(phi,sigma,4*6)
+    plot.data <- irf.to.plotdata(irf.ortho,c('seattle','seahawks'))
+
+    plot.irf(irf.ortho, c('seattle','seahawks'))
+
+    plot.data <- irf.to.plotdata(irf.ortho,c('seattle','seahawks'))
+    get.community.edgelists(plot.data)
+
+}
