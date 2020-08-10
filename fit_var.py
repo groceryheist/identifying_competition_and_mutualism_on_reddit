@@ -8,7 +8,7 @@ import fire
 import pickle
 import pystan
 
-def fit_var(p, chains=4, iter=3000, adapt_delta=0.99, max_treedepth=18, refresh=100, infile='data/var_stan_data.pickle', output=None):
+def fit_var(p, chains=4, iter=3000, adapt_delta=0.98, max_treedepth=15, refresh=100, infile='data/var_stan_data.pickle', output=None):
 
     if output is None:
         output = f"var_stan_p{p}"
@@ -49,7 +49,8 @@ def fit_var(p, chains=4, iter=3000, adapt_delta=0.99, max_treedepth=18, refresh=
                                           iter=iter,
                                           refresh=refresh,
                                           control={'adapt_delta':adapt_delta,
-                                                   'max_treedepth':max_treedepth}
+                                                   'max_treedepth':max_treedepth},
+                                          seed=1773
     )
     
     output_format = f"stan_models/{output}_stanmod.pickle"
