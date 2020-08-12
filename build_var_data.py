@@ -5,23 +5,29 @@ from pyRemembeR import Remember
 from var_data import VarData
 import pickle
 
-remember = Remember()
+import fire
 
-df = pd.read_feather("data/included_timeseries.feather")
-df = df.rename(mapper= lambda n: n.replace('.','_'),axis='columns')
+def build_var_data(indata="data/included_timeseries.feather",output='data/var_stan_data.pickle',min_date='2011-06-1',max_date='2015-12-1',forecast_date='2016-06-1',remember_prefix=''):
+    remember = Remember()
 
-min_date = datetime(2011,6,1)
-fit_date = datetime(2015,12,1)
-forecast_date = datetime(2016,6,1)
+    df = pd.read_feather(indata)
+    df = df.rename(mapper= lambda n: n.replace('.','_'),axis='columns')
 
-remember(min_date,'min_date')
-remember(fit_date,'max_date')
-remember(forecast_date,'forecast_date')
+    min_date = datetime.fromisoformat(min_date)
+    fit_date = datetime.fromisoformat(max_date)
+    forecast_date = datetime.fromisoformat(forecast_date)
 
-vardata = VarData.from_df(df,min_date,fit_date,forecast_date)
+    remember(min_date,f'{remember_prefix}min_date')
+    remember(fit_date,'{remember_prefix}max_date')
+    remember(forecast_date,'{remember_prefix}forecast_date')
 
-pickle.dump(vardata, open('data/var_stan_data.pickle','wb'))
+    vardata = VarData.from_df(df,min_date,fit_date,forecast_date)
 
-test_df = df.loc[df.subreddit.isin(['seattle','seahawks'])]
-test_vardata = VarData.from_df(test_df,min_date,fit_date,forecast_date)
-pickle.dump(test_vardata, open('data/var_stan_testdata.pickle','wb'))
+    pickle.dump(vardata, open(output,'wb'))
+
+# test_df = df.loc[df.subreddit.isin(['seattle','seahawks'])]
+# test_vardata = VarData.from_df(test_df,min_date,fit_date,forecast_date)
+# pickle.dump(test_vardata, open('data/var_stan_testdata.pickle','wb'))
+
+if __name__=='__main__':
+    fire.Fire(build_var_data)

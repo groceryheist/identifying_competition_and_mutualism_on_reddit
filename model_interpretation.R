@@ -230,7 +230,7 @@ get.community.edgelists <- function(irf.plotdata,level='90'){
 }
 
 get.forecast.plotdata <- function(){
-
+    
 }
 
 plot.forecast <- function(){
@@ -238,7 +238,7 @@ plot.forecast <- function(){
 }
 
 if (sys.nframe() == 0){
-    model.name <- 'var_stan_p1_stanmod'
+    model.name <- 'var_stan_p2_stanmod'
     draws <- load.draws(model.name)
     draws <- as.data.table(draws)
     params <- extract.params(draws)
@@ -248,6 +248,7 @@ if (sys.nframe() == 0){
 
     included_subreddits <- data.table(read_feather("data/included_timeseries.feather"))
     included_subreddits <- unique(included_subreddits$subreddit)
+
     ## for(i in 1:length(phi)){
     ##     for(k in 1:dim(phi[[i]])[3]){
     ##         phi[[i]][,,k] <- matrix(as.numeric(phi[[i]][[k]] * matrix(c(0.5,0.5,-0.5,0.5),2)),2)
@@ -267,8 +268,6 @@ if (sys.nframe() == 0){
     plot.data <- irf.to.plotdata(irf.ortho,included_subreddits)
 
     plot.irf.focal(plot.data, included_subreddits,focal.sub = 'seattle')
-
-    plot.data <- irf.to.plotdata(irf.ortho,included_subreddits)
 
     edgelists <-get.community.edgelists(plot.data,level='95')
 

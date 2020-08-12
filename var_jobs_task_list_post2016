@@ -1,0 +1,7 @@
+./fit_var.py -p 1 --infile data/var_stan_data_post2016.pickle --output post2016/var_stan_p1 &> stan_logs/var_stan_p1_post2016.log
+./fit_var.py -p 2 --infile data/var_stan_data_post2016.pickle --output post2016/var_stan_p2 &> stan_logs/var_stan_p2_post2016.log
+./fit_var.py -p 3  --infile data/var_stan_data_post2016.pickle --output post2016/var_stan_p3 &> stan_logs/var_stan_p3_post2016.log
+./fit_var.py -p 4  --infile data/var_stan_data_post2016.pickle --output post2016/var_stan_p4 &> stan_logs/var_stan_p4_post2016.log
+./fit_var.py -p 5  --infile data/var_stan_data_post2016.pickle --output post2016/var_stan_p5 &> stan_logs/var_stan_p5_post2016.log
+./fit_var.py -p 6  --infile data/var_stan_data_post2016.pickle --output post2016/var_stan_p6 &> stan_logs/var_stan_p6_post2016.log
+
