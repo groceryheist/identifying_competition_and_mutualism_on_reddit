@@ -7,7 +7,7 @@ import pickle
 
 import fire
 
-def build_var_data(indata="data/included_timeseries.feather",output='data/var_stan_data.pickle',min_date='2011-06-1',max_date='2015-12-1',forecast_date='2016-06-1',remember_prefix=''):
+def build_var_data(indata="data/included_timeseries.feather",output='data/var_stan_data.pickle',min_date='2011-06-01',max_date='2015-12-01',forecast_date='2016-06-01',remember_prefix=''):
     remember = Remember()
 
     df = pd.read_feather(indata)
@@ -24,6 +24,10 @@ def build_var_data(indata="data/included_timeseries.feather",output='data/var_st
     vardata = VarData.from_df(df,min_date,fit_date,forecast_date)
 
     pickle.dump(vardata, open(output,'wb'))
+    out_fit = vardata.df_fit.reset_index()
+    out_fit.to_feather(f"{output.replace('.pickle','')}_fit.feather")
+    out_forecast = vardata.df_forecast.reset_index()
+    out_forecast.to_feather(f"{output.replace('.pickle','')}_forecast.feather")
 
 # test_df = df.loc[df.subreddit.isin(['seattle','seahawks'])]
 # test_vardata = VarData.from_df(test_df,min_date,fit_date,forecast_date)

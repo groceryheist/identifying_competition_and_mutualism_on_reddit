@@ -2,7 +2,16 @@ library(arrow)
 library(Matrix)
 library(data.table)
 library(ggplot2)
-library
+
+comp.stats <- function(draws){
+    q <- quantile(draws,probs=c(0.025,0.05,0.15,0.2,0.5,0.8,0.85,0.95,0.975))
+    result <- list("mean" = mean(draws),
+                   "var" = var(draws))
+    result <- c(result,q)
+    return(result)
+}
+
+
 
 load.draws <- function(model.name){
     draws <- read_feather(paste0(file.path("stan_models",model.name),'.feather'))
@@ -34,7 +43,14 @@ extract.params <- function(draws){
     mu.cols <- names(draws)[grepl('^mu\\[',names(draws))]
     mu <- apply(draws[,mu.cols,with=F],1,function(df) as.array(as.list(df)))
 
-    return(list(mu=mu, phi=phi, sigma=sigma))
+    lambda.cols <- names(draws)[grepl('^lambda\\[',names(draws))]
+
+    lambda <- draws[,lambda.cols,with=F]
+
+    lambda.forecast.cols <- names(draws)[grepl('^lambda_new\\[', names(draws))]
+    forecast.len <- as.integer(substr(strsplit(lambda.forecast.cols[length(lambda.forecast.cols)],',')[[1]],12,10000)[[1]])
+    lambda.forecast <- draws[,lambda.forecast.cols,with=F]
+    return(list(mu=mu, phi=phi, sigma=sigma, lambda=lambda, lambda.forecast=lambda.forecast))
 }
 
 
@@ -121,14 +137,6 @@ irf.to.plotdata <- function(irf, matnames){
     ## TARGET: subreddit i, subreddit j, 95%, 80%, 50%, 20%, 5%, mean, sd, x
     stat.rows <- function(d, matnames){
 
-        comp.stats <- function(draws){
-            q <- quantile(draws,probs=c(0.025,0.05,0.15,0.2,0.5,0.8,0.85,0.95,0.975))
-            result <- list("mean" = mean(draws),
-                           "var" = var(draws))
-            result <- c(result,q)
-            return(result)
-        }
-
         m <- dim(d[[1]])[1]
 
         dflat <- unlist(d)
@@ -136,12 +144,12 @@ irf.to.plotdata <- function(irf, matnames){
         rownames <- rep(matnames, m)
         rows <- list()
         for(i in 1:m**2){
-            if(i == 4){
+            if(i == m**2){
                 idx <- 0
             } else {
                 idx <- i
             }
-            stats <- comp.stats(dflat[1:length(dflat) %% m**2 == idx])
+            stats <- comp.stats(dflat[1:length(dflat) %% (m**2) == idx])
             rows[[i]] <- c(list('name.row' = rownames[i],'name.col' = colnames[i]),stats)
         }
         return(rows)
@@ -199,16 +207,20 @@ plot.irf.focal <- function(plotdata, matnames, focal.sub = 'seattle',level='95')
 
 }
 
+set.sig.level <- function(df,level){
+    if(level=='95')
+        setnames(df,old=c('97.5%','2.5%'),new=c('upper','lower'),skip_absent=T)
+    if(level=='90')
+        setnames(df,old=c('95%','5%'),new=c('upper','lower'),skip_absent=T)
+    if(level=='80')
+        setnames(df,old=c('85%','15%'),new=c('upper','lower'),skip_absent=T)
+    return(df)
+}
+
 ## we say the short-run relationship is the first one that is statistically significant
 get.community.edgelists <- function(irf.plotdata,level='90'){
     irf.plotdata <- copy(irf.plotdata)
 
-    if(level=='95')
-        setnames(irf.plotdata,old=c('97.5%','2.5%'),new=c('upper','lower'),skip_absent=T)
-    if(level=='90')
-        setnames(irf.plotdata,old=c('95%','5%'),new=c('upper','lower'),skip_absent=T)
-    if(level=='80')
-        setnames(irf.plotdata,old=c('85%','15%'),new=c('upper','lower'),skip_absent=T)
 
     first.negative <- irf.plotdata[upper < 0,.(x=min(x)),by=c("name.row","name.col")]
     first.negative <- first.negative[,'type':='competitor']
@@ -229,16 +241,66 @@ get.community.edgelists <- function(irf.plotdata,level='90'){
     return(list('long.run' = long.run, 'short.run' = short.run))
 }
 
-get.forecast.plotdata <- function(){
+get.forecast.plotdata <- function(fit.df, forecast.df, params){
+
+    subreddit.names <- unique(fit.df$subreddit)
+
+    get.stats <- function(l, subreddit.names){
+        rows <- list()
+        i <- 1
+        for(col in names(l)){
+            x <- as.integer(gsub("[^0-9.-]","",strsplit(col,',')[[1]][1],8,10000)[[1]][1])
+            subreddit_idx <- as.integer(gsub(']','',strsplit(col,',')[[1]][2]))
+            subreddit <- subreddit.names[[subreddit_idx]]
+            stats <- comp.stats(sapply(l[[col]],function(lambda) rpois(1,exp(lambda))))
+            rows[[i]] <- c(list('subreddit'=subreddit,x=x),stats)
+            i <- i + 1
+        }
+        return(rbindlist(rows))
+    }
+
+    lambda <- params$lambda
+    lambda.forecast <- params$lambda.forecast
+    model.length <- dim(lambda[[1]])[1]
+    forecast.length <- dim(lambda.forecast[[1]])[1]
+
+    fit.weeks <- unique(fit.df$week)
+    forecast.weeks <- unique(forecast.df$week)
+
+    fit.stats <- get.stats(lambda,subreddit.names)
+    fit.stats <- fit.stats[order(subreddit,x)]
+    fit.stats[,week := rep(fit.weeks, length(subreddit.names))]
+
+    forecast.stats <- get.stats(lambda.forecast,subreddit.names)
+    forecast.stats <- forecast.stats[order(subreddit,x)]
+
+    forecast.stats <- forecast.stats[,week := rep(forecast.weeks, length(subreddit.names))]
     
+    fit.stats[, type := 'fit']
+    forecast.stats[, type := 'forecast']
+    df <- rbind(fit.stats,forecast.stats)
+    return(df)
 }
 
-plot.forecast <- function(){
+plot.forecast <- function(pred.df, fit.df, holdout.df, level='95'){
+    
+    fit.df <- fit.df[,type:='fit']
+    holdout.df <- holdout.df[,type:='forecast']
+    df <- rbind(fit.df,holdout.df)
+    pred.df <- set.sig.level(pred.df,level)
+    pred.df[,median:=pred.df[['50%']]]
+    pdf("plots/test_forecast.pdf",width=14,height=14)
+    p <- ggplot() + geom_line(aes(x=week,y=mean),data=pred.df,color='red') + geom_ribbon(aes(x=week,y=median,ymax=upper,ymin=lower),data=pred.df,alpha=0.4)
+    p <- p + geom_line(aes(x=week,y=N_authors,linetype=type),data=df)
+    p <- p + facet_wrap(.~subreddit,scales='free_y')
+    print(p)
+
+    dev.off()
 
 }
 
 if (sys.nframe() == 0){
-    model.name <- 'var_stan_p2_stanmod'
+    model.name <- 'var_stan_p3_stanmod'
     draws <- load.draws(model.name)
     draws <- as.data.table(draws)
     params <- extract.params(draws)
@@ -246,8 +308,12 @@ if (sys.nframe() == 0){
     mu <- params[['mu']]
     phi <- params[['phi']]
 
-    included_subreddits <- data.table(read_feather("data/included_timeseries.feather"))
-    included_subreddits <- unique(included_subreddits$subreddit)
+    fit.df <- data.table(read_feather("data/var_stan_data_fit.feather"))
+    holdout.df <- data.table(read_feather("data/var_stan_data_forecast.feather"))
+    included.subreddits <- unique(fit_data$subreddit)
+
+    pred.df <- get.forecast.plotdata(fit.df,holdout.df,params)
+    plot.forecast(pred.df,fit.df,forecast.df)
 
     ## for(i in 1:length(phi)){
     ##     for(k in 1:dim(phi[[i]])[3]){
@@ -261,15 +327,15 @@ if (sys.nframe() == 0){
     irf.forecast <- get.irf.forecast(phi,8)
     irf.ortho <- get.irf.ortho(phi,sigma,8)
 
-    plot.data.forecast <- irf.to.plotdata(irf.forecast,included_subreddits)
+    pred.df <- irf.to.plotdata(irf.forecast,included.subreddits)
 
-    plot.irf.focal(plot.data.forecast, included_subreddits,focal.sub = 'seattle')
+    plot.irf.focal(plot.data.forecast, included.subreddits,focal.sub = 'seattle')
 
-    plot.data <- irf.to.plotdata(irf.ortho,included_subreddits)
+    plot.data <- irf.to.plotdata(irf.ortho,included.subreddits)
 
-    plot.irf.focal(plot.data, included_subreddits,focal.sub = 'seattle')
+    plot.irf.focal(plot.data, included.subreddits,focal.sub = 'seattle')
 
-    edgelists <-get.community.edgelists(plot.data,level='95')
+    edgelists <-get.community.edgelists(plot.data,level='80')
 
     ## remove self-edges
     shortrun <- edgelists$short
