@@ -29,9 +29,14 @@ def build_var_data(indata="data/included_timeseries.feather",output='data/var_st
     out_forecast = vardata.df_forecast.reset_index()
     out_forecast.to_feather(f"{output.replace('.pickle','')}_forecast.feather")
 
-# test_df = df.loc[df.subreddit.isin(['seattle','seahawks'])]
-# test_vardata = VarData.from_df(test_df,min_date,fit_date,forecast_date)
-# pickle.dump(test_vardata, open('data/var_stan_testdata.pickle','wb'))
+    test_df = df.loc[df.subreddit.isin(['seattle','seahawks'])]
+    test_vardata = VarData.from_df(test_df,min_date,fit_date,forecast_date)
+    pickle.dump(test_vardata, open('data/var_stan_testdata.pickle','wb'))
+    out_fit = test_vardata.df_fit.reset_index()
+    out_fit.to_feather(f"{output.replace('.pickle','')}_test_fit.feather")
+    out_forecast = test_vardata.df_forecast.reset_index()
+    out_forecast.to_feather(f"{output.replace('.pickle','')}_test_forecast.feather")
+
 
 if __name__=='__main__':
     fire.Fire(build_var_data)

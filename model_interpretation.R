@@ -2,6 +2,7 @@ library(arrow)
 library(Matrix)
 library(data.table)
 library(ggplot2)
+library(scoringRules)  ## package with forecast evaluation functions
 
 comp.stats <- function(draws){
     q <- quantile(draws,probs=c(0.025,0.05,0.15,0.2,0.5,0.8,0.85,0.95,0.975))
@@ -220,7 +221,7 @@ set.sig.level <- function(df,level){
 ## we say the short-run relationship is the first one that is statistically significant
 get.community.edgelists <- function(irf.plotdata,level='90'){
     irf.plotdata <- copy(irf.plotdata)
-
+    irf.plotdata <- set.sig.level(irf.plotdata,level)
 
     first.negative <- irf.plotdata[upper < 0,.(x=min(x)),by=c("name.row","name.col")]
     first.negative <- first.negative[,'type':='competitor']
@@ -299,8 +300,40 @@ plot.forecast <- function(pred.df, fit.df, holdout.df, level='95'){
 
 }
 
+get.forecast.scores <- function(draws,holdout.df){
+    subreddits <- unique(holdout.df$subreddit)
+    out.metrics <- list()
+
+    for(sr in subreddits){
+        y <- holdout.df[sr==subreddit,N_authors]
+        sridx <- which(subreddits==sr)
+        forecast.len <- length(y)
+
+        par.draws <- draws[,grepl(paste0('lambda_new\\[.*,',sridx,'\\]'),names(draws),perl=T),with=F]
+        lambda <- exp(par.draws)
+        dat <- t(apply(lambda, c(1,2), function(l) rpois(1,l)))
+        crps_est <- mean(crps_sample(y,dat=dat,method='edf'))
+        logs_est <- mean(logs_sample(y,dat=dat))
+        out.metrics[[paste0('crps_',sr)]] <- crps_est
+        out.metrics[[paste0('logs_',sr)]] <- logs_est
+
+    }
+    y <- dcast(holdout.df,subreddit ~ week,value.var='N_authors')
+    y[['subreddit']] <- NULL
+    y <- as.matrix(y)
+
+    for(i in 1:forecast.len){
+        dat <- t(as.matrix(draws[,grepl(paste0('lambda_new\\[',i,',.*\\]'),names(draws),perl=T),with=F]))
+        dat <- apply(exp(dat),c(1,2),function(l) rpois(1,l))
+        out.metrics[[paste0('ESm_',i)]] <- es_sample(y=y[,i],dat=dat)
+        out.metrics[['ESm']] <- mean(unlist(out.metrics[grepl('ESm.*',names(out.metrics))]))
+    }
+    return(out.metrics)
+}
+
+
 if (sys.nframe() == 0){
-    model.name <- 'var_stan_p3_stanmod'
+    model.name <- 'test_stan_stanmod'
     draws <- load.draws(model.name)
     draws <- as.data.table(draws)
     params <- extract.params(draws)
@@ -308,12 +341,15 @@ if (sys.nframe() == 0){
     mu <- params[['mu']]
     phi <- params[['phi']]
 
-    fit.df <- data.table(read_feather("data/var_stan_data_fit.feather"))
-    holdout.df <- data.table(read_feather("data/var_stan_data_forecast.feather"))
-    included.subreddits <- unique(fit_data$subreddit)
+    fit.df <- data.table(read_feather("data/var_stan_data_test_fit.feather"))
+    holdout.df <- data.table(read_feather("data/var_stan_data_test_forecast.feather"))
+    included.subreddits <- unique(fit.df$subreddit)
 
     pred.df <- get.forecast.plotdata(fit.df,holdout.df,params)
-    plot.forecast(pred.df,fit.df,forecast.df)
+
+    plot.forecast(pred.df,fit.df,holdout.df)
+
+    forecast.perf <- get.forecast.scores(draws,holdout.df)
 
     ## for(i in 1:length(phi)){
     ##     for(k in 1:dim(phi[[i]])[3]){
@@ -329,7 +365,7 @@ if (sys.nframe() == 0){
 
     pred.df <- irf.to.plotdata(irf.forecast,included.subreddits)
 
-    plot.irf.focal(plot.data.forecast, included.subreddits,focal.sub = 'seattle')
+    plot.irf.focal(pred.df, included.subreddits,focal.sub = 'seattle')
 
     plot.data <- irf.to.plotdata(irf.ortho,included.subreddits)
 

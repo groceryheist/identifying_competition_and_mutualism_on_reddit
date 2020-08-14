@@ -228,9 +228,12 @@ generated quantities {
 
   // for each of the first p forecasts, we need information from lambda
   {
-    int sea_beta_idx = 1;
+    int sea_beta_idx;
+
+    // here t indexes the index of the forecast
     for(t in 1:p){
       mut_forecast[t] = mu;
+      // i indexes the lag
       for(i in 1:p){
 	if(t <= i) mut_forecast[t] += phi[i] * (lambda[N-i+t] - mu);
 	else mut_forecast[t] += phi[i] * (lambda_new[t-i] - mu);
@@ -244,7 +247,8 @@ generated quantities {
 	// i is the current m
 	i = seasonality_idx[s];
 	for(j in 1:n_seas_levels[s]){
-	  if(season[s,t] == j)
+	  // this is the bug. should be season N +tt
+	  if(season[s,t+N] == j)
 	    mut_forecast[t,i] += beta_seas[sea_beta_idx];
 	}
 	sea_beta_idx = 1 + sea_beta_idx;
