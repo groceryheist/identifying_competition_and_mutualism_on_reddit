@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import numpy as np
 import nflgame
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from itertools import chain
 
 ### We account for seasonal interest in the Seattle sounders according to their sports schedule.
@@ -438,3 +438,30 @@ def load_wwu_seasons(ytab):
     })
 
     return(load_uni_seasons(ytab,None, wwu_aca_spans))
+
+def solar(ytab):
+    # from https://stackoverflow.com/a/28688724/4241491
+    Y = 2000
+
+    seasons = [('winter', (date(Y,  1,  1),  date(Y,  3, 20))),
+               ('spring', (date(Y,  3, 21),  date(Y,  6, 20))),
+               ('summer', (date(Y,  6, 21),  date(Y,  9, 22))),
+               ('autumn', (date(Y,  9, 23),  date(Y, 12, 20))),
+               ('winter', (date(Y, 12, 21),  date(Y, 12, 31)))]
+
+    def get_season(now):
+        if isinstance(now, datetime):
+            now = now.date()
+            now = now.replace(year=Y)
+            return next(season for season, (start, end) in seasons
+                        if start <= now <= end)
+
+
+    ytab['season'] = ytab.week.apply(get_season)
+
+    get_season_cat = lambda s: {'winter':1,'spring':2,'summer':3,'autumn':4}[s]
+
+    ytab['season_cat'] = ytab.season.apply(get_season_cat)
+    ytab.season_cat = ytab.season_cat.astype(np.int32)
+    print(ytab)
+    return(ytab)

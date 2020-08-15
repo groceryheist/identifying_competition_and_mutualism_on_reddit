@@ -12,7 +12,11 @@ class VarData(object):
                        'mariners':seas.load_mariners_seasons,
                        'udub':seas.load_udub_seasons,
                        'wsu':seas.load_wsu_seasons,
-                       'wwu':seas.load_wwu_seasons}
+                       'wwu':seas.load_wwu_seasons,
+                       'mycology':seas.solar,
+                       'whatisthisbird':seas.solar,
+                       'whatisthisplant':seas.solar,
+                       'whatisthisfisth':seas.solar}
 
     # input datafame at the subreddit-week level, with seasonality data
     # input 3 dates: begining and end of fit period (inclusive), and the final date for forecast evaluation
@@ -74,3 +78,4 @@ class VarData(object):
 
         self.stan_data['n_seas_levels'] = np.array(n_seas_levels,dtype=int)
         self.stan_data['season'] = np.array(season,dtype=int)
+        

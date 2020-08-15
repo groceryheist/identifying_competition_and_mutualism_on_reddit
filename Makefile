@@ -7,11 +7,28 @@ data/seattle_subreddit_submissions.feather: pull_seattle_subs.py comdata_output/
 	python3 pull_seattle_subs.py; \
 	echo "Done"
 
+data/whatsthis_subreddit_submissions.feather: pull_whatsthis_subs.py comdata_output/reddit_submissions_by_subreddit.parquet
+	echo "Pulling whatsthis subreddit histories from parquet"; \
+	source ./bin/activate; \
+	python3 pull_whatsthis_subs.py; \
+	echo "Done"
+
+
+# min date for whatsthis? 
+
+# Add arguments to build_var_data.py instead of having a bunch of different scripts
+data/var_whatsthis_data.pickle: build_var_data.py var_data.py seasonality.py data/whatsthis_included.feather
+	source ./bin/activate && python3 build_var_data.py --indata data/whatsthis_included.feather --output data/var_whatsthis_data.pickle --min-date '2013-10-31' --max-date '2019-10-31' --forecast_date '2020-04-30'
+
 data/var_stan_data.pickle: seasonality.py data/mlb/ data/mls.csv data/ncaa data/included_timeseries.feather build_var_data.py seasonality.py var_data.py
 	source ./bin/activate && python3 build_var_data.py
 
 data/var_stan_data_post2016.pickle: seasonality.py data/mlb data/mls.csv data/ncaa data/included_timeseries_post2016.feather build_var_data.py var_data.py
 	source ./bin/activate && python3 build_var_data.py --indata "data/included_timeseries_post2016.feather" --output "data/var_stan_data_post2016.pickle" --min_date='2016-10-01' --max_date='2019-10-31' --forecast_date='2020-04-30'
+
+
+data/included_whatsthis.feather: choose_subreddits.R data/whatsthis_subreddit_submissions.feather
+	Rscript choose_whatsthis_subreddits.R
 
 data/included_timeseries.feather: choose_subreddits.R data/seattle_subreddit_submissions.feather
 	Rscript choose_subreddits.R
