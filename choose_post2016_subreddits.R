@@ -51,7 +51,7 @@ include <- include[include==TRUE,.(subreddit)]
 df <- df[subreddit %in% include$subreddit]
 
 remember(include, 'included_subreddits_post2016')
+
+print(df)
 ## our inclusion criteria is having no more than 15% of weeks without posts each year from 2012 through 2019.
 write_feather(df,'data/included_timeseries_post2016.feather',compression="uncompressed")
-
-

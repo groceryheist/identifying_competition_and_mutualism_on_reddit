@@ -90,11 +90,11 @@ data {
   real<lower=0> h0;
 
   int<lower=0> forecast_len;
-
+  
   int <lower=0> n_seas; // number of series with seasonality
-  int <lower=1> seasonality_idx[n_seas]; // which series have seasonality
-  int <lower=1> n_seas_levels[n_seas]; // now many levels does each seasonal series have?
-  int <lower=1> season[n_seas,N+forecast_len]; // seasonality data (dummy vars);
+  int <lower=0> seasonality_idx[n_seas ? n_seas : 1]; // which series have seasonality
+  int <lower=0> n_seas_levels[n_seas ? n_seas : 1]; // now many levels does each seasonal series have?
+  int <lower=0> season[n_seas ? n_seas : 1, n_seas ? N+forecast_len : 1]; // seasonality data (dummy vars);
 }
 
 transformed data {
@@ -185,8 +185,9 @@ model {
     }
   }
 
-
-  beta_seas ~ normal(0,2);
+  if(n_seas > 0){
+    beta_seas ~ normal(0,2);
+  }
 
   lambda_1top ~ multi_normal(mut_init, Gamma);
   

@@ -30,13 +30,15 @@ potential_competitors_excluded = c('bellevuewa','seawa','seattlejobs','seattle_b
 
 df <- load_weekly_posts()
 
+remember(length(unique(df$subreddit)),"n.seattle.found")
+
 ## a limitation of this analysis is that it ignores some subreddits that became active after 2012.
 ## notably a discontinuity.
 ## we can extend our approach using state space models in future work.
 
 min_yearly_nonzero_prop <- 0.3
 
-min_date <- as.POSIXct("2011-06-01",tz='UTC')
+min_date <- as.Date("2011-06-01",tz='UTC')
 
 remember(min_date,"min_date")
 remember(min_yearly_nonzero_prop,'min_yearly_nonzero_prop')

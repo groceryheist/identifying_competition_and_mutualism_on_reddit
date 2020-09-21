@@ -452,9 +452,9 @@ def solar(ytab):
     def get_season(now):
         if isinstance(now, datetime):
             now = now.date()
-            now = now.replace(year=Y)
-            return next(season for season, (start, end) in seasons
-                        if start <= now <= end)
+        now = now.replace(year=Y)
+        return next(season for season, (start, end) in seasons
+                    if start <= now <= end)
 
 
     ytab['season'] = ytab.week.apply(get_season)

@@ -62,12 +62,13 @@ def gen_fun_matrix(K,growth=0.5,growth_var=0.5, dist=None):
     signs = np.power(-1,signs + 1)
 
     if dist is None:
-        dist = lambda size: np.random.normal(loc=growth, scale=growth_var, size=size)
+        dist = lambda size: np.random.normal(loc=growth, scale=growth_var, size=K)
 
     lamda = dist(size=K)
     # the eigenvalues have to be less than 1 in magnitude
     rescale = np.abs(lamda).max()
     if rescale > 1:
+        print('rescaling eigenvalues')
         lamda = lamda / rescale
 
     lamda = signs * lamda
@@ -109,9 +110,9 @@ def plot_ar(fit, y_vec, true_forecast):
     p.draw()
     return p
 
-def evolve_var_system(alpha, beta, sigma, y0, N, forecast_len, link_args=[], link = lambda x:x,nested_alpha=False):
+def evolve_var_system(alpha, beta, sigma, y0, N, forecast_len, link_args=[], link = lambda x:x,nested_alpha=False,random=np.random):
 
-    y_star = y0
+    y_star = y0.copy()
     P = beta.shape[0]
     K = beta.shape[1]
 
@@ -120,22 +121,20 @@ def evolve_var_system(alpha, beta, sigma, y0, N, forecast_len, link_args=[], lin
         if not nested_alpha:
             mut = alpha
             for i in range(P):
-                mut = mut + np.matmul(y[i],beta[i])
-            return np.random.multivariate_normal(mut, sigma)
+                mut = mut + np.matmul(y[-(i+1)],beta[i])
+            return random.multivariate_normal(mut, sigma)
         else:
             mut = alpha - alpha
             for i in range(P):
-                mut = mut + np.matmul(y[i] - alpha, beta[i])
-            return alpha + np.random.multivariate_normal(np.matmul(mut, beta[i]), sigma)
+                mut = mut + np.matmul(y[-(i+1)] - alpha, beta[i])
+            return alpha + random.multivariate_normal(mut, sigma)
 
-    for n in range(P,N):
+    for n in range(P,N+forecast_len+P):
         y_star.append(y_next(y_star))
 
-    true_forecast = y_star[-(P+1):-1]
-    for n in range(forecast_len):
-        true_forecast.append(y_next(true_forecast))
+    true_forecast = y_star[N+1:]
+    y_star = y_star[:N]
 
-    true_forecast = true_forecast[P:]
     y_star = np.column_stack(y_star)
 
     true_forecast = np.column_stack(true_forecast) 
