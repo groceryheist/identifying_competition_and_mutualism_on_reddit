@@ -1,0 +1,832 @@
+%
+%% This is file `sample-authordraft.tex',
+%% generated with the docstrip utility.
+%%
+%% The original source files were:
+%%
+%% samples.dtx  (with options: `authordraft')
+%% 
+%% IMPORTANT NOTICE:
+%% 
+%% For the copyright see the source file.
+%% 
+%% Any modified versions of this file must be renamed
+%% with new filenames distinct from sample-authordraft.tex.
+%% 
+%% For distribution of the original source see the terms
+%% for copying and modification in the file samples.dtx.
+%% 
+%% This generated file may be distributed as long as the
+%% original source files, as listed above, are part of the
+%% same distribution. (The sources need not necessarily be
+%% in the same archive or directory.)
+%%
+%% The first command in your LaTeX source must be the \documentclass command.
+% \documentclass[sigconf,authordraft]{acmart}
+
+
+%%%% As of March 2017, [siggraph] is no longer used. Please use sigconf (above) for SIGGRAPH conferences.
+
+%%%% As of May 2020, [sigchi] and [sigchi-a] are no longer used. Please use sigconf (above) for SIGCHI conferences.
+    
+%%%% Proceedings format for SIGPLAN conferences 
+% \documentclass[sigplan, anonymous, authordraft]{acmart}
+    
+%%%% Proceedings format for conferences using one-column small layout
+%\documentclass[acmsmall,authordraft]{acmart}
+    
+% NOTE that a single column version is required for submission and peer review. This can be done by changing the \doucmentclass[...]{acmart} in this template to 
+% \documentclass[sigconf,review=True]{acmart}
+\documentclass[manuscript,review=True,anonymous=True]{acmart}
+
+<<init, echo=FALSE, warning=FALSE>>=
+suppressMessages(source("resources/preamble.R"))
+library(knitr)
+library(tikzDevice)
+library(ggplot2)
+knit_hooks$set(document = function(x) {
+  sub('\\usepackage[]{color}', '\\usepackage[]{color}', x, fixed = TRUE)
+})
+opts_chunk$set(fig.='pdf')
+opts_chunk$set(dev='pdf')
+opts_chunk$set(external=TRUE)
+# knitr::clean_cache()
+opts_chunk$set(cache=FALSE)
+overwrite <- FALSE
+@
+\definecolor{c77a1d2}{RGB}{119,161,210}
+\definecolor{cbf9837}{RGB}{191,152,55}
+\definecolor{cc0c0c0}{RGB}{192,192,192}
+\def \globalscale {0.2}
+
+\usepackage{tikz}
+\usepackage{booktabs}
+%%
+%% \BibTeX command to typeset BibTeX logo in the docs
+\AtBeginDocument{%
+  \providecommand\BibTeX{{%
+    \normalfont B\kern-0.5em{\scshape i\kern-0.25em b}\kern-0.8em\TeX}}}
+    
+%% Rights management information.  This information is sent to you
+%% when you complete the rights form.  These commands have SAMPLE
+%% values in them; it is your responsibility as an author to replace
+%% the commands and values with those provided to you when you
+%% complete the rights form.
+\setcopyright{acmcopyright}
+\copyrightyear{2018}
+\acmYear{2018}
+\acmDOI{10.1145/1122445.1122456}
+
+%% These commands are for a PROCEEDINGS abstract or paper.
+\acmConference[Woodstock '18]{Woodstock '18: ACM Symposium on Neural
+  Gaze Detection}{June 03--05, 2018}{Woodstock, NY}
+\acmBooktitle{Woodstock '18: ACM Symposium on Neural Gaze Detection,
+  June 03--05, 2018, Woodstock, NY}
+\acmPrice{15.00}
+\acmISBN{978-1-4503-XXXX-X/18/06}
+
+%% Submission ID.
+%% Use this when submitting an article to a sponsored event. You'll
+%% receive a unique submission ID from the organizers
+%% of the event, and this ID should be used as the parameter to this command.
+%%\acmSubmissionID{123-A56-BU3}
+
+%%
+%% The majority of ACM publications use numbered citations and
+%% references.  The command \citestyle{authoryear} switches to the
+%% "author year" style.
+%%
+%% If you are preparing content for an event
+%% sponsored by ACM SIGGRAPH, you must use the "author year" style of
+%% citations and references.
+%% Uncommenting
+%% the next command will enable that style.
+%%\citestyle{acmauthoryear}
+
+%\usepackage{subfig}
+\usepackage{subcaption}
+\usepackage{natbib}
+\def\citepos#1{{\hypersetup{citecolor=black}\citeauthor{#1}}'s \citep{#1}}
+\def\citespos#1{{\hypersetup{citecolor=black}\citeauthor{#1}}' \citep{#1}}
+\let\oldciteauthor=\citeauthor
+\def\citeauthor#1{{\hypersetup{citecolor=black}\oldciteauthor{#1}}}
+%%
+%% end of the preamble, start of the body of the document source.
+\begin{document}
+
+% \baselineskip 24pt
+
+%%
+%% The "title" command has an optional parameter,
+%% allowing the author to define a "short title" to be used in page headers.
+\title[Identifying Competitive and Mutualistic Relationships]{A Community Ecology Approach for Identifying Competitive and Mutualistic Relationships Between Online Communities}
+
+%% The "author" command and its associated commands are used to define
+%% the authors and their affiliations.
+%% Of note is the shared affiliation of the first two authors, and the
+%% "authornote" and "authornotemark" commands
+%% used to denote shared contribution to the research.
+\author{Nate TeBlunthuis}
+\email{nathante@uw.edu}
+\orcid{1234-5678-9012}
+\affiliation{%
+  \institution{University of Washington}
+  \streetaddress{Box 353740}
+  \city{Seattle}
+  \state{Washington}
+  \postcode{98195}
+}
+
+\author{Benjamin Mako Hill}
+\email{makohill@uw.edu}
+\affiliation{%
+  \institution{University of Washington}
+  \streetaddress{Box 353740}
+  \city{Seattle}
+  \state{Washington}
+  \postcode{98195}
+}
+
+%%
+%% By default, the full list of authors will be used in the page
+%% headers. Often, this list is too long, and will overlap
+%% other information printed in the page headers. This command allows
+%% the author to define a more concise list
+%% of authors' names for this purpose.
+\renewcommand{\shortauthors}{TeBlunthuis and Hill}
+    
+%%
+%% The abstract is a short summary of the work to be presented in the
+%% article.
+    
+%% Abstract 150 words
+\begin{abstract}
+% Most explanations of changes in online group size focus on internal factors like social structures or design decisions. 
+% do not make the , and render critical questions like “which other groups are a given group's strongest competitors or mutualists?”  unanswerable.
+Research in social computing shows how online groups affect each other's group sizes as people, content, and ideas flow between groups. How can researchers and designers understand the relationship between these inter-group interactions and group sizes over time? Inspired by population ecology, prior HCI research correlated group size with overlap in content and membership between all other groups. The resulting body of evidence is puzzling and suggests that overlap will sometimes help and sometimes hurt. We suggest that this confusion results from aggregating inter-group relationships into an overall environmental effect while ignoring the network of varying inter-group relationships. To capture these dynamics, we propose a theoretical framework based on community ecology and a method for inferring competitive and mutualistic relationships from time-series participation data. We demonstrate our approach and its benefits for social computing research through analyses of simulated data and of three real networks of groups hosted by Reddit.
+\end{abstract}
+
+%%
+%% The code below is generated by the tool at http://dl.acm.org/ccs.cfm.
+%% Please copy and paste the code instead of the example below.
+%%
+% \begin{CCSXML}
+% <ccs2012>
+%  <concept>
+%   <concept_id>10010520.10010553.10010562</concept_id>
+%   <concept_desc>Computer systems organization~Embedded systems</concept_desc>
+%   <concept_significance>500</concept_significance>
+%  </concept>
+%  <concept>
+%   <concept_id>10010520.10010575.10010755</concept_id>
+%   <concept_desc>Computer systems organization~Redundancy</concept_desc>
+%   <concept_significance>300</concept_significance>
+%  </concept>
+%  <concept>
+%   <concept_id>10010520.10010553.10010554</concept_id>
+%   <concept_desc>Computer systems organization~Robotics</concept_desc>
+%   <concept_significance>100</concept_significance>
+%  </concept>
+%  <concept>
+%   <concept_id>10003033.10003083.10003095</concept_id>
+%   <concept_desc>Networks~Network reliability</concept_desc>
+%   <concept_significance>100</concept_significance>
+%  </concept>
+% </ccs2012>
+% \end{CCSXML}
+
+% \ccsdesc[500]{Computer systems organization~Embedded systems}
+% \ccsdesc[300]{Computer systems organization~Redundancy}
+% \ccsdesc{Computer systems organization~Robotics}
+% \ccsdesc[100]{Networks~Network reliability}
+
+%%
+%% Keywords. The author(s) should pick words that accurately describe
+%% the work being presented. Separate the keywords with commas.
+% \keywords{datasets, neural networks, gaze detection, text tagging}
+
+%% A "teaser" image appears between the author and affiliation
+%% information and the body of the document, and typically spans the
+%% page.
+% \begin{teaserfigure}
+%   \includegraphics[width=\textwidth]{sampleteaser}
+%   \caption{Seattle Mariners at Spring Training, 2010.}
+%   \Description{Enjoying the baseball game from the third-base
+%   seats. Ichiro Suzuki preparing to bat.}
+%   \label{fig:teaser}
+% \end{teaserfigure}
+
+%%
+%% This command processes the author and affiliation and title
+%% information and builds the first part of the formatted document.
+\maketitle
+
+%% We're going for a "known puzzle" + "clarifying confusion" framing
+%% Rememver to frame aronud the depvar 
+\section{Introduction}
+
+% Why we need an ecological approach
+%Online groups are important places where people collaborate to produce information sources, engage in discussions and participate in culture.
+Although the fact is frequently ignored in social computing scholarship, online groups do not exist in isolation.\footnote{We use the term ``online group'' instead of ``online community'' to help avoid confusion with our analytical term ``community ecology.''} Indeed, a growing body of HCI scholars have shown how online groups spawn new groups and wage conflicts against each other, compete with, and help each other \cite{zhu_impact_2014, tan_tracing_2018, datta_identifying_2017}.  This emerging body of work has demonstrated that a full understanding of online groups involves understanding how they relate to one another.
+% What's wrong with previous ecological approaches
+Prior investigations of interdependence between online groups draw from ecology \cite{wang_impact_2012, zhu_impact_2014, zhu_selecting_2014}. Ecology has been fruitfully applied to human organizations ranging from commercial industries to social movements for over 40 years \cite{hannan_population_1977, baum_ecological_2006}. However, there remain very few explicitly ecological studies of online groups and those that exist yield a puzzling body of results. This research has shown that wikis that groups whose memberships overlap with other groups survived longer \cite{zhu_selecting_2014}, but such Usenet groups failed earlier \cite{wang_impact_2012}. In some settings, the relationship between topical overlaps and performance follows theoretical predictions that moderate overlap should lead to the best outcomes \cite{zhu_selecting_2014}, while studies in other settings find weak or theoretically inconsistent relationships \cite{tan_tracing_2018, teblunthuis_population_2020}.
+ 
+ We argue that a path to increased clarity involves recognizing that there are two distinct strands of ecological theory that may be applicable to social computing but that these strands---called \emph{community ecology} and \emph{population ecology}---have different levels of analysis and make distinct theoretical predictions \citep{astley_two_1985}. Population ecology considers the dynamics within a population such as a biological species.
+% (e.g., bats of species \emph{Myotis lucifugus} in biology) 
+% (e.g. newspapers in organizational ecology).
+The earliest and most influential works of ecology as applied to human organizations have used the population ecology approach to answer questions such as those about how organizational forms become established or decline \cite{aldrich_organizations_2006}. This approach requires treating a population as consisting of entities with similar resource needs while ignoring the distinct roles that individual groups play.
+Population ecology has framed every ecological analysis of online groups published in social computing venues that we are aware of. 
+Community ecology is a distinct approach that adopts a higher level of analysis to consider dynamics within an \emph{ecological community} comprised of heterogeneous and interdependent populations \citep{astley_two_1985}. In biology, this might be those organisms inhabiting a lake or valley. In organization science, this might be the network of technology developers, manufacturers, and suppliers in the semiconductor industry \cite{powell_network_2005, verhoef_community_2010}. Community ecology is also of considerable influence in organization science \citep[e.g.][]{astley_two_1985, margolin_normative_2012, ruef_emergence_2000, powell_network_2005, monge_evolution_2008, barnett_competition_1987}. 
+To our knowledge, community ecology has never been applied in HCI or social computing research.
+
+However, while ecological studies of online groups like those by \citet{wang_impact_2012}, \citet{zhu_selecting_2014}, and \citet{zhu_impact_2014} are consistently framed in terms \emph{population ecology} theory, their empirical analyses deviate from population ecological analysis in important ways.
+Although ecological studies in social computing have focused on overlapping resources like topics and participants,
+% , they recognize the diversity of the topics, participant bases, and organizational practices of online communities. However, 
+theories of population ecology focus on homogenous populations and are thus simply not designed to explain these phenomena.  The ultimate result, we believe, is the confusion that ecological studies in social computing are mired in today. 
+
+Population ecology studies of resource overlaps in HCI measure the degree to which a groups's participants or topics overlap with every other group is correlated with growth or survival.  Thus, they treat competition and mutualism as environmental forces.  While these forces may emerge from relationships between groups, the relationships themselves are obscured through aggregation. In this paper, we describe and demonstrate a novel community ecology approach to studying online groups that emphasizes how different online groups have heterogeneous roles and corresponding resource needs which give rise to competitive or mutualistic relationships between groups. In doing so, we make distinct theoretical and methodological contributions to HCI and social computing scholarship. 
+
+
+First, in \textsection \ref{sec:community_ecology}, we contribute to theory by providing a framework that supports a conceptual shift from treating individual online groups as indistinct parts of an ecological environment to treating them as belonging to a ecological community of related entities. Where prior approaches aggregate individual relationships between groups, our approach makes it possible to answer critical questions like ``Which are a given online group's strongest mutualists or competitors?'' In the process, our theoretical work brings clarity to a confusing set of empirical results in prior research.
+% Describe methodological intervention
+Our second contribution, in \textsection \ref{sec:inferring} is to introduce a statistical method for inferring networks of competitive and mutualistic relationships from online group participation activity data using vector autoregression models \cite{sims_macroeconomics_1980, canova_var_2007, ives_estimating_2003}.
+%  This method builds on a popular approach in biology that provides robust inferences about networks of ecological relationships. , analysis of stability, forecasts of future participation, and can scale to analyze systems of dozens of related communities. We apply this approach to four datasets. 
+We validate our method using simulated data to show that it can identify a full range of ecological relationships and conduct a series of three case studies of groups hosted on the platform Reddit in \textsection \ref{sec:case.studies}. Although limited, these case studies make a third contribution in the form of empirical findings that suggest that specific patterns of relationships vary substantially across networks of groups and that mutualism appears to be much more common than competition.
+
+\section{Background}
+
+Our contributions build on a body of existing theoretical work that theorizes online groups as depending on several distinct types of resources as well as a smaller body of ecological research in social computing conducted over the last decade. We briefly summarize both before introducing our conceptual approach.
+% It also builds closely on two bodies of ecological theory: first, explanations from population ecology that describe entities as sharing resources in environments and second, explanations from community ecology that theorize networks of specific community relationships.
+% In our background we introduce the first two bodies of related work in sections \ref{sec:resource_dep} and \ref{sec:ecology_background}.
+    
+\subsection{Online groups depend on resources}
+\label{sec:resource_dep}
+ 
+    % Frame around the dependent variable: 
+    
+    % Explaining participation is important because 
+    % 1. It's a longstanding concern of the field
+    % 2. Online Groups are important to society  
+    % models 
+    
+Online groups are important social structures built to serve a wide range of goals
+% ranging from entertainment, information exchange, social interaction, to the collaborative production of knowledge and organization of collective action
+\cite{dimaggio_social_2001, benkler_wealth_2006, kraut_building_2012}. While many online groups are formed, only an extreme minority develop a sizable group of participants \cite{johnson_emergence_2014, kraut_role_2014}.  Understanding why some groups take off while others do not is important because an online group's ability to achieve its goals depends on attracting and retaining contributors \cite{kraut_building_2012}.   
+Ecological approaches to explaining the growth of online groups build on a theoretical approach that treats resources contributed by participants such as content, information, attention, or social interactions as playing a role in motivating participation by subsequent participants \cite{butler_membership_2001, wang_impact_2012, zhang_group_2011}.
+% This positive feedback between the value of prior contributions and the motivation for future contributions drives community growth.  
+Although this dynamic implies a feedback loop, groups clearly do not grow forever and increasing costs of participation will eventually limit further growth \cite{butler_membership_2001}. While factors such as leadership, organizational practices, network structure, and design decisions can lower costs and benefits of participation \cite{butler_membership_2001, kraut_role_2014, tsugawa_impact_2019}, institutions intended to improve quality appear to limit growth. For example, the end of English Wikipedia's growth in early 2007 can be explained by barriers to newcomer participation erected during its growth phase \cite{halfaker_rise_2013} in a pattern observed in other collaborative knowledge production projects \cite{teblunthuis_revisiting_2018}.
+
+Of course, the nature of resources is clearly important to resource-based theories. Online group research has been particularly concerned with \textit{rival} resources that become unavailable for use by others when used by any one group \cite{benkler_wealth_2006, kubiszewski_production_2010, ostrom_public_1977,romer_endogenous_1990}. Interdependence between online groups can be important to explaining growth, decline and survival because important rival resources like the time, attention, and efforts of participants are are subject to competition. Although opportunity costs of participation mean that people will not participate in a group if they prefer alternatives like sleep, entertainment, or work \cite{becker_theory_1965, butler_attraction-selection-attrition_2014}, participation in a related online group providing the same benefits at lesser costs might be a compelling alternative.
+% If different online groups can substitute for participation in one another and participation is rival this will lead to competition between the communities and decrease participation in both.
+In this way, declines in online participation can sometimes be explained in terms of competition over rival resources like participant's time \cite{wang_impact_2012}.
+
+
+On the other hand, not all resources important to online groups will be subject to competition. 
+% Public goods are non-rival because their usefulness is not diminished when others use them.
+Some groups produce connective and communal public goods like opportunities to communicate and information \cite{fulk_connective_1996} which can be non-rival or even ``anti-rival'' when their usefulness increases as a result of others using them \cite{kubiszewski_production_2010, weber_political_2000}. For example, the usefulness of a communication network increases as more people join it \cite{fulk_connective_1996, katz_network_1985}. Similarly, the usefulness of an information good can increase as more people come to know and depend upon it \cite{kubiszewski_production_2010, weber_political_2000}.  
+For example, awareness of an audience can motivate participation in online groups 
+% as was demonstrated when Chinese government blocked the Chinese language edition of Wikipedia, unblocked contributors decreased their participation 
+\cite{zhang_group_2011}. If multiple online groups help build the same connective or communal public goods, they may form mutualistic relationships with one another such that contributions to one group may ``spill over'' and motivate participation in related groups \cite{zhu_impact_2014}.   
+
+Even though online groups can share and compete over resources, studying interdependence between online groups adds enormous complexity to research projects \citep{hill_studying_2019}. Despite the challenges, a growing body of empirical research in social computing has sought to quantify how online groups share users or topics \cite{datta_identifying_2017, del_tredici_semantic_2018, tan_all_2015, hessel_science_2016} and how interactions between groups relate to outcomes like the emergence of new groups \cite{tan_tracing_2018}, contributions to peer produced knowledge \cite{vincent_examining_2018}, and the spread of hate speech \cite{chandrasekharan_you_2017}.   However, few general theories or theoretical frameworks exist with which to understand how forms of interdependence between online groups shape their growth or survival.
+
+%As a result, researchers, designers, and managers of online communities often set aside thorny questions of interdependence between online communities.  
+%While extensions of the resource dependence framework recognize the importance of exit from online communities \cite{butler_attraction-selection-attrition_2014}, they do not say where people go when they leave.  % Before turning to our theory of community ecology, we note differences between ecological theory and analysis in organization and biological science from  other uses of the term ecology in HCI and social computing. 
+% The term ``ecology'' often connotes interconnectedness, complexity, growth, and nature, and also crises of resource sustainability, loss, and extinction \cite{worster_natures_1994, blevis_ecological_2015}.  Most references technologists make to ``ecology'' 
+% For example Nardi and O'Day invoke the ecological metaphor in describing their vision for individuals to cultivate intentional and localized relationships with technology \cite{nardi_information_2000, bowker_bonnie_2001}.   
+% This continues a long-running intellectual exchange between social and biological sciences.  Economic thought was strongly influenced by Darwinian evolution and ecologists in biology were influenced by economic models to understand and solve problems in forestry and conservation \cite{kropotkin_mutual_2012, worster_natures_1994}. Once modern ecological science was developed it was not long before it was applied to understand human societies \cite[e.g.][]{park_human_1936, hawley_human_1986}.  Because theories of organizational ecology were crafted to address particular concerns in organization science and are laden with assumptions appropriate to traditional firms with fixed and durable boundaries, our ecological approach also draws from biology.
+    
+\subsection{Ecological research in social computing}
+\label{sec:ecology_background}
+
+Our theoretical approach draws from ecology. While our work focuses on the ecological study of online groups, other social computing scholars like \citet{nardi_information_1999} have used the term ``ecology'' and related concepts like ``ecoystem'' and ``environment'' as metaphors denoting assemblages of sites, technologies, or platforms. We use the term in a more narrow sense to refer to the conceptual and mathematical models of ecological dynamics. 
+In particular, our work builds on a tradition rooted in \textit{organizational ecology}. First developed in the late 1970s by sociologists studying interrelatedness between firms, organizational ecology was inspired by, and has drawn closely from, ecological studies in biology \citep{hannan_population_1977}. 
+
+Because online groups bear many similarities to traditional organizations, organizational ecology provides a theoretical framework for understanding interdependence between online groups and has been adopted by at least three empirical studies of how the resources shared between online groups shape the growth, decline, or survival of online groups \cite{wang_impact_2012, zhu_impact_2014, zhu_selecting_2014}.
+All three take up propositions of density dependence theory which sees competitive or mutualistic forces in a population of groups as a function of density. 
+In the earliest and most influential strands of organizational ecology, density is simply the number of members in a population \cite{aldrich_organizations_2006}.  
+
+Density dependence theory proposes a trade-off between positive and negative consequences of density such that low levels of density are associated with resource-scarce environments unable to support a large population while high levels of density lead to competition. Low levels of density reflect limited opportunities for mutualistic relationships that contribute to shared non-rival resources like legitimacy, connectivity, or knowledge. When density is high, it becomes difficult to avoid competitive relationships.  
+
+
+%In a homogenous population or in cases where litt
+
+%Population ecologists have used a number of definitions of population, but they often refer to sets of organizations having the same organizational form or business model. 
+
+Models of density dependence theory in population ecology have a similar form to the models of resource dependence described in \textsection \ref{sec:resource_dep}.  
+Just as online group growth is thought to be driven by the attraction of new members to the contributions of prior participants, so growth in an organizational population is driven by positive feedback as successful organizations legitimate a business model causing new organizations to enter the market.
+In an analagous way, a population of online groups may grow as their platform gains in popularity, as existing groups spin off new ones, and as useful knowledge develops that can be shared between groups \cite{tan_tracing_2018, zhu_impact_2014}.
+An individual online group's growth may be limited by the ability of their social structures to scale to include more members  \cite{butler_membership_2001}  or due to competition with other groups over members \cite{hannan_organizational_1989}.
+Similarly, a population of online groups may decline if they compete with one another over participants.  
+
+While the foundational studies of density dependence in organizational research study density and growth at the population level, ecological studies of online groups model a different notion of density dependence based on the concept of \emph{overlap density}.\footnote{Although it is less common in organizational research, overlap density has also been used by some organizational ecologists \cite[e.g.][]{dobrev_dynamics_2001}.}  
+Rather than the number of groups that exist in a population, overlap density measures the extent to which an individual group's members or topics overlap with all other groups. Overlap density is not a property of a population of groups, but a property of the resource environment an individual group faces.  
+
+In contrast to biological species, this approach does not assume a population is homogeneous. Instead individuals have different \emph{niches} corresponding to their resource needs \cite{aldrich_organizations_2006}. This is plausible in the case of  online groups sharing a platform with diverse topics \cite{kairam_life_2012}, norms \cite{chandrasekharan_internets_2018, fiesler_reddit_2018}, and user bases \cite{tan_all_2015}.   Yet results from studies of overlap density in populations of online groups are inconsistent both with each other and with theoretical predictions from density dependence theory. For example, \citet{wang_impact_2012} study user overlaps in Usenet newsgroups and find they are associated with decreasing numbers of participants. Similarly, \citet{teblunthuis_population_2020} find that topical overlaps between online petitions are negatively associated with participation. By contrast \citet{zhu_impact_2014} find that membership overlap is positively associated with increasing survival of new Wikia wikis. 
+Only \citet{zhu_selecting_2014} find support for the curvilinear relationship predicted by density dependence theory.
+
+\section{A Community Ecology Approach for Social Computing \label{sec:community_ecology}}
+
+We propose a community ecology approach to the study of online groups defined by networks of dyadic relationships between online groups as a focal object of study.  Our focus is on making visible the distinctive roles that particular groups play in a broader ecological community.
+Overlap density has been useful for advancing ecological theory and the empirical analysis of online groups because it provides a way to characterize the environment that an online group faces.   As noted in \textsection \ref{sec:resource_dep}, empirical studies online groups find that higher levels of of overlap density are associated with decreasing group sizes in some contexts but increasing growth or survival in others.  We propose that these puzzling results are due to how overlap density aggregates a group's many relationships into a single property of the group's environment. 
+
+
+% Relationships studied in community ecology are defined by how they , but they are also important because networks of relationships 
+%and give rise to higher-order properties like stability. 
+
+%Our community ecology approach instead focus on relationships between communities from overlap density approaches to focuses on relationships between communities as a step toward solving the puzzle. 
+
+%Consider the example of how \citet{zhu_impact_2014} find membership overlap is associated with increasing survival of new Wikia wikis, but in \citepos{wang_impact_2012} study of Usenet groups user overlaps are associated with decreasing group sizes. 
+
+One possible reasons for these inconsistent findings is that factors other than topic or user overlaps can lead to competitive and mutualistic forces. 
+ \citepos{zhu_impact_2014} Wikia was a growing platform and they found increased survival among new communities with overlapping members from established groups. 
+Perhaps the growth of Wikia wikis during that study's data collection period was limited by knowledge of how to build a Wiki and this knowledge was provided by more experienced users. Usenet was in decline during \citespos{wang_impact_2012} study period and it may not have been limited in this way.
+%study period,  and they found a stronger relationship when overlapping members were from more established groups. Perhaps the growth Wikia wikis was limited by knowledge of how to build a Wiki which was provided by more experienced users and user overlaps were correlated with access to such knowledge.  While 
+In general, competition over overlapping resources will have no affect on group growth if growth is limited by something other than the resource subject to competition. Ecologists of biological organisms understand that different populations might consume the same resource (e.g. eating the same food, sharing the same habitat), but not compete if the resource is abundant \cite{verhoef_community_2010}.
+%that neither population's growth is limited by the resource (instead something else, like a predator or a different resource limits population growth), different populations may not compete over it 
+Further, resources that limit growth may be unobserved. Our community ecology approach begins by relaxing the assumption that competition and mutualism are driven by observable resource overlaps.
+
+A second reason for inconsistent findings in prior work is that the overall amount of user and topic overlap for a particular group is a poor proxy
+for the degree to which its size is limited by a competitive or mutualistic environment.  It may simply be that user overlaps indicate that two groups are related. Perhaps most relationships were mutualistic in \citepos{zhu_impact_2014} context but competitive but in \citespos{wang_impact_2012}.  Also,  differences in communication modalities between discussion groups and Wikis may be associated with different resource needs and thus different potential relationships between user overlaps and competition or mutualism. 
+
+%The logic of density dependence is that at high levels of resource overlap competitive mechanisms will be more powerful than mutualistic ones. But this argument depends on assumptions of a relatively homogeneous population where all individuals have similar needs for rival resources.  However, the inconsistent findings of population ecology analyses in social computing suggest that online groups likely do not have homogenous resource needs.
+%based on correlating the extent a focal group's users or content overlaps with all other grups with that group's subsequent growth.  Importantly, 
+
+
+
+Overlap density takes an indirect approach to understanding competition or mutualism between online groups. Critically, it does not infer whether or not two groups are competitors or mutualists. The community ecology approach we propose opens such relationships up to investigation. While varying conceptions of community ecology are found in the literature on organizational ecology \cite{freeman_community_2006}, our approach follows \citet{aldrich_organizations_2006} and \citet{hawley_human_1986}.
+
+
+\begin{table}
+    \caption{The five possible commensal relationships between two online groups. Values in the column ``A $\rightarrow$ B'' represent the sign of hypothetical group A's effect on group B.  Based on table 11.1 from \citet{aldrich_organizations_2006}.}
+    \centering
+    \begin{tabular}{c|c|c}
+    A $\rightarrow$ B & B $\rightarrow$ A & Relationship type  \\ \hline
+    $+$ & $+$ & Full mutualism \\
+    $+$ & $\cdot$ & Partial mutualism \\
+    $+$ & $-$ & Predation \\
+    $-$ & $\cdot$ & Partial competition \\
+    $-$ & $-$ & Full competition \\
+%    $\cdot$ & $\cdot$ & Neutrality
+    \end{tabular}
+    \label{tab:commensalism}
+\end{table}
+
+% by conceiving of community ecology as the study of relationships between different groups.
+While population ecology analyzes populations, community ecology aims to understand how different groups shape each other's growth, survival, and evolution \cite{aldrich_organizations_2006, astley_two_1985}.  In organizational science, this can mean studying relationships between different organizational populations \cite[e.g.][]{sorensen_recruitment-based_2004, mcpherson_ecology_1983}, or networks of relationships between organizations \cite[e.g][]{powell_network_2005, margolin_normative_2012}. 
+We propose a community ecology approach for social computing that, in an analogous way, seeks to theorize the relationships between different online groups.  Our approach follows community ecology in biology and organization science by seeking to understand commensal relationships between groups \cite{aldrich_organizations_2006}. A commensal relationship is a way groups affect one another through changes in group size.  A group may have a commensal influence on another group in three ways. Mutualism is when one group has a positive influence on the second such that growth (decline) in the first group leads to growth (decline) in the second.  Competition, is where one group has a negative effect on the second such that growth (decline) in the first group leads to decline (growth) in the second. 
+%So a commensal relationship exists between each pair of groups in an ecological community.
+
+There are five possible commensal relationships as described in Table \ref{tab:commensalism}.  Note that commensal relationships can be reciprocal (as in full mutualism and competition) or not (as in partial mutualism and competition). In our framework ``predation'' (also called parasitism) refers to cases where a relationship is positive in one direction but negative in the other. It is of course possible that growth or decline in the first group has no effect on the second group, and visa-versa, a situation termed neutrality. With commensalism, we can seek to explain the puzzling results of resource overlap studies by asking questions like ``what kinds of resource overlap between two groups are associated with mutualism or competition?'' or ``do groups that have more overlap have more (or stronger) mutualistic or competitive relationships?''
+
+Ecological dynamics play out through the network of such relationships over time as represented by a \emph{community matrix}.  Analysis of the community matrix can reveal indirect relationships between groups and properties of an ecological community like stability \cite{ives_estimating_2003}. 
+%Seeing interdependence between online groups through a community ecology-based network of dynamical relationships can make visible special roles that particular groups play in an ecological community through their many mutualistic or competitive relationships.
+Finally, community ecology can provide a bridge between quantitative studies of participation in online groups and theories of interconnected information ecologies \cite{nardi_information_1999}. While we focus on relationships between groups sharing a platform, one can apply our concepts and methods to understand how interdependent systems of technologies and  users give rise to higher levels of social organization and social media platforms \cite{astley_two_1985, aldrich_organizations_2006}. 
+
+% Next we take a first methodological step toward answering questions like these by adapting vector autoregression models from biology and macroeconomics as an approach to inferring community matrices.  We then apply our approach in three case studies of related groups hosted on Reddit to reveal three qualitatively different ecological communities. 
+
+
+%% SOME BIKERACK RAISING MORE ISSUES WITH THE NICHE OVERLAP APPROACH
+
+% study online groups additionally shifts from an analogy of online communities as individual members of a biological species to online communities as species themselves and seeking to understand functional relationships between different online groups. 
+% Yet a closer examination of the analogy to density-dependence in organizational or biological populations reveals conceptual awkwardness.  At issue is the referent of the term ``niche.''  Should we use ``niche'' to refer to a set of resources that an online community can utilize?  This is what ``niche'' means in both overlap density and in our version of community ecology.
+
+% Social exposure is also important, but we don't deal with that in this .  The idea here is that the cost-benefit structure depends on alternatives which can lower costs or . 
+%VAR analysis can quantify the stability of the system and affords exploration of counterfactual forecasts to simulate hypothetical interventions \citep{ives_estimating_2003}.  
+
+
+\section{Methods}
+
+\subsection{Vector Autoregression Models}    
+\label{sec:var}
+%Here we review the prior work on which we build our methodological approach to inferring competitive and mutualistic relationships between online groups. %\textsection \ref{sec:inferring} describes our own methodological contributions. 
+
+The goal of our methodology is to infer the community matrix of commensal relationships between groups which is a central analytical object in community ecology in biological and organizational ecology \cite{verhoef_community_2010, novak_characterizing_2016, aldrich_organizations_2006}. Because of data and statistical challenges, organizational scientists have rarely attemptted to estimate the full community matrix
+\cite[e.g.][]{ruef_emergence_2000, sorensen_recruitment-based_2004}.  
+We take advantage of advances in tools for statistical inference and of granular behavioral trace data from online groups to use vector autoregression (VAR) models, an established approach in biological ecology, to infer ecological networks of commensal relationships.  VAR models are a workhorse in biological ecology because VAR(1) models (i.e., VAR models with a single autoregressive term) have a close relationship to Gompertz models of population growth, which are themselves similar to the Lotka-Volterra self-limiting growth models used in \citepos{butler_membership_2001} resource dependence framework from social computing \cite{ives_estimating_2003}. Even in the presence of unmodeled nonlinearities, VAR(1) models can reliably identify competition or mutualism between species in empirically realistic scenarios \citep{certain_how_2018}.
+They have also been widely adopted in the social sciences, particularly in political science and in macroeconomics \citep{box-steffensmeier_time_2014}. 
+% \citet{sims_macroeconomics_1980} advocated VAR modeling in macroeconomics to address a problem in the field as an alternative to structural equation modeling (SEM), which required detailed specification of a large number of theoretical assumptions to identify. 
+%similar to structural equation models but require fewer theoretical assumptions but are
+VAR models are flexible enough to model a wide range of systems so long as sufficiently long time-series data are available \citep{sims_macroeconomics_1980}. They can be intuitively understood as a generalization of a one-dimensional auto-regressive (AR) models in time series analysis. But while AR models predict the state of a single time-series variable as a function of its previous values, VAR models simultaneously predict multiple time series variables as a function of the values of every other variable in the system \cite{canova_var_2007}.  A VAR(1) model has the form:
+
+%$$ Y_t = \Mu + \Phi_1 Y_{t-1} + \ldots + \Phi_p Y_{t-p} + \epsilon_t $$ 
+\begin{equation}\label{eq:var1}
+Y_t = B_0 + \mathbf{B} X_{t} + \mathbf{\Phi} Y_{t-1} + \epsilon_t
+\end{equation}
+
+\noindent Where $Y_t$ is a vector of of length $m$. The parameter $B_0$ is a vector of intercept terms.  $\Phi$ is a matrix where the diagonal elements are intrinsic growth rates for each element of $Y$ and the off-diagonal elements are the influence between different variables. Additional predictors can be included in $X_{t}$,  and $\epsilon_t$ is the error term. 
+
+The parameter $\Phi$ in a VAR(1) model encodes the ``community matrix''  \cite{novak_characterizing_2016}. VAR models also capture ``net effects,'' which include indirect relationships between groups.  Consider relationships between three groups (A, B, C) such that A partially competes with B and B partially competes with C but A and C have no direct relationship. A VAR(1) model inferring these relationships will have negative coefficients $\phi_{A,B}$ and $\phi_{B,C}$  and $\phi_{A,C}$ will be nearly zero. 
+
+However, this does not mean that groups A and C are independent because an exogenous increase in A will cause a decrease in B and thereby an eventual increase in C.  Indirect relationships like these can be inferred by using impulse response functions (IRFs) to interpret a VAR model \cite{box-steffensmeier_time_2014}.  In large VAR models, the great number of parameters can mean that few specific elements of $\Phi$ will be statistically significant, while the cumulation of many weak relationships might yield additional statistically significant IRFs \cite{canova_var_2007}.  
+
+\subsection{Inferring the community matrix for social computing systems} 
+\label{sec:inferring}
+
+Most VAR models in macroeconomics and biological ecology are fit using ordinary least squares, an approach which relies on assumptions that will be difficult to sustain in the online group settings of our interest. The number of parameters in the model increases quadratically with the number of variables in the system which can lead to over-fitting, estimation difficulties, and false discoveries arising from the testing of a large number of hypotheses. 
+For models fit using OLS, non-normal errors can lead to bias. A Bayesian vector autoregression approach can overcome such limitations and allows the use of hierarchical priors that pull estimates towards 0 and thereby correct for multiple hypothesis tests  \cite{canova_bayesian_2007, banbura_large_2010, gelman_why_2012}.  
+
+We extend Equation \ref{eq:var1} to include a Poisson link function and a hierarchical Bayesian prior structure. We use a Poisson link function in order to model count data for groups with smaller numbers of participants.  In our model, $Y_t$ is a count of participants distributed according to Poisson parameter $\lambda_t$ which has a multivariate normal distribution evolving over time according to a VAR process. The parameter $\Phi$ corresponds to the community matrix as described in \textsection \ref{sec:var}. We use $X_{t}$ to account for seasonality as described in our case studies.  
+
+We use impulse response functions to quantify how much a group's size will change in response to a sudden increase in the size of another group represented by $\Theta_0$, which is an identity matrix so our impulses represent a log-unit increase of 1. Our models have a latent VAR process which we transform into a count variable through a Poisson link.  To interpret IRFs in terms of the number of members of a group, we transform them using a baseline of the median number of participants in a group over the study period, ($\widetilde{Y}_i$) and exponentiating to obtain $\Theta_i^*$ as shown in Equation \ref{eq:irf}. 
+
+\begin{align}
+    \Theta_i &= \Theta_{i-1}\Phi, i = 1,2,... \label{eq:irf} \\
+    \Theta_i^* &= e^{\Theta_i + \mathrm{log}(\widetilde{Y}_i)} \nonumber
+\end{align}
+
+Stationarity is a common assumption in time series analysis \cite{box-steffensmeier_time_2014}. For a VAR(1) model, stationarity means assuming that the eigenvalues of $\Phi$ are all less than 1. Practically speaking, this assumes that groups will not grow infinitely nor that the probabilities of activity in them will go to zero. In developing our model, we found that enforcing stationarity through the Heaps prior improved forecast accuracy and helped us fit larger VAR models including more online groups \cite{heaps_enforcing_2020}.  More information on our models, including our prior specifications is available in Appendix \ref{ap:model}.
+We developed our model using the Stan probabilistic programming language building off of code published by \citet{heaps_enforcing_2020} to add support for intercept terms, account for seasonality, and count data \cite{carpenter_stan:_2016}. In our simulation and in all our empirical case studies we report results from Stan models fit using 4 chains that pass Stan's diagnostic checks.  We have released all code and data necessary to reproduce these analysis in the Harvard Dataverse.
+
+
+\section{Simulating an ecological community}
+
+\begin{figure}
+
+<<simulation_coef,results='asis',echo=F,fig.height=2.5,fig.width=3.5,message=F>>=
+
+    stats <- copy(simulation.phi.stats.95)
+    median <- t(stats$medians[,,])
+    upper <- t(stats$upper[,,])
+    lower <- t(stats$lower[,,])
+    names <- sapply(1:dim(simulated_phi)[2],function(i) paste0('Y',i))
+    plot.df <- list()
+    m <- dim(stats$median[,,])[1]#$
+    idx <- 1
+    for(i in 1:m){
+        for(j in 1:m){
+            plot.df[[idx]] <- list('i'=i,'j'=j,'coef'=median[i,j],'upper'=upper[i,j],'lower'=lower[i,j],
+            'true'=simulated_phi[,,][i,j],
+            name.expr=paste0(names[[i]],"%->%",names[[j]]),
+            name.tex=paste0(names[[i]],"$\\rightarrow$",names[[j]]))
+            idx <- idx + 1
+        }
+    }
+    plot.df <- rbindlist(plot.df)
+
+    plot.df <- plot.df[,':='(name.tex = factor(name.tex,levels=rev(name.tex)))]
+    plot.df <- plot.df[,':='(name.expr = factor(name.expr,levels=rev(name.expr)))]
+
+    if(opts_chunk$get("dev") == 'tikz'){
+        plot.df$name = plot.df$name.tex
+    } else {
+        plot.df$name = plot.df$name.expr
+    }
+
+    N.sim.wrong <- nrow(plot.df[(true < lower) | (true > upper)])
+    
+    p <- plot.coefs(simulation.phi.stats.80, names, simulation.phi.stats.90, simulation.phi.stats.95, stat.names=c("80%","90%","95%"),include.all=T,point.shape.name='estimate',ncols=2)
+
+    groups <- unique(plot.df[,.(name)])
+    plot.df[,group:=cut(1:nrow(groups),2)]
+    p <-  p + geom_point(aes(x=name,y=true,shape='value'),data=plot.df,size=1.5) + coord_flip()
+
+
+    p <- p + scale_shape_manual(name='',values=c(estimate=19,value=1), breaks=c("estimate","value"), labels=c("Estimate","True value"))
+    p <- p + ylab("") + xlab("Coefficient") + theme(legend.position='bottom',panel.grid.minor.y=element_blank(),panel.grid.major.y=element_blank())
+    p <- p + scale_x_discrete(labels = parse(text=levels(plot.df$name)),breaks=rev(plot.df$name))#$
+    p <- p + guides(color=guide_legend(direction='horizontal',byrow=F), shape=guide_legend(direction='horizontal'))
+    p <- p + theme(legend.box="vertical",legend.margin=margin())
+    print(p)
+@
+% # p <- p + scale_color_manual(name='',values=c('black','blue'),breaks=c("estimate","value"),labels=c("Estimate","True value"),override.aes=list(color=c('black','blue')))
+
+\Description{Model estimates are shown as points with credible intervals as bars for each pair of variables in our simulation. True values from the simulation are also shown as points.  Most of the time both the true values and the estimates are near zero, but in several cases they are larger. The true points are within the 95\% credible interval in almost all cases showing that the model recovers parameters from simulated data.}
+
+\caption{Results of our simulation study demonstrating that our model can recover true values of $\Phi$ with estimated medians and 95\% credible intervals (CI). True simulated values are shown as open circles and the median and 95\% credible intervals (CI) from our fitted model are solid. }
+\label{fig:simulation_coef}
+\end{figure}
+
+
+% TODO missing paragraph here
+
+Before turning to our empirical analysis, we first present a brief simulation study to demonstrate that our our model can correctly infer all 6 possible commensal relationships included in Table \ref{tab:commensalism}. We simulated an ecological community consisting of 6 hypothetical groups with every possible commensal relationship over 320 weeks, a length of time similar to that available in our empirical data.
+Results from the simulation are shown in Figure \ref{fig:simulation_coef}. For each element of $\Phi$ we show the true simulated value along with the median and 95\% credible intervals (CI) from our fitted model.  In all but \Sexpr{N.sim.wrong} case the true parameter value is within the 95\% CI and even in this case the correct sign is inferred. We conclude from our simulation that our model can infer commensal relationships from data on online groups. 
+
+%Analysis of a second simulation with 15 groups and more information about our simulation studies is available in the online supplement.  
+
+% When \citeauthor{wang_impact_2012} observes that organizations in the same population can occupy different niches, they encounter a confusion common in the application of population ecology in domains where heterogeneity between organizations is salient: \emph{what is a niche} anyway?  
+
+% In translating ecological concepts from biology to organizations many organizational ecologists came to see organizations as individuals belonging to populations.  This was a fruitful choice for looking at relatively homogeneous industries such as newspapers  
+    
+% it's very important that individual communities are seen as different.
+
+
+% 1 longish paragraphs ~ 200 words summarizing empirical findings of interdependence between online communities
+
+% Approaches to interdependence between online communities
+    
+% Population vs Community Ecology
+    
+% Inference of ecological relationships
+    
+\section{Empirical case studies: related subreddits}
+\label{sec:case.studies}
+
+\begin{table}[t]
+\caption{Summary of data collected for case studies.}
+\begin{tabular}{c c c c}
+    Case study & \# Groups & Date Range & Time span  \\ \hline
+
+    Seattle-area & \Sexpr{length(unique(seattle.fit.df$subreddit))} & \Sexpr{as.Date(min(seattle.fit.df$week))}---\Sexpr{as.Date(max(seattle.fit.df$week))} & \Sexpr{first(seattle.fit.df[,.N,by=.(subreddit)]$N)} weeks \\
+    Wallpaper & \Sexpr{length(unique(wallpaper.fit.df$subreddit))} & \Sexpr{min(wallpaper.fit.df$week)}---\Sexpr{max(wallpaper.fit.df$week)} &    \Sexpr{first(wallpaper.fit.df[,.N,by=.(subreddit)]$N)} weeks \\
+    Design humor & \Sexpr{length(unique(design.fit.df$subreddit))} & \Sexpr{min(design.fit.df$week)}---\Sexpr{max(design.fit.df$week)} &    \Sexpr{first(design.fit.df[,.N,by=.(subreddit)]$N)} weeks 
+\end{tabular}
+\label{tab:case studies}
+\end{table}
+
+
+\begin{figure*}[t]
+\centering
+\begin{subfigure}[B]{0.3\textwidth}
+
+    <<seattle.coefs, echo=F, results='asis',fig.width=3.5,fig.height=2.5>>=
+    p <- plot.coefs(seattle.phi.stats.80,sort(unique(seattle.fit.df$subreddit)),
+    seattle.phi.stats.90,seattle.phi.stats.95,c("80%","90%","95%"))
+    print(p)
+@
+\caption{Estimated VAR(1) model for seattle subreddits. Only coefficients where the 80\% CI does not contain 0 are shown.}
+\label{fig:seattle.coef} 
+\Description{Model estimates are shown as points with credible intervals as bars for each pair of Seattle-area subreddits. 14 pairs of variables where 80\% CIs  do not include 0 are shown.  In two cases (seattle $\rightarrow$ eastside and wsu $\rightarrow$ seattle) the points are negative suggesting competition. In the other 12 cases the points are positive.  The 95\% credible intervals general contain zero but in many cases the 90\% credible intervals do not.}
+\end{subfigure} \qquad
+\begin{subfigure}[B]{0.3\textwidth}
+\centering
+<<seattle.irf,results='asis',echo=F,fig.width=3.8,fig.height=3.5,warning=F>>=
+    p <- plot.irf(seattle.irf.forecast.units.data[x<=20],level='80',ncol=3,'90','95',c("80%","90%","95%"),"95",scales='free_y',raw.irf = seattle.irf.forecast.data[x<=20],mu=seattle.med.mu)
+
+    p <- p + guides(color=guide_legend(ncol=2,byrow=TRUE,order=1),linetype=guide_legend(),order=2)
+    p <- p + theme(legend.position=c(0.7,0.15),legend.box='horizontal')
+    print(p)
+@
+\caption{Impulse response functions for relationships between Seattle-area subreddits. Arrows above each subplot show the direction of the represented relationship. Relationships where the 95\% CI does not include the baseline are shown.}
+\label{fig:seattle.irf}
+\Description{7 line plots showing impulse response functions with error bands indicating credible intervals. A dashed line indicates the baseline. In all cases the baseline is outside of the 95\% credible interval. The first plot shows the increase in /r/sealist in response to a shock in /r/mariners. The remaining plots show how different subreddits respond to /r/seahawks. In all cases the responses are positive.}
+\end{subfigure}
+\qquad
+\begin{subfigure}[B]{0.3\textwidth}
+\includegraphics[width=\textwidth]{figures/seattle_network.pdf}
+\caption{Network diagram of commensal relationships among Seattle-area subreddits. Edges represent impulse response functions where the 90\% CIs  does not include the baseline.}
+\label{fig:seattle.network}
+\Description{Network diagram showing inferred commensal relationships between subreddits. There is one edge representing competition from /r/seahawks to /r/eastside. The remaining nodes are part of a large component connected by mutualism.  There are many edges going out from /r/seahawks and /r/wwu showing their distinctive roles in the ecological community.}
+\end{subfigure}
+
+\caption{Results of VAR(1) model for Seattle-area subreddits. Plot (\subref{fig:seattle.coef}) shows model coefficients, (\subref{fig:seattle.irf}) shows impulse response functions, and (\subref{fig:seattle.network}) shows the network of commensal relationships derived from impulse responses.  The community ecology of Seattle subreddits is relatively dense with several mutualistic relationships.}
+\label{fig:var.seattle}
+\Description{A figure with three subplots.}
+\end{figure*}
+
+Confident that our approach can infer commensal relationships between groups, we turn to the analysis of three sets of related groups on Reddit. These case studies serve to demonstrate our method on real online groups and to surface empirical findings that motivate future directions for research.
+In each case study we analyze time series data from a set of related online groups: subreddits related to the Seattle area, subreddits for sharing wallpaper (i.e., desktop or mobile phone backgrounds), and design and craft humor subreddits. All three studies draw data from the Pushshift archive of Reddit submissions \cite{baumgartner_pushshift_2020}.  Table \ref{tab:case studies} shows the number of groups and time ranges for each study.  
+In all three case studies our analytic variable is the number of unique posters or accounts making submissions to a given subreddit each week.  Compared to alternatives like the number of commenting accounts or the amount of activity in a subreddit, submitting content is a relatively costly form of participation and indicates a relatively high degree of involvement.
+    
+In each case study we report all off-diagonal elements of $\Phi$ where the 80\% credible interval (CI) does not contain 0, impulse response functions where the 95\% (CI) does not include the baseline, and a network of commensal relationships where edges represent impulse response functions where the 90\% CI does not include the baseline. Because we are interested not in intrinsic growth, but rather in relationships between groups, we do not show diagonal elements of $\Phi$ or IRFs which correspond to loops the network.  Plots showing our estimates for all our coeffients and all impulse response functions are available in the online supplement.
+    
+\subsection{Seattle-area subreddits}
+    
+Our first case study looks at subreddits related to Seattle area.  We collected a pool of \Sexpr{n.seattle.found} subreddits consisting of all subreddits found in the sidebars and Wikis of the /r/seattle subreddit as of July 20th 2020.  In 2016, conflict in /r/seattle led much of the group to migrate to /r/seattlewa.  Because this event constitutes a discontinuous shock that will violate assumptions of our model, we restrict our analysis to the period between \Sexpr{format(as.Date(min(seattle.fit.df$week)),"%B %-dth %Y")} and \Sexpr{format(as.Date(max(seattle.fit.df$week)),"%B %-dth %Y")}, prior to the schism. 
+We examined plots of the time series of the number of unique posters and excluded subreddits without posts in at least \Sexpr{format.percent(min_yearly_nonzero_prop)} of weeks in each year of the study.
+
+%The Seattle-area subreddits include the general-purpose \emph{/r/Seattle}, Seattle-area sports teams \emph{/r/Seahawks}, \emph{/r/SoundersFC}, and \emph{/r/Mariners}, subreddits for buying and selling (\emph{/r/sealist}) and looking for work (\emph{/r/Seajobs}), for broader geographic areas like (e.g. \emph{/r/Cascadia} and \emph{/r/Washington}), for other cities in Washington State (e.g. \emph{/r/Spokane}, and \emph{/r/Bellingham}) and universities in Washington State (e.g. \emph{/r/udub}, \emph{/r/wsu}, \emph{/r/wwu}).
+     
+We account for sports-related seasonality in \emph{/r/seahawks}, \emph{/r/soundersfc},  \emph{/r/mariners}, \emph{/r/udub} and \emph{/r/wsu} using a categorical variable with 5 levels: if a week is during a sports teams' (1) regular season, (2) post-season, (3) if the team has a pre-season game, (4) if they have an off-season friendly or it is the post season and they have already been eliminated from contention, and (5) if their sport is out of season.  For the university groups we only account for NCAA American football which is the only sport which appears to drive significant activity.
+We obtained NFL data from the nflgame-redux python package,\footnote{\url{https://pypi.org/project/nflgame-redux/}} MLB data from \url{retrosheets.org}, MLS data from the engsoccerdata in R\footnote{\url{https://cran.r-project.org/web/packages/engsoccerdata/index.html}} and from Wikipedia articles on SoundersFC seasons, and NCAA football from college football reference.\footnote{obtained from \url{https://gamethread.redditcfb.com/gamedb.php}} 
+The subreddits \emph{/r/udub}, \emph{/r/wwu} and \emph{/r/wsu} also exhibit seasonality with the academic calendar so we include an additional variable indicating if the university is in session according to historical course calendars and registrar websites.
+
+    % bar chart with well-estimated coefficients (at a relatively low level)
+    % impulse response functions where CI excludes 0 
+    % graph showing impulse responses
+
+%While the resource dependence framework is oriented to the scarcity of participant's time and effort and suggests that such groups may be competitors,
+Our VAR analysis of Seattle-area subreddits reveals a large number of  mutualistic relationships.  
+Figure \ref{fig:seattle.coef} shows median values and credible intervals for elements of the inferred community matrix where the 80\% CI does not contain 
+0. While a handful of coefficients are negative at this credibility level, the vast majority are positive.  Figure \ref{fig:seattle.irf} shows several impulse response functions where the 95\% CI indicates evidence of mutualism.
+For example, the top-left subplot shows that the commensalism from \emph{/r/Mariners} to \emph{/r/sealist} is strong enough that, for the median week, a sudden increase in the number of unique posters by about \Sexpr{round(mariners.shock.size,1)} in \emph{/r/Mariners} will most likely drive an increase in \emph{/r/sealist} of almost 1 unique poster per week.
+
+\begin{figure*}[t]
+\centering
+\begin{subfigure}[B]{0.3\textwidth}
+\centering
+<<wallpaper.coefs, echo=F, results='asis',fig.width=3.5,fig.height=2>>=
+        p <- plot.coefs(wallpaper.phi.stats.80, unique(wallpaper.fit.df$subreddit), wallpaper.phi.stats.90,wallpaper.phi.stats.95,c("80%","90%","95%")) #$
+#    p <- p + theme(panel.grid.major.y=element_blank(),panel.grid.minor.y=element_blank())
+
+    p <- p + theme(legend.position='bottom',legend.box.just='left',legend.direction='horizontal',legend.box.margin=margin(0,40,0,0))
+    print(p)
+@
+
+\caption{Estimated VAR(1) model for wallpaper subreddits. Relationships where the 80\% CI does not include the baseline.}
+\label{fig:wallpaper.coef}    
+\Description{Model estimates are shown as points with credible intervals as bars for each pair of Wallpaper subreddits. 4 pairs of variables where 80\% CIs do not include 0 are shown.    There are four relationships shown (/r/iphonewallpapers $\rightarrow$ /r/nsfw\_wallpapers is negative, nsfw_wallpapers $\rightarrow$ /r/iphonewallpapers is positive, 
+/r/verticalwalpapers $\rightarrow$ /r/wallpaperrequests is positive, 
+/r/wallpaperrequests $\rightarrow$ /r/verticalwallpapers is negative). /r/wallpaperrequests $\rightarrow$ /r/verticalwallpapers is the only relationship where the 95\% credible interval does not contain 0.}
+\end{subfigure} \quad
+\begin{subfigure}[B]{0.3\textwidth}
+\centering
+<<wallpaper.irf,results='asis',echo=F,fig.width=3,fig.height=3,warning=F>>=
+    p <- plot.irf(wallpaper.irf.forecast.units.data[x<=20],level='80',ncol=3,'90','95',c("80%","90%","95%"),"95",scales='free_y',raw.irf = wallpaper.irf.forecast.data[x<=20],mu=wallpaper.med.mu)
+
+    p <- p + guides(color=guide_legend(ncol=2,byrow=TRUE,order=1),linetype=guide_legend(),order=2)
+    p <- p + theme(legend.position='bottom',legend.box='horizontal')
+    print(p)
+@
+\caption{Impulse response functions for relationships between wallpaper subreddits. The only relationships where the 95\% CI does not include the baseline is shown.}
+\label{fig:wallpaper.irf}
+\Description{A line plot showing an impulse response function with error bands indicating credible intervals. A dashed line indicates the baseline. The plot shows a decrease from about 5 unique posters to about 3 unique posters in /r/verticalwallpapers in response to an increase in /r/wallpaperrequests.}
+\end{subfigure} \qquad 
+\begin{subfigure}[B]{0.3\textwidth}
+\includegraphics[width=\textwidth]{figures/wallpaper_network.pdf}
+\caption{Network diagram of commensal relationships among wallpaper sharing subreddits. Edges represent impulse response functions where the 90\% CI does not contain zero.}
+\label{fig:wallpaper.network}
+\Description{A network diagram showing inferred commensal relationships between wallpaper subreddits.  There is a single competitive edge from /r/wallpaperrequests to /r/verticalwallpapers.}
+\end{subfigure}
+
+\caption{Results of VAR(1) model for wallpaper subreddits. Plot (\subref{fig:wallpaper.coef}) shows model coefficients, and (\subref{fig:wallpaper.network}) shows the network of commensal relationships derived from impulse responses and (\subref{fig:wallpaper.irf}) shows the impulse response functions where the 95\% CI excludes the baseline. The ecological community of wallpaper subreddits is sparse with few commensal relationships between different groups.}
+\label{fig:var.wallpaper} 
+\Description{A figure with three sub plots.}
+\end{figure*}
+
+
+
+As shown in Figure \ref{fig:seattle.network}, the commensal network of Seattle-area subreddits is dense with mutualistic relationships revealing a tightly connected ecological community characterized by positive spill-overs. From the network we can also see how certain groups play outsized roles. The growth of \emph{/r/Seahawks} in particular is strongly associated with growth of a number of other subreddits, especially smaller regional subreddits like \emph{/r/Bellingham}, \emph{/r/Oympia} and \emph{/r/Spokane}.
+Though we do not measure the trajectories of individual accounts, the  network suggests people may be drawn to Seattle-area subreddits by way of /r/Seahawks. 
+For example, it may be relatively common for Seahawks fans from Bellingham to come to Reddit to discuss the Seahawks but then find that activity on the Bellingham subreddit is relavent to their interests.  
+Influxes of sports fans from communities like \emph{/r/Seahawks} also appear to promote the growth of a wider array of  sports subreddits like \emph{/r/SoundersFC}. 
+
+While the mutualistic relationships associated with sports fan groups are those most confidently inferred by our model, many additional mutualistic relationships are visible in the network in Figure \ref{fig:seattle.network}.
+One intersting example is \emph{/r/wwu}, associated with Western Washington University in the town of Bellingham.  From Figure \ref{fig:seattle.coef}, we see that a direct relationship from \emph{/r/wwu} to \emph{/r/Bellingham} is plausible.  The network suggests that when posters become active in \emph{/r/wwu}, they may later become posters to \emph{/r/Bellingham}, the state-wide \emph{/r/Washington} subreddit, and more. 
+%Perhaps University students attract their friends to groups related to other universities (\emph{/r/udub}, \emph{/r/wsu}) or other college towns in Washington (e.g. \emph{/r/Olympia}).
+
+% \qquad
+% \subfloat[Impulse response functions for relationships between wallpaper subreddits.  Shaded bands from light to dark indicate 95\%, 90\% and 80\% credible intervals. All relationships shown are at least modestly probable as the as the 80\% band does not include 0. Yet none are very likely as the 95\% includes 0. \label{fig:wallpaper.irf}]{
+% <<wallpaper.irf,results='asis',echo=F,fig.width=3.5,fig.height=3,out.width="0.3\\textwidth",warning=FALSE>>=
+%     p <- plot.irf(wallpaper.irf.data,level='95',ncol=2,'90','95',c("80%","90%","95%"))
+%     p <- p + guides(color=guide_legend(ncol=2,byrow=TRUE))
+%     p <- p + theme(legend.position=c(0.95,0.12),legend.direction='vertical',legend.justification='right',legend.box.just='left')
+%     p <- p + xlim(c(0,20))
+%     p 
+%     @
+%   }
+
+
+\subsection{Wallpaper sharing subreddits}
+
+Our second case study looks at a set of subreddits for sharing wallpaper background images.  The wallpaper sharing groups are interesting because  many seem superficially very similar. For example \emph{/r/wallpaper} and
+\emph{/r/wallpapers} are both general purpose desktop wallpaper subreddits and  \emph{/r/mobilewallpaper} and
+\emph{/r/phoneallpapers} are based around wallpapers for mobile devices. 
+The high degree of similarity between the content shared in these groups suggests that they may compete.
+    
+Using Pushshift submissions data, we selected all \Sexpr{n.wallpaper.found}  subreddits including ``wallpaper'' in their names. 
+As with Seattle area subreddits, we excluded groups with lower levels of activity by requiring posts in at least \Sexpr{format.percent(0.4)} of weeks in each year of our analysis.\footnote{We chose a lower level of activity as our threshold in our study of Seattle because we were interested in the role of some smaller subreddits like \emph{/r/seajobs} in the community ecology of Seattle area subreddits.}  We analyze data from between \Sexpr{format(as.Date(min(seattle.fit.df$week)),"%B %-dth %Y")} and \Sexpr{format(as.Date(max(seattle.fit.df$week)),"%B %-dth %Y")}.
+
+While we found many mutualistic relationships in the case of Seattle-area subreddits, our analysis of wallpaper-sharing subreddits reveals very few commensal relationships at all. Only four out of the 210 non-diagonal elements of $\Phi$ shown in Figure \ref{fig:wallpaper.coef} have an 80\% CI that does not contain 0. In only one case does the 95\% CI of the impulse response functions not contain the baseline. Even though the content shared in these groups is similar, they have little influence on each other's membership size over time. 
+
+This shows that even among groups with apparently similar content, commensal relationships may not even exist.  Even though this case study covered the longest time period and had fewer groups than our study of Seattle-area subreddits---resulting in more statistical power---we found evidence of only one competitive relationship and weak evidence of three other commensal relationships.
+
+\subsection{Design and craft humor subreddits}
+
+\begin{figure*}[t]
+\begin{subfigure}[B]{0.3\textwidth}
+
+    <<design.coefs, echo=F, results='asis',fig.width=3.5,fig.height=3.6>>=
+        p <- plot.coefs(design.phi.stats.80, sort(unique(design.fit.df$subreddit)), design.phi.stats.90,design.phi.stats.95,c("80%","90%","95%"))
+        p <- p + theme(legend.box.margin=margin(0,40,0,0),legend.direction='horizontal')
+        print(p)
+    @
+
+\caption{Estimated VAR(1) model for design and craft humor subreddits.  Only coefficients where the 80\% CI does not include 0 are shown.} 
+\label{fig:design.coef}
+\Description{Model estimates are shown as points with credible intervals as bars for each pair of design and crafts humor subreddits. In 14 cases the 80\% credible interval does not contain 0. In 3 cases the estimates are negative and they are positive in the rest.}
+\end{subfigure}
+\qquad
+\begin{subfigure}[B]{0.3\textwidth}
+<<design.irf,results='asis',echo=F,fig.width=3.7,fig.height=4>>=
+    p <- plot.irf(design.irf.forecast.units.data[x<=20],level='80',ncol=2,'90','95',c("80%","90%","95%"),"95",scales='free_y',raw.irf = design.irf.forecast.data[x<=20],mu=design.med.mu)
+    names <- unique(design.fit.df$subreddit)
+#    p <- p + guides(color=guide_legend(ncol=1,byrow=TRUE))
+    p <- p + theme(legend.position='bottom',legend.direction='horizontal')
+    p
+@
+
+\caption{Impulse response functions for design and craft humor subreddits.  Relationships where the 95\% CI does not include the baseline are shown.}
+\label{fig:design.irf}
+\Description{6 line plots with impulse responses, credible intervals, and baselines among design and craft humor subreddits. There are 5 relationships where the responses are positive and 1 (from /r/onejob to /r/assholdesign) where the response is negative. }
+\end{subfigure}
+\qquad
+\begin{subfigure}[B]{0.3\textwidth}
+\includegraphics[width=\textwidth]{figures/design_network.pdf}
+\caption{Network diagram of commensal relationships among humorous design and craft humor subreddits. Edges represent IRFs where the 90\% CI does not include the baseline.}
+\label{fig:design.network}
+\Description{Network diagram of commensal relationships between design and craft humor subreddits. There are 4 isolated subreddits that have no relationships. The remaining nodes are part of a mutualistic connected component. There are three competitive edges revealing predatory relationships involving /r/onejob, /r/assholedesign, and /r/notmyjob. }
+\end{subfigure}
+\caption{Results of VAR(1) model for design and craft humor subreddits. Plot (\subref{fig:design.coef}) shows model coefficients, (\subref{fig:design.irf}) shows impulse response functions, and (\subref{fig:design.network}) shows the network of commensal relationships derived from impulse responses. This ecological community is characterized by a mix of mutualistic and competitive relationships.} \label{fig:var.design}
+\Description{A figure with 3 subplots}
+\end{figure*}
+
+The final case study is a set of subreddits for humorous sharing of design and crafts.  Subreddits typically place boundaries around the kind of content that is appropriate for their groups in rules posted in their sidebars or wikis \citep{chandrasekharan_internets_2018, fiesler_reddit_2018}.  Often these rules suggest alternative subreddits for submitting content that is not a good fit for a particular subreddit.  We are interested in how such boundaries and links may lead to commensal relationships between groups so we collected design and craft humor subreddits from a thread in \emph{/r/assholedesign} discussing a flowchart for deciding where to post content.\footnote{\url{https://www.reddit.com/r/assholedesign/comments/a02ezp/meta\_is\_it\_asshole\_design\_a\_handy\_flowchart/}}  We extended our search for related subreddits by reading the wikis and sidebars of \emph{/r/assholedesign} and \emph{/r/crappydesign}.  This search yielded \Sexpr{n.design.found} subreddits. We excluded \Sexpr{n.design.excluded} subreddits that were created much later than the rest and analyze the period from \Sexpr{format(as.Date(min(design.fit.df$week)),"%B %-dth %Y")} to \Sexpr{format(as.Date(max(design.fit.df$week)),"%B %-dth %Y")} during which all the remaining subreddits had submissions.
+
+ Similar to our analysis of Seattle-area subreddits, our analysis of design and craft humor subreddits reveals a number of commensal ties. However, the portrait of the ecological community that emerges is quite different from both other cases. 
+ A shown in Figure \ref{fig:design.coef}, we estimate a number of negative coefficients indicating the existence of competitive relationships. Figure \ref{fig:design.irf} shows impulse response functions for relationships inferred by our model where the 95\% CI does not include the baseline.
+ The bottom-right plot in Figure \ref{fig:design.irf} shows how, according to our model a sudden large increase of about \Sexpr{round(onejob.shock.size)} unique posters in \emph{/r/onejob} can be expected to drive a decrease of about 5 unique posters in  \emph{/r/assholedesign} in a median week.
+ 
+ Figure \ref{fig:design.network} shows the network of commensal relationships between the 10 design and craft humor subreddits.  As with the Seattle-area subreddits, we find relatively few reciprocal competitive or mutualistic relationships where one group is helped (harmed) by another and the second is helped (harmed) by the first. Interestingly, while the network contains more mutualistic ties than competitive ones, it contains three predatory relationships where one group benefits from an increase in the size of the other, but the other group is hurt by an increase in the first. 
+The subreddit \emph{/r/onejob} is a predator of \emph{/r/assholedesign} as increases in the size of \emph{/r/onejob} predict subsequent decreases in the size of \emph{/r/assholedesign} even as increases in the size of \emph{/r/assholedesign} predict increases in the size of \emph{/r/onejob}.  Similarly, \emph{/r/onejob} is predator of \emph{/r/notmyjob} and also of \emph{/r/assholedesign}. 
+
+%Finally, while our first two case studies did not provide a clear demonstration of competitive relationships between online groups, in our study of humorous  design and artistry subreddits we found both   competitive and  mutualistic relationships between online groups. 
+
+It is interesting that we do not find commensal relationships between the three groups that were most visibly differentiated in guidelines about what kind of content belongs in each group (\emph{/r/assholedesign}, \emph{/r/mildlyinfuriating}, and \emph{/r/crappydesign}).  That we do not find competition between these communities is consistent with the prediction of ecological theory that partitioning of resources (here topics or styles of content) between groups may reduce competition \cite{aldrich_organizations_2006, carroll_concentration_1985}.  
+
+
+\section{Threats to Validity}
+
+Our work is subject to several important threats to validity.
+The method we propose for identifying commensal relationships between online groups has limitations common to all time-series analysis of observational data. While our community ecology approach assumes that commensal relationships drive dynamics in the size of groups over time and cause groups to grow or decline, drawing causal inference using our method would depend on untestable assumptions. For example, our ability to infer causal relationships might be limited if  groups we do not consider---including groups on other platforms---play a role in an ecological community. Therefore, we refrain from claiming causality. 
+Potential omitted variables might also include additional time lags of group size. We chose to use VAR(1) models with only 1 time lag for simplicity but future work can improve upon our approach and model more complex dynamics with additional lags.
+Our results are offered as limited temporal associations consistent with inferred commensal relationships.
+
+Like most other time series analysis, our analysis assumes stationarity. Doing so implies that dynamics in the community ecologies of online groups that we study have a single equilibrium. This is difficult to evaluate empirically and may not be realistic \cite{canova_var_2007}.  We selected case studies and restricted our analysis to time spans in ways that sought to avoid obvious violations of these assumptions that are common in populations of online groups. Future work might relax these assumptions using more complex models with time-varying VAR parameters or state space models \cite{box-steffensmeier_time_2014}. These types of approaches may also be useful for investigating how commensal relationships change over time. We hope to explore these techniques in future work.
+
+Finally, our three cases studies are limited in that they can offer only a proof-of-concept analysis and an enticing hint at more comprehensive future analyses with more rigorously defined populations of online groups.
+Although we found varying results in the three ecological communities we selected, these case studies can provide little explanation for when one should expect to find different forms of commensalism in online groups. Our hope is that these initial results can point in new directions for research. 
+% We looked at three different sets of related online groups and found three qualitatively different ecological communities.  
+As is true in all case study research, there is little reason to expect findings from any one of our case studies to generalize to any specific other set of contexts.
+
+\section{Discussion}
+    
+Prior ecological studies in social computing use overlap in participants or topics to characterize the resource environment faced by particular online groups \cite{wang_impact_2012,zhu_impact_2014,zhu_selecting_2014}. However, they yield a puzzling set of empirical results about the relationship between resource overlaps and growth, decline and survival. Observing that the use of overlap density in these studies potentially aggregates many varying kinds of relationships, we propose a community ecology approach as a first step toward resolving this puzzle.
+We set out to infer networks of commensal relationships between groups directly from time series of membership sizes. Applying our method in three case studies reveals three qualitatively different ecological communities.
+In an ecological community focused on Seattle, we find a great number of mutualistic relationships. Among groups for sharing wallpaper images, we found almost no commensal relationships.  In design and craft humor subreddits we find many mutualistic ties, but also predation, and no commensal ties between those groups where visibly posted norms clearly distinguished between content appropriate for sharing in each group. 
+
+While our case studies reveal variation in networks of commensal relationships between related groups, case studies alone cannot resolve the puzzle of why resource overlaps appear related to competition in some circumstances \cite{teblunthuis_population_2020,wang_impact_2012} but in others appear related to mutualism \cite{zhu_impact_2014,zhu_selecting_2014}. However our results provide strong support for the claim that relationships between similar communities might be competitive or mutualistic depending on factors other than content or topical overlaps.
+We believe that a search for conditions leading to the emergence of different forms of commensalism is a good next step toward resolving the puzzle. 
+
+Within a large platform like Reddit there are a great number of sets of related groups that can be studied. This makes it possible to eventually construct and test generalizable theories about when and how different types of ecological communities are constructed. However, interest groups often use platforms with distinctive affordances for different purposes \cite{kiene_technological_2019}. Since our method relies only on time series data, it can be applied to study ecological communities spanning different social media platforms. 
+
+%we can also conceive of studies of relationships between different populations of groups such as populations defined by groups located on different social media platforms. 
+
+%Studying relationships between populations raises challenges of measurement and data collection not faced by studies of groups within the same platform 
+%  collective decision making to shift topic, policies, or governance practices. 
+While competitive relationships are defined by how they decrease the size of groups. Competition can also be important to the functioning of the broader ecological community. Exit to an alternative group can be an avenue for political change in response to grievances and poor governance \cite{hirschman_exit_1970, frey_emergence_2019}. The existence of a sufficient diversity of alternative institutions is likely to lead to competition, but might also make the expression of voice more compelling to moderators \cite{hirschman_exit_1970}. 
+Future studies should investigate such aspects of the dynamics between  governance and commensalism.
+
+Finally, we propose that future work investigates higher-level properties of ecological communities.  The motivation for community ecology is not only to better describe commensal relationships between online groups, but also to better understand how groups shape one another as well as higher order social structures like social media platforms and technological cultures.  
+
+%One direction toward such ends is to analyze stability dynamics of VAR models to investigate conditions giving rise to relatively stable or unstable ecological communities in social computing systems \cite{ives_estimating_2003}.
+
+%Approaching interdependence between online groups from a community ecology perspective means recognizing relationships between groups and the networks formed from these relationships in ecological communities as an object of study in their own right. 
+
+\subsection{Implications for Design}
+    
+% While Resnick et al.~\citep{resnick_starting_2012} 
+In their final chapter of their book on \textit{Building Successful Online Communities}, \citet{kraut_building_2012} advise managers of online groups to select an effective niche and beware of competition. But these recommendations are based on little direct evidence from studies of online groups and offer almost no concrete advice on what a designer or group should do differently based on either piece of advice. We provide a framework for online group managers to think about ecological constraints on group size in terms of dyadic relationships. While intuition suggests that online community managers might seek out mutualistic relationships and avoid competitive ones, it is often not obvious whether a related community is a competitor or mutualist. Our method provides a way for group mangers to solve this problem. 
+Competitors have a negative impact on growth, but ecological theory suggests that specialization is an adaptive strategy in response to competition \cite{aldrich_organizations_2006, carroll_concentration_1985, kraut_building_2012, powell_network_2005}. For example, the growth of Wikipedia caused other online encyclopedia projects to shift their focus \cite{hill_almost_2013}. Our method provides a tool by which group managers might identify competitors limiting the growth of their groups. With knowledge from this analysis in hand, they might be able to escape a competitive dynamic, perhaps by differentiation through unique design, policies, or governance practices. 
+
+Groups looking to increase activity should desire to seek out mutualistic relationships. We suggest that designers of online platforms can help them do so.
+Features such as meta-groups, group search, and recommendation engines, and practices like linking related groups may lower boundaries between groups and thereby support mutualistic relationships. However, it is not obvious to what extent particular features will support competition, mutualism, or both.  Using our method, community managers may be able to better understand how design features give rise to mutualism or competition.
+
+\section{Conclusion}
+
+% NOTE: This seems like too much of an side. -mako
+% 
+
+Explanations for the rise or decline of online groups often look to internal mechanisms. For example, Wikipedia's decline appears to have been caused by structural barriers to newcomers \cite{halfaker_rise_2013}. Did competition with emerging groups like Facebook also limit Wikipedia's growth?
+Ecological approaches provide a path toward answering such questions. Our work provides a novel approach for doing so and takes step to resolve empirical puzzles raised by prior work. By narrowing the focus to the dyadic commensal relationships between groups that matter, the community ecology framework we present also raises a host of new directions for social computing researche.  We look forward to building on this work and to building stronger and better online groups through in process.
+
+%Networks of commensal relationships between online groups can be inferred directly from time-series data and analyzed to reveal distinctive roles groups play in their ecological communities.  Our three case studies yield qualitatively different ecological communities that suggest promising directions for future work investigating when and how commensal relationships form.
+
+ 
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{CHI_VAR}
+
+\appendix
+
+\section{Bayesian Poisson Vector Autoregression Model specification}
+\label{ap:model}
+Below is the full prior specification of our model.   $Y_t$ is Poisson distributed with parameter $\lambda_t$ having a multivariate normal distribution which evolves over time according to a VAR process.  More information on our models, including our prior specifications is available in the online supplement. We use a weakly informative hierarchical prior for the elements of $B_0$.  
+
+In developing our model we found that enforcing stationarity through the Heaps prior improved forecast accuracy and helped us fit larger VAR models including more online groups \cite{heaps_enforcing_2020}
+We use the Heaps exchangeable prior over stationary values of $\Phi$ , which places separate hierarchical normal priors on the diagonal and off-diagonal elements of an unconstrained matrix that is homeomorphic to $\Phi$. Our choice of hyperparameters follows the recommendations of \cite{heaps_enforcing_2020}, but we chose a modestly more diffuse hyperprior for the means to increase the sensitivity of our model.
+
+
+\begin{align}
+ Y_t &\sim \mathrm{Poisson}(e^{\lambda_t}) & \lambda_t &\sim \mathrm{MVN}(\mu_t, \Sigma) \label{eq:bvar} \\
+ \mu_t &= B_0 + \Phi \mu_{t-1} & \Phi &\sim \mathrm{Heaps}(1,\sqrt{3}, 0, \sqrt{3},2.1,\frac{1}{3})  \nonumber \\
+\Sigma &\sim IW(m+3,I(m)) & B_0 &\sim \mathrm{N}(\mu_{B_0}, \sigma_{B_0}) \nonumber \\ \mu_{B_0} &\sim \mathrm{N}(0,7) & \sigma_{B_0} &\sim \Gamma(4,3) \nonumber \\
+\mathbf{B} &\sim N(0,2) & & \nonumber
+\end{align}
+ 
+
+\end{document}
+\endinput
+%% LOCALWORDS autoregression
+%% End of file `sample-authordraft.tex'.
+%People regularly participate in multiple online communities \cite{fara}. While online communities often have well-defined topical boundaries, these boundaries can overlap and shift \cite{butler_cross-purposes_2011}. 
+    
+\subsection{Sketching a chart of the ecological frontier}
+    
+Community ecology of offline organizations emphasizes how the evolution of ties in a network shapes the development of industries \cite[e.g.][]{dimaggio_social_2001, monge_evolutionary_2011, monge_communication_2008}.  
+    
+Organizational scholars 
+    
+We apply community ecology framework to study relationships between individual online communities, but other levels of analysis such as relationships between similar online communities or between different platforms are possible and can be the subject of future work.  
+
+Active cooperation by communities may be an important form of mutualism that can be cultivated through new designs. While the commensal relationships we study may arise from patterns in how individuals choose to participate in communities, they may also form intentionally as two communities intentionally collaborate or when a new community forms in order to compete with an old one.  
