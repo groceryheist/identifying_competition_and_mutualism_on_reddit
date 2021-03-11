@@ -421,6 +421,8 @@ get.mu.stats <- function(draws,level='95'){
     return(result)
 }
 
+
+
 get.forecast.scores <- function(draws,holdout.df){
     subreddits <- unique(holdout.df$subreddit)
     out.metrics <- list()
