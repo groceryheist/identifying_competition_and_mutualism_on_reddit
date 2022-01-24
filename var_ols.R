@@ -3,6 +3,7 @@ library(data.table)
 library(ggplot2)
 library(arrow)
 library(scoringRules)
+library(argparse) 
 source("RemembR/R/RemembeR.R")
 
 # y.pred is the output of predict(varest with ci = 682
@@ -42,9 +43,10 @@ prep.data <- function(df){
 }
 
 exogen.mat <- function(ylog){
+    ## since we have a const and trend we'll have collinnearity if there are less than 2 weeks without edits:
     first.edits <- as.array(apply(ylog > 0,c(1),function(x) min(which(x))))
-    all.0 <- first.edits==1
-    exogen <- apply(first.edits[first.edits!=1,drop=FALSE],c(1),function(x,ylen) c(1:(x-1),rep(0,ylen-x+1)),dim(ylog)[2])
+    all.0 <- (first.edits<=2) 
+    exogen <- apply(first.edits[first.edits>2,drop=FALSE],c(1),function(x,ylen) c(1:(x-1),rep(0,ylen-x+1)),dim(ylog)[2])
     return(exogen)
 }
 
@@ -60,7 +62,7 @@ train.test <- function(mat,n.test){
 
 varm.restrictions <- function(ylog, K){
     first.edits <- as.array(apply(ylog > 0,c(1),function(x) min(which(x))))
-    all.0 <- first.edits==1
+    all.0 <- (first.edits<=2) 
     n.coefs <- K + 2 + (K-sum(all.0))
     retmat <- matrix(1,K,n.coefs)
     if(!all(all.0)){
@@ -71,7 +73,7 @@ varm.restrictions <- function(ylog, K){
 
 baseline.restrictions <- function(ylog, K){
     first.edits <- as.array(apply(ylog > 0,c(1),function(x) min(which(x))))
-    all.0 <- first.edits==1
+    all.0 <- (first.edits<=2) 
     n.coefs <- K + 2 + (K-sum(all.0))
     retmat <- diag(1,K,n.coefs)
     retmat[,(K+1):(K+2)] <- 1
@@ -122,9 +124,9 @@ plot.model <- function(varm,ylog,y.pred,weeks){
     return(p=p)
 }
 
-plot.irf.data <- function(varm, ortho=FALSE, boot=TRUE, runs=1000,n.tries = 10,seed=NULL){
+plot.irf.data <- function(varm, ortho=FALSE, boot=TRUE, runs=1000, n.tries = 10, seed=NULL, ci=0.95){
 
-    irf.data <- irf(varm,ortho=ortho,boot=boot,seed=seed)
+    irf.data <- irf(varm,ortho=ortho,boot=boot,runs=runs,seed=seed,ci=ci)
 
     to.dt <- function(m,value.name){
         dt <- melt(data.table(m),variable.name='response.subreddit',measure.vars=colnames(m),value.name=value.name)
@@ -160,12 +162,12 @@ plot.irf.data <- function(varm, ortho=FALSE, boot=TRUE, runs=1000,n.tries = 10,s
     return(dt)
 }
 
-plot.irf <- function(varm, ortho=FALSE, boot=TRUE, runs=1000, data=NULL, seed=seed){
+plot.irf <- function(varm, ortho=FALSE, boot=TRUE, runs=1000, data=NULL, seed=seed, ci=0.95){
 
     if(!(is.null(data))){
         df <- data
     }  else {
-        df <- plot.irf.data(varm, ortho=ortho, boot=boot, runs=runs,seed=seed) 
+        df <- plot.irf.data(varm, ortho=ortho, boot=boot, runs=runs,seed=seed, ci=ci) 
 
     }
 
@@ -188,9 +190,12 @@ parser <- ArgumentParser(description="Fit var models using OLS on reddit data")
 parser$add_argument("--path", type='character', help='path to a feather file containing data for a cluster')
 parser$add_argument("--name", type='character', help='name to refer to this cluster')
 parser$add_argument('--forecast-length', type='integer', help='length of forcast for evaluating forecast skill')
-parser$add_argument('--boot', type='integer', help='number of bootstrap samples',default=1000)
+parser$add_argument('--runs', type='integer', help='number of bootstrap samples',default=1000)
+args <- parser$parse_args() #("--path","tempdata_tf/author_cluster_17_tf.feather","--forecast-length","24", "--runs","200", "--name","author_cluster_17_tf"))
 
-args <- parser$parse_args()
+# check: 1881, 14, 17
+
+print(args$name)
 
 if(!exists('path'))
     path <- args$path
@@ -202,13 +207,13 @@ if(!exists('n.test'))
     n.test <- args$forecast_length
 
 if(!exists('boot'))
-    boot <- args$boot
+    runs <- 1000
 
-change.remember.file("var_ols_remember.RDS",clear=TRUE)
+dir.create("ols_models",showWarnings=FALSE)
 
-if(!exists('df')){
-    df <- read_data(path)
-}
+change.remember.file(file.path("ols_models",paste0("var_ols_remember_",name,".RDS")), clear=TRUE)
+
+df <- read.data(path)
 
 if(!exists('ylog')){
     o <- prep.data(df)
@@ -236,72 +241,125 @@ n.coefs <- nrow(coef(varm.base)[[1]])
 retmat.main <- varm.restrictions(ylog, K)
 varm.main <- restrict(varm.base,method='manual',resmat=retmat.main)
 remember(coef(varm.main),paste0("var.coef.",name))
+saveRDS(varm.main,file.path("ols_models",paste0("var_ols_",name,".RDS")))
 
 y.pred <- predict(varm.main,n.ahead=n.test,ci=0.682,dumvar=exogen.test)
 remember(avg.crps(ylog.test, y.pred),paste0("var.crps.",name))
-remember(rmse(ylog.test, y.pred),paste0("var.rmse.",name))
+remember(y.pred, paste0("var.ypred.crps.",name))
 
 y.pred <- predict(varm.main,n.ahead=n.test,dumvar=exogen.test)
+remember(rmse(ylog.test, y.pred),paste0("var.rmse.",name))
+remember(y.pred, paste0("var.ypred.rmse.",name))
+
 p.main <- plot.model(varm.main, ylog, y.pred, weeks)
 plot.data <- plot.model.data(varm.main, ylog, y.pred, weeks)
 remember(plot.data, paste0("var.plot.data.",name))
 
 max.tries <- 10
-try.irf <- function(varm,ortho,boot,max.tries){
+
+try.irf <- function(varm,ortho,boot,runs,max.tries,ci=0.95){
     if(max.tries == 0){
         print("FAILED TO FIT CI FOR IRF")
-        return (plot.irf.data(varm,ortho=ortho,boot=FALSE,seed=max.tries))
+        return (plot.irf.data(varm,ortho=ortho,boot=FALSE,runs=runs,seed=max.tries,ci=ci))
 
     }
     tryCatch({
-        irf.data <- plot.irf.data(varm,ortho=ortho,boot=boot,seed=max.tries)
+        irf.data <- plot.irf.data(varm,ortho=ortho,boot=boot,runs=runs,seed=max.tries,ci=ci)
         return(irf.data)
     },
     error = function(e){
         print(e)
         print(paste0("trying ",max.tries - 1,'more times'))
-        try.irf(varm, ortho, boot, max.tries - 1)
+        try.irf(varm, ortho, boot, runs, max.tries - 1)
     }
     )
 }
 
-irf.ortho.data <- try.irf(varm.main,ortho=TRUE,boot,max.tries)
+irf.ortho.data <- try.irf(varm.main,boot=TRUE, ortho=TRUE,runs,max.tries)
+irf.ortho.data.90 <- try.irf(varm.main,boot=TRUE, ortho=TRUE,runs,max.tries,ci=0.9)
+irf.ortho.data.85 <- try.irf(varm.main,boot=TRUE, ortho=TRUE,runs,max.tries,ci=0.85)
 
 if(!is.null(irf.ortho.data)){
     remember(irf.ortho.data, paste0("irf.ortho.data.", name))
         
     p.ortho.irf <- plot.irf(varm.main,data=irf.ortho.data)
-    ggsave(paste0("plots/",name,"irf_ortho_main.pdf"),p.ortho.irf,width=16,height=11,units='in')
+#    ggsave(paste0("plots/",name,"irf_ortho_main.pdf"),p.ortho.irf,width=16,height=11,units='in')
 } else {
     remember('failed to estimate irf', paste0("irf.ortho.data.", name))
 }
 
-irf.data <- try.irf(varm.main,ortho=FALSE,boot=boot,max.tries)
+if(!is.null(irf.ortho.data.90)){
+    remember(irf.ortho.data.90, paste0("irf.ortho.data.90.", name))
+        
+    p.ortho.irf <- plot.irf(varm.main,data=irf.ortho.data)
+#    ggsave(paste0("plots/",name,"irf_ortho_main.pdf"),p.ortho.irf,width=16,height=11,units='in')
+} else {
+    remember('failed to estimate irf', paste0("irf.ortho.data.90.", name))
+}
+
+if(!is.null(irf.ortho.data.85)){
+    remember(irf.ortho.data.85, paste0("irf.ortho.data.85.", name))
+        
+    p.ortho.irf <- plot.irf(varm.main,data=irf.ortho.data.85)
+#    ggsave(paste0("plots/",name,"irf_ortho_main.pdf"),p.ortho.irf,width=16,height=11,units='in')
+} else {
+    remember('failed to estimate irf', paste0("irf.ortho.data.85.", name))
+}
+
+
+irf.data <- try.irf(varm.main,ortho=FALSE,boot=TRUE,runs,max.tries)
+irf.data.90 <- try.irf(varm.main,ortho=FALSE,boot=TRUE,runs,max.tries,ci=0.9)
+irf.data.85 <- try.irf(varm.main,ortho=FALSE,boot=TRUE,runs,max.tries,ci=0.85)
 
 if(!is.null(irf.data)){
     remember(irf.data, paste0("irf.data.", name))
         
     p.irf <- plot.irf(varm.main,data=irf.data)
-    ggsave(paste0("plots/",name,"irf_ortho_main.pdf"),p.irf,width=16,height=11,units='in')
+#    ggsave(paste0("plots/",name,"irf_ortho_main.pdf"),p.irf,width=16,height=11,units='in')
 } else {
     remember('failed to estimate irf', paste0("irf.data.", name))
 }
 
-ggsave(paste0("plots/",name,"_main.pdf"),p.main,width=16,height=11,units='in')
+
+if(!is.null(irf.data.90)){
+    remember(irf.data.90, paste0("irf.data.90.", name))
+        
+    p.irf <- plot.irf(varm.main,data=irf.data.90)
+#    ggsave(paste0("plots/",name,"irf_ortho_main.pdf"),p.irf,width=16,height=11,units='in')
+} else {
+    remember('failed to estimate irf', paste0("irf.data.90.", name))
+}
+
+
+if(!is.null(irf.data.85)){
+    remember(irf.data.85, paste0("irf.data.85.", name))
+        
+    p.irf <- plot.irf(varm.main,data=irf.data.85)
+#    ggsave(paste0("plots/",name,"irf_ortho_main.pdf"),p.irf,width=16,height=11,units='in')
+} else {
+    remember('failed to estimate irf', paste0("irf.data.85.", name))
+}
+
+#ggsave(paste0("plots/",name,"_main.pdf"),p.main,width=16,height=11,units='in')
 
 retmat.baseline <- baseline.restrictions(ylog,K)
 varm.baseline <- restrict(varm.base,method='manual',resmat=retmat.baseline)
 remember(coef(varm.baseline),paste0("ar.coef.",name))
 
-y.pred <- predict(varm.baseline,n.ahead=n.test,ci=0.682,dumvar=exogen.test)
-y.pred <- predict(varm.baseline,n.ahead=n.test,dumvar=exogen.test)
+saveRDS(varm.baseline,file.path("ols_models",paste0("baseline_ar_ols_",name,".RDS")))
 
+y.pred <- predict(varm.baseline,n.ahead=n.test,ci=0.682,dumvar=exogen.test)
+remember(y.pred, paste0("ar.ypred.crps.",name))
 remember(avg.crps(ylog.test, y.pred),paste0("ar.crps.",name))
+
+y.pred <- predict(varm.baseline,n.ahead=n.test,dumvar=exogen.test)
+remember(y.pred, paste0("ar.ypred.rmse.",name))
 remember(rmse(ylog.test, y.pred),paste0("ar.rmse.",name))
+remember(ylog.test,paste0('ytest.',name))
 
 p.baseline <- plot.model(varm.baseline, ylog, y.pred, weeks)
 plot.data <- plot.model.data(varm.baseline, ylog, y.pred, weeks)
 
 remember(plot.data, paste0("ar.plot.data.",name))
 
-ggsave(paste0("plots/",name,"_baseline.pdf"),p.baseline,width=16,height=11,units='in')
+#ggsave(paste0("plots/",name,"_baseline.pdf"),p.baseline,width=16,height=11,units='in')

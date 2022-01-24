@@ -3,26 +3,29 @@ random = np.random.RandomState(1968)
 
 import pandas as pd
 
-def load_densities():
-    term_density = pd.read_feather("/gscratch/comdata/output/reddit_density/comment_terms_10000.feather")
-    author_density = pd.read_feather("/gscratch/comdata/output/reddit_density/comment_authors_10000.feather")
+def load_densities(term_density_file="/gscratch/comdata/output/reddit_density/comment_terms_10000.feather",
+                   author_density_file="/gscratch/comdata/output/reddit_density/comment_authors_10000.feather"):
+
+    term_density = pd.read_feather(term_density_file)
+    author_density = pd.read_feather(author_density_file)
 
     term_density.rename({'overlap_density':'term_density','index':'subreddit'},axis='columns',inplace=True)
     author_density.rename({'overlap_density':'author_density','index':'subreddit'},axis='columns',inplace=True)
 
-    density = term_density.merge(author_density,on='subreddit',how='inner')
+    density = term_density.merge(author_density,on='subreddit',how='outer')
 
     return density
 
-def load_clusters():
-    term_clusters = pd.read_feather("/gscratch/comdata/output/reddit_clustering/comment_terms_10000.feather")
-    author_clusters = pd.read_feather("/gscratch/comdata/output/reddit_clustering/comment_authors_10000.feather")
+def load_clusters(term_clusters_file="/gscratch/comdata/output/reddit_clustering/comment_terms_10000.feather",
+                  author_clusters_file="/gscratch/comdata/output/reddit_clustering/best_author-tf.feather"):
+    term_clusters = pd.read_feather(term_clusters_file)
+    author_clusters = pd.read_feather(author_clusters_file)
 
     # rename, join and return
     term_clusters.rename({'cluster':'term_cluster'},axis='columns',inplace=True)
     author_clusters.rename({'cluster':'author_cluster'},axis='columns',inplace=True)
 
-    clusters = term_clusters.merge(author_clusters,on='subreddit',how='inner')
+    clusters = term_clusters.merge(author_clusters,on='subreddit',how='outer')
 
     return clusters
 
