@@ -10,3 +10,6 @@
 [submodule "python-mwxml"]
 	path = python-mwxml
 	url = https://github.com/mediawiki-utilities/python-mwxml.git
+[submodule "overleaf"]
+	path = overleaf
+	url = https://git.overleaf.com/61ce9c8d97ae7f13129c1833
