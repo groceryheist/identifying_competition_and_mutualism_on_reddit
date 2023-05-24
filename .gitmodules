@@ -1,15 +1,12 @@
 [submodule "cdsc_reddit"]
 	path = cdsc_reddit
-	url = code:cdsc_reddit
+	url = https://github.com/groceryheist/cdsc_reddit
 [submodule "RemembR"]
 	path = RemembR
-	url = https://github.com:/groceryheist/RemembR.git
+	url = https://github.com:/groceryheist/RemembR
 [submodule "pyRembr"]
 	path = pyRembr
-	url = https://github.com/groceryheist/pyRembr.git
-[submodule "python-mwxml"]
-	path = python-mwxml
-	url = https://github.com/mediawiki-utilities/python-mwxml.git
+	url = https://github.com/groceryheist/pyRembr
 [submodule "overleaf"]
 	path = overleaf
-	url = https://git.overleaf.com/61ce9c8d97ae7f13129c1833
+	url = https://github.com/identifying_competition_and_mutualism_reddit_overleaf
