@@ -1,10 +1,11 @@
----
-title: Reproduction code for "Identifying Competition and Mutualism between Online Groups". 
----
+
+# Reproduction code for "Identifying Competition and Mutualism between Online Groups". #
+
+© 2022 Nathan TeBlunthuis
 
 This repository contains code used in an analysis of ecological relationships among subreddits published as: 
 
-TeBlunthuis, N., & Hill, B. M. (2022). Identifying competition and mutualism between online groups. International AAAI Conference on Web and Social Media (ICWSM 2022), 16, 993–1004. <https://doi.org/10.1609/icwsm.v16i1.19352>
+TeBlunthuis, N., & Hill, B. M. (2022). Identifying competition and mutualism between online groups. International AAAI Conference on Web and Social Media (ICWSM 2022), 16, 993–004. <https://doi.org/10.1609/icwsm.v16i1.19352>
 
 This repository only contains code. The data is available in the
 [Harvard Dataverse](https://doi.org/10.7910/DVN/KLGHKY).
