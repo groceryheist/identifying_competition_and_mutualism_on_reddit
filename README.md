@@ -10,7 +10,7 @@ TeBlunthuis, N., & Hill, B. M. (2022). Identifying competition and mutualism bet
 This repository only contains code. The data is available in the
 [Harvard Dataverse](https://doi.org/10.7910/DVN/KLGHKY).
 
-== Overview ==
+### Overview ###
 
 The top-level files run the analyses reported in the paper, but depend
 on several submodules. The entire project has been automated using
