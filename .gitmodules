@@ -3,9 +3,10 @@
 	url = https://github.com/groceryheist/cdsc_reddit
 [submodule "RemembR"]
 	path = RemembR
-	url = https://github.com:/groceryheist/RemembR
+	url = https://github.com/groceryheist/RemembR
 [submodule "pyRembr"]
 	path = pyRembr
 	url = https://github.com/groceryheist/pyRembr
 [submodule "overleaf"]
+	path = overleaf
 	url = https://github.com/groceryheist/identifying_competition_and_mutualism_reddit_overleaf
