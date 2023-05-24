@@ -13,6 +13,7 @@ data {
   real<lower=-scale_diag/(m-1)> scale_offdiag; // Off-diagonal element in scale matrix
   real<lower=m+3> df;                          /* Degrees of freedom (limit ensures 
                                                   finite variance) */
+  int<lower=0> forecast_len;
 }
 transformed data {
   vector[m] mu = rep_vector(0.0, m); // (Zero)-mean of VAR process
@@ -28,6 +29,7 @@ parameters {
   matrix[m, m] phi[p]; // The phi_i
   cov_matrix[m] Sigma; // Error variance, Sigma
 }
+
 model {
   vector[m] mut_rest[N-p]; // Conditional means of y_{p+1}, ..., y_{N}
   // (Conditional) likelihood (conditional on first p observations):
@@ -48,4 +50,31 @@ model {
       }
     }
   }
+}
+
+generated quantities {
+  vector[m] y_new[forecast_len];
+  vector[m] mu_forecast[forecast_len];
+
+  // for each of the first p forecasts, we need information from y
+  for(t in 1:p){
+    mu_forecast[t] = mu;
+    // if i is less than t then we need elements from y  
+    // first loop: t = 1; i = 1; N-(i-t) = N
+    // second loop: t = 1; i = 2; N-(i-t) = N-1
+    // t = 2; i = 1; (t-i) = 1
+    for(i in 1:p){
+      if(t <= i) mu_forecast[t] += phi[i] * (y[N-(i-t)] - mu);
+      else mu_forecast[t] += phi[i] * (y_new[t-i] - mu);
+    }
+    y_new[t] = multi_normal_rng(mu_forecast[t], Sigma);
+  }
+
+   for(t in (p+1):forecast_len){
+     mu_forecast[t] = mu;
+     for(i in 1:p){
+       mu_forecast[t] = phi[i] * (y_new[t-i] - mu);
+     }
+     y_new[t] = multi_normal_rng(mu_forecast[t], Sigma);
+   }
 }

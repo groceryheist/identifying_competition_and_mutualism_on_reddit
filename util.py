@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+import pandas as pd
+import plotnine  # python ggplot2 clone
+plotnine.options.figure_size = (10,7)
+from  plotnine import *
+theme_set(theme_minimal())
 import subprocess
 import logging
 from datetime import datetime
@@ -11,6 +16,12 @@ import numpy as np
 from scipy.stats import special_ortho_group
 import pickle
 import sys
+import pystan
+import numpy as np
+import os
+import pickle
+import sys
+
 
 
 def csv_to_stan_data(df,y_name,forecast_len=0):
@@ -51,12 +62,13 @@ def gen_fun_matrix(K,growth=0.5,growth_var=0.5, dist=None):
     signs = np.power(-1,signs + 1)
 
     if dist is None:
-        dist = lambda size: np.random.normal(loc=growth, scale=growth_var, size=size)
+        dist = lambda size: np.random.normal(loc=growth, scale=growth_var, size=K)
 
     lamda = dist(size=K)
     # the eigenvalues have to be less than 1 in magnitude
     rescale = np.abs(lamda).max()
     if rescale > 1:
+        print('rescaling eigenvalues')
         lamda = lamda / rescale
 
     lamda = signs * lamda
@@ -98,30 +110,41 @@ def plot_ar(fit, y_vec, true_forecast):
     p.draw()
     return p
 
-def evolve_var_system(alpha, beta, sigma, y0, N, forecast_len, link_args=[], link = lambda x:x):
-    y_star = [y0]
-    K = beta.shape[0]
+def evolve_var_system(alpha, beta, sigma, y0, N, forecast_len, link_args=[], link = lambda x:x,nested_alpha=False,random=np.random):
 
-    def y_next(y0):
-        return np.random.multivariate_normal(alpha + np.matmul(y0,beta), sigma)
+    y_star = y0.copy()
+    P = beta.shape[0]
+    K = beta.shape[1]
 
-    for n in range(1, N):
-        y_star.append(y_next(y_star[-1]))
+    def y_next(y):
 
-    true_forecast = [y_star[-1]]
-    for n in range(forecast_len):
-        true_forecast.append(y_next(true_forecast[-1]))
+        if not nested_alpha:
+            mut = alpha
+            for i in range(P):
+                mut = mut + np.matmul(y[-(i+1)],beta[i])
+            return random.multivariate_normal(mut, sigma)
+        else:
+            mut = alpha - alpha
+            for i in range(P):
+                mut = mut + np.matmul(y[-(i+1)] - alpha, beta[i])
+            return alpha + random.multivariate_normal(mut, sigma)
 
-    true_forecast = true_forecast[1:]
+    for n in range(P,N+forecast_len+P):
+        y_star.append(y_next(y_star))
+
+    true_forecast = y_star[N+1:]
+    y_star = y_star[:N]
+
     y_star = np.column_stack(y_star)
-    true_forecast = np.column_stack(true_forecast)
+
+    true_forecast = np.column_stack(true_forecast) 
         
     all_x = range(N + forecast_len)
     all_y_star = np.column_stack([y_star, true_forecast])
     y = link(y_star.T, *link_args)
 
     true_forecast = link(true_forecast.T, *link_args)
-    y.shape
+    
     true_forecast.shape
     all_y = np.row_stack([y, true_forecast])
 
@@ -162,10 +185,10 @@ def convert_negbin_params(mu, theta):
     p = (var - mu) / var
     return r, 1 - p
 
-def stan_negbin_var_predict(fit, N):
-    pars = fit.extract(['theta','eta_new'])
+def stan_negbin_var_predict(fit, N, mean_name='eta_new'):
+    pars = fit.extract(['theta',mean_name])
     theta = pars['theta']
-    eta_new = pars['eta_new']
+    eta_new = pars[mean_name]
     K = theta.shape[1]
     forecast_len = eta_new.shape[1]
     n_draws = eta_new.shape[0]
@@ -178,8 +201,8 @@ def stan_negbin_var_predict(fit, N):
     return(build_forecast_df(y_new, N))
 
 
-def stan_pois_var_predict(fit,N):
-    lambda_new = fit.extract(pars=['lambda_new'])['lambda_new']
+def stan_pois_var_predict(fit,N,param_name='lambda_new'):
+    lambda_new = fit.extract(pars=[param_name])[param_name]
     y_new = np.random.poisson(np.exp(lambda_new))
     return build_forecast_df(y_new, N)
 
@@ -190,18 +213,29 @@ def stan_var_predict(fit,N):
 ### for testing stability is more important than sparsity
 ### figure out how to generate sparse stable matrixes later
 ### we might be able to do that by taking QR decompositions of sparse matrixes
-def gen_system(K,N,sparsity=0.5,growth=3,growth_var=9,community=0.95, community_var=0.1,noise=3,seed=1234):
+def gen_system(K,N,sparsity=0.5,growth=3,growth_var=9,community=0.95, community_var=0.1,noise=3, seed=1234):
+
+    beta = list()
+    if type(community) is not list:
+        beta.append(gen_fun_matrix(K, growth=community, growth_var=community_var))
+
+    else:
+        for i in range(len(community)):
+            beta.append(gen_fun_matrix(K, growth=community[i], growth_var=community_var[i]))
+        beta = np.array(beta)
+        
     np.random.seed(seed)
     alpha = np.random.normal(growth,growth_var,K)
     # we want beta to be sparse
     # sparsify the betas
-    beta = gen_fun_matrix(K, growth=community, growth_var=community_var)
 
     sigma = np.array([np.random.normal(0,noise,K) for i in range(K)])
     sigma = np.dot(sigma,sigma.T)
+
     return (alpha,
             beta,
-            sigma)
+            sigma
+    )
 
 # save obj if filename not exists, or overwrite, else load
 def unpickle_or_create(filename, overwrite, function, *args, **kwargs):
@@ -248,3 +282,5 @@ def get_loglevel(arg_loglevel):
         print("Choose a valid log level: debug, info, warning, error, or critical", file=sys.stderr)
         return logging.INFO
 
+
+                            

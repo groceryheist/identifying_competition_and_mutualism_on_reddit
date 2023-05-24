@@ -34,3 +34,24 @@
 /var_outline/resources/auto/
 *.\#*
 /stan_code/stan_code
+/.Rhistory
+/core.*
+/remembr.RDS_LOCK
+/data/schedule.zip
+data/mlb/*.zip
+/data/ncaa/_r_CFB Game Database_WSU_files/
+/data/ncaa/_r_CFB Game Database_UW_files/
+/remember.RDS.lock
+/Rplots.pdf
+/comdata_output
+/data.pickle
+/*.bak
+/*/*.bak
+/wallpaper_var_jobs_refit
+/gephi_stat.txt
+/hs_err_pid4223.log
+/job_script.sh
+/mem_usage.txt
+/stan_logs/
+/wallpaper_var_jobs
+/wallpaper_var_jobs_2
