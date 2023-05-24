@@ -283,7 +283,6 @@ if(!is.null(irf.ortho.data)){
     remember(irf.ortho.data, paste0("irf.ortho.data.", name))
         
     p.ortho.irf <- plot.irf(varm.main,data=irf.ortho.data)
-#    ggsave(paste0("plots/",name,"irf_ortho_main.pdf"),p.ortho.irf,width=16,height=11,units='in')
 } else {
     remember('failed to estimate irf', paste0("irf.ortho.data.", name))
 }
@@ -292,7 +291,6 @@ if(!is.null(irf.ortho.data.90)){
     remember(irf.ortho.data.90, paste0("irf.ortho.data.90.", name))
         
     p.ortho.irf <- plot.irf(varm.main,data=irf.ortho.data)
-#    ggsave(paste0("plots/",name,"irf_ortho_main.pdf"),p.ortho.irf,width=16,height=11,units='in')
 } else {
     remember('failed to estimate irf', paste0("irf.ortho.data.90.", name))
 }
@@ -301,7 +299,6 @@ if(!is.null(irf.ortho.data.85)){
     remember(irf.ortho.data.85, paste0("irf.ortho.data.85.", name))
         
     p.ortho.irf <- plot.irf(varm.main,data=irf.ortho.data.85)
-#    ggsave(paste0("plots/",name,"irf_ortho_main.pdf"),p.ortho.irf,width=16,height=11,units='in')
 } else {
     remember('failed to estimate irf', paste0("irf.ortho.data.85.", name))
 }
@@ -315,7 +312,6 @@ if(!is.null(irf.data)){
     remember(irf.data, paste0("irf.data.", name))
         
     p.irf <- plot.irf(varm.main,data=irf.data)
-#    ggsave(paste0("plots/",name,"irf_ortho_main.pdf"),p.irf,width=16,height=11,units='in')
 } else {
     remember('failed to estimate irf', paste0("irf.data.", name))
 }
@@ -325,7 +321,6 @@ if(!is.null(irf.data.90)){
     remember(irf.data.90, paste0("irf.data.90.", name))
         
     p.irf <- plot.irf(varm.main,data=irf.data.90)
-#    ggsave(paste0("plots/",name,"irf_ortho_main.pdf"),p.irf,width=16,height=11,units='in')
 } else {
     remember('failed to estimate irf', paste0("irf.data.90.", name))
 }
@@ -335,12 +330,10 @@ if(!is.null(irf.data.85)){
     remember(irf.data.85, paste0("irf.data.85.", name))
         
     p.irf <- plot.irf(varm.main,data=irf.data.85)
-#    ggsave(paste0("plots/",name,"irf_ortho_main.pdf"),p.irf,width=16,height=11,units='in')
 } else {
     remember('failed to estimate irf', paste0("irf.data.85.", name))
 }
 
-#ggsave(paste0("plots/",name,"_main.pdf"),p.main,width=16,height=11,units='in')
 
 retmat.baseline <- baseline.restrictions(ylog,K)
 varm.baseline <- restrict(varm.base,method='manual',resmat=retmat.baseline)
@@ -362,4 +355,3 @@ plot.data <- plot.model.data(varm.baseline, ylog, y.pred, weeks)
 
 remember(plot.data, paste0("ar.plot.data.",name))
 
-#ggsave(paste0("plots/",name,"_baseline.pdf"),p.baseline,width=16,height=11,units='in')

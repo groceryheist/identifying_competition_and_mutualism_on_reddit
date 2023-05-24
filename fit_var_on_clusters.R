@@ -73,7 +73,6 @@ for(clid in sort(N.subs.author.clusters$author_cluster)){
         write_feather(df,path)
         write(sprintf(base_call, path, n.test, runs, name),script,append=TRUE)
     }
-#    source('var_ols.R')
 }
 
 

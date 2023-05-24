@@ -84,13 +84,6 @@ overall.scores <- function(overwrite = FALSE){
                 print(paste0("NA found in ",clid))
             }
 
-            ## all.ypred.rmse.var <- c(all.ypred.rmse.var,rdata[paste0("var.ypred.rmse.",name)])
-            ## all.ypred.crps.var <- c(all.ypred.crps.var,rdata[paste0("var.ypred.crps.",name)])
-            ## all.ypred.rmse.ar <- c(all.ypred.rmse.ar,rdata[paste0("ar.ypred.rmse.",name)])
-            ## all.ypred.crps.ar <- c(all.ypred.crps.ar,rdata[paste0("ar.ypred.crps.",name)])
-
-            ## all.fitted.var <- fitted(var.mod)
-
             sqerr.var <- c()
             for(i in 1:length(var.rmse.ypred)){
                 var.rmse.err <- ytest[[1]][i,]-var.rmse.ypred[[1]]$fcst[[i]][,1]
@@ -180,11 +173,6 @@ commensal.by.clusters <- function(coefs.tab, clusters){
     return(commensal.by.clusters)
 }
 
-#wang.overlaps <- author.wang.density(clusters)
-
-# what's the correlation between overlaps and commensalisms? 
-# only 706 clusters got fit!
-
 # these subreddits aren't assigned to clusters since they only have 1 user.
 remember(10000 - nrow(clusters), "n.one.user.subs")
 coefs.tab <- load_var_coefs(overwrite=TRUE)
@@ -233,31 +221,13 @@ dt.density <- local.author.density(clusters)
 
 dt <- dt.commensal[dt.density,on=.(author_cluster)]
 
-#dt <- dt.commensal
-#dt.density2 <- local.author.wang.density(clusters)
-
-#dt <- dt[dt.density2,on=c("author_cluster")]
-
 dt <- dt[!is.na(N.edges)]
 
 dt <- dt[,abs.sub.avg.commensalism := avg.abs.commensalism - avg.commensalism]
 
 df <- dt[df,on=c("author_cluster")]
 
-#dt <- setnames(dt,old=c("overlap"), new=c("local.wang.overlap"))
-
-#cor(dt[!is.na(local.wang.overlap),.(local.author.density, local.wang.overlap, avg.abs.commensalism, abs.sub.avg.commensalism, avg.commensalism)])
-
-# cor(dt[,.(local.author.density, avg.abs.commensalism, abs.sub.avg.commensalism, avg.commensalism)])
-
-## plot.dt <- melt(dt, id.vars=c("author_cluster","N.edges","local.author.density",'local.wang.overlap'),measure.vars=c("avg.commensalism","avg.abs.commensalism",'abs.sub.avg.commensalism'))
-
-## plot.dt <- melt(plot.dt, id.vars=c("author_cluster","N.edges","variable","value"),measure.vars=c("local.author.density","local.wang.overlap"),value.name='overlap',variable.name='overlap.type')
-
 plot.dt <- melt(dt, id.vars=c("author_cluster","N.edges","local.author.density"),measure.vars=c("avg.commensalism","avg.abs.commensalism",'abs.sub.avg.commensalism'))
-
-#plot.dt <- melt(plot.dt, id.vars=c("author_cluster","N.edges","variable","value"),measure.vars=c("local.author.density"),value.name='overlap',variable.name='overlap.type')
-
 
 # subreddit level
 pdf("author_tfidf_heatmaps.pdf",width=12,height=6)
@@ -268,30 +238,7 @@ dev.off()
 
 dt[,diff.abs.avg := avg.abs.commensalism - avg.commensalism]
 
-# cluster level
-#dt.cluster <- dt[,.(avg.commensalism=mean(avg.commensalism), avg.abs.commensalism=mean(avg.abs.commensalism), local.author.density = mean(local.author.density), local.wang.overlap = mean(local.wang.overlap), abs.sub.avg.commensalism = mean(abs.sub.avg.commensalism),N.edges=first(N.edges)),by=.(author_cluster)]
-
 dt.cluster <- dt[,.(avg.commensalism=mean(avg.commensalism), avg.abs.commensalism=mean(avg.abs.commensalism), local.author.density = mean(local.author.density), abs.sub.avg.commensalism = mean(abs.sub.avg.commensalism),N.edges=first(N.edges)),by=.(author_cluster)]
-
-## cor(dt.cluster[,.(local.author.density, avg.abs.commensalism, abs.sub.avg.commensalism, avg.commensalism)])
-
-## plot.dt <- melt(dt.cluster, id.vars=c("author_cluster","N.edges","local.author.density"),measure.vars=c("avg.commensalism","avg.abs.commensalism",'abs.sub.avg.commensalism'))
-
-## #plot.dt <- melt(plot.dt, id.vars=c("author_cluster","N.edges","variable","value"),measure.vars=c("local.author.density","local.wang.overlap"),value.name='overlap',variable.name='overlap.type')
-
-## # subreddit level
-## pdf("author_tfidf_heatmaps-by-cluster.pdf",width=12,height=6)
-## remember(plot.dt,"author.tfidf.heatmap1.plotdata.by.cluster")
-## p <- ggplot(plot.dt, aes(x=local.author.density,y=value,group=variable)) + geom_bin2d(bins=50) + facet_wrap(.~variable,scales='free',ncol=3)
-## print(p)
-## dev.off()
-
-
-## # subreddit level
-## pdf("author_tfidf_heatmaps.pdf",width=12,height=6)
-## p <- ggplot(plot.dt, aes(x=overlap,y=value,group=variable)) + geom_bin2d(bins=50) + facet_wrap(overlap.type~variable,scales='free',ncol=3)
-## print(p)
-## dev.off()
 
 
 pdf("subreddit_absxavg.pdf",width=12,height=6)
@@ -300,46 +247,22 @@ p <- ggplot(dt, aes(x=avg.commensalism, y=avg.abs.commensalism)) + geom_bin2d(bi
 print(p)
 dev.off()
 
-
-## pdf("cluster_absxavg.pdf",width=12,height=6)
 remember(dt.cluster, 'dt.cluster.commensalism.pdf')
-## p <- ggplot(dt.cluster, aes(x=avg.commensalism, y=avg.abs.commensalism)) + geom_bin2d(bins=50)
-## print(p)
-## dev.off()
-
 
 dt[,diff.abs.avg := avg.abs.commensalism - avg.commensalism]
-
-## pdf("wang_overlap_heatmaps.pdf")
-
-## print(p)
-## dev.off()
 
 df <- iv[df,on=c("Subreddit.i"="subreddit")]
 df <- iv2[df,on=c("Subreddit.i")]
 
 for (i in names(df))
     df[is.na(get(i)),(i):=0]
-
-# df <- wang.density[df,on=c("subreddit"="Subreddit.i")] 
-#df <- df[!is.na(N.edges)]
-
 ###
 author.similarities <- data.table(read_feather("/gscratch/comdata/output/reddit_similarity/comment_authors_10000.feather"))
 term.similarities <- data.table(read_feather("/gscratch/comdata/output/reddit_similarity/comment_terms_10000.feather"))
 
-### cluster level wang overlaps will be a trick.
-
-### build local cluster similarities
-#cor(df[,.(avg.commensalism, total.commensalism, term_density, author_density, overlap, count, delta.count, N.edges,positive.sig,negative.sig,avg.abs.commensalism,sum.abs.commensalism)],method='spearman')
 
 library(ggeffects)
 
-## df.temp <- recomp.density(clusters)
-## df <- df[df.temp, on=c('Subreddit.i'='subreddit')]
-
-## df <- df[author_cluster != -1]
-## df <- df[subreddit %in% unique(iv$Subreddit.i)]
 
 df <- df[,author_density := author_density/max(author_density)]
 ## df <- df[,author_density.l1p := log1p(author_density)]
@@ -376,13 +299,8 @@ by.cluster <- df[,.(mean.growth = mean(delta.count.log),
                     mean.local.author.density=(mean(local.author.density))),by=.(author_cluster)]
 by.cluster <- by.cluster[!is.na(mean.local.author.density) & !is.na(mean.growth)]
 
-## by.cluster <- df[,.(mean.growth = mean(delta.count.log),
-##                     mean.overlap = mean(overlap),
-##                     mean.local.author.density=(mean(local.author.density))),by=.(author_cluster)]
 
 cor(by.cluster[,.(mean.growth,mean.local.author.density)])
-
-# by.cluster <- by.cluster[,overlap.scaled := scale(log1p(mean.overlap),center=T,scale=T)] 
 
 pdf("densityxgrowth.pdf")
 
@@ -487,20 +405,3 @@ for(cluster in void.clusters$author_cluster){
     print(cluster)
     print(sub.clusters[author_cluster==cluster]$subreddit)
 }
-
-
-## m0 <- lm(delta.count.log ~ total.commensalism,df)
-## summary(m0)
-
-## m1 <- lm(delta.count.log ~ term_density+overlap,df)
-## summary(m1)
-
-## m2<- lm(delta.count.log ~ term_density+overlap+total.commensalism,df)
-## #+poly(term_density,2)+poly(overlap,2),df)
-## summary(m2)
-
-## Still need 3 more things
-## 1. [Won't do] subreddit~subreddit model of relationship between overlap and commensalism 
-## 2. [ ] dates (begining of data collection, beginning and end dates of the forecasting period)
-## 3. [ ] data for 2 plots of of avg.subreddit.commensalism x density at the community level
-## 4. [ ] 

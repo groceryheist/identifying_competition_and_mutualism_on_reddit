@@ -67,7 +67,6 @@ if __name__ == '__main__':
 
     high_density_term_clusters = term_cluster_density.loc[(term_cluster_density.td_percentile['mean'] > 0.75) & (term_cluster_density.subreddit['count'] > 5)]
 
-    # let's just use term density instead of author density for now. We can do a second batch with author density next.
 
     chosen_clusters = high_density_term_clusters.sample(3,random_state=random)
 
@@ -88,16 +87,6 @@ if __name__ == '__main__':
 
 
     for clid in chosen_clusters.index.values:
-        # subs = cluster_info.loc[cluster_info.term_cluster==clid].subreddit.values
-        # ts = author_timeseries.loc[author_timeseries.subreddit.isin(subs)]
-        # # fill the time series with 0s
-        # ts = ts.pivot(index=['week'],columns='subreddit',values='author').fillna(0).reset_index()
-        # ts = ts.melt(id_vars='week')
-
-        # #output
-        # ts.to_feather(f"data/ts_term_cluster_{clid}.feather")
-
-        ts = pd.read_feather(f"data/ts_term_cluster_{clid}.feather")
 
         import plotnine as pn
         pn.options.figure_size = (11.7,8.27)
@@ -112,14 +101,3 @@ if __name__ == '__main__':
         g.map_dataframe(sns.scatterplot,'week','value',data=ts,ax=ax)
         
 
-    # for each cluster, what's the average density?
-
-    # what are the percentiles of these average densities?
-
-    # let's pick clusters that have densities than other clusters.
-
-    # exclude clusters that are small!
-
-    # and where the subreddits are also in higher density clusters of the other kind.
-
-    # or do the double-z-score thing from Datta.

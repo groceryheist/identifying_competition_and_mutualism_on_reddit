@@ -18,7 +18,7 @@ def main(term_clusters_path="/gscratch/comdata/output/reddit_clustering/comment_
     
     spark = SparkSession.builder.getOrCreate()
     
-    df = spark.read.parquet("/gscratch/comdata/output/reddit_comments_by_subreddit.parquet")
+    df = spark.read.parquet("data/reddit_comments_by_subreddit.parquet")
     
     df = df.withColumn('week', f.date_trunc('week', f.col("CreatedAt")))
     
