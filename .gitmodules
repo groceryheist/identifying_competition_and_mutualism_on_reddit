@@ -3,10 +3,10 @@
 	url = code:cdsc_reddit
 [submodule "RemembR"]
 	path = RemembR
-	url = git@github.com:groceryheist/RemembR.git
+	url = https://github.com:/groceryheist/RemembR.git
 [submodule "pyRembr"]
 	path = pyRembr
-	url = git@github.com:groceryheist/pyRembr.git
+	url = https://github.com/groceryheist/pyRembr.git
 [submodule "python-mwxml"]
 	path = python-mwxml
 	url = https://github.com/mediawiki-utilities/python-mwxml.git

@@ -15,7 +15,7 @@ The top-level files run the analyses reported in the paper, but depend
 on several submodules. The entire project has been automated using
 `GNU make`. It has been designed to run on the Hyak supercomputer at
 the University of Washington. Reach out to Nathan TeBlunthuis
-(nathante@umich.edu) or @groceryheist on github if you wish to attempt
+(nathante@umich.edu; @groceryheist on github) if you wish to attempt
 to reproduce this analysis.
 
 The `cdsc_reddit` submodule contains a pipeline for building datasets
