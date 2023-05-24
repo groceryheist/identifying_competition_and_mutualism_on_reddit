@@ -10,3 +10,5 @@
 [submodule "overleaf"]
 	path = overleaf
 	url = https://github.com/identifying_competition_and_mutualism_reddit_overleaf
+[submodule "overleaf/"]
+	url = https://github.com/groceryheist/identifying_competition_and_mutualism_reddit_overleaf
