@@ -8,7 +8,8 @@ This repository contains code used in an analysis of ecological relationships am
 TeBlunthuis, N., & Hill, B. M. (2022). Identifying competition and mutualism between online groups. International AAAI Conference on Web and Social Media (ICWSM 2022), 16, 993–004. <https://doi.org/10.1609/icwsm.v16i1.19352>
 
 This repository only contains code. The data is available in the
-[Harvard Dataverse](https://doi.org/10.7910/DVN/KLGHKY).
+Harvard Dataverse, but contains copywritten materials.
+Contact Nathan TeBlunthuis for access to the Dataverse. 
 
 ### Overview ###
 
